@@ -4,11 +4,11 @@
     "calendar": null,
     "mentions": null,
     "weather": null,
-    "system": 1742960100000,
-    "ideabot": 1742960100000,
-    "cron": 1742960100000,
-    "dashboard_ui": 1742960100000
+    "system": 1743037440000,
+    "ideabot": 1743037440000,
+    "cron": 1743037440000,
+    "dashboard_ui": 1743037440000
   },
   "createdAt": "2026-03-17T13:55:00+08:00",
-  "lastSummary": "2026-03-26 08:15 - Dashboard OK (200s) | Ideabot: 新想法 SmartClip 会议助手 | GitHub 仍不可达 | History Atlas commit pending push"
+  "lastSummary": "2026-03-26 12:44 - Dashboard: 200 OK | 2 cron jobs 持续 error（History Atlas部署、每日A股报告）| Ideabot 无新想法"
 }
