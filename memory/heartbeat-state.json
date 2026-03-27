@@ -4,11 +4,11 @@
     "calendar": null,
     "mentions": null,
     "weather": null,
-    "system": 1743131640000,
+    "system": 1743135240000,
     "ideabot": null,
-    "cron": 1743131640000,
-    "dashboard_ui": 1743131640000
+    "cron": 1743135240000,
+    "dashboard_ui": 1743135240000
   },
   "createdAt": "2026-03-17T13:55:00+08:00",
-  "lastSummary": "2026-03-27 12:34 - ⚠️ History Atlas对比模块改进(730256f1)新增error；A股报告-16点仍error；UI优化已恢复；Dashboard OK"
+  "lastSummary": "2026-03-27 13:34 - ⚠️ 对比模块改进(730256f1)和A股报告-16点仍error；Dashboard OK"
 }
