@@ -4,11 +4,11 @@
     "calendar": null,
     "mentions": null,
     "weather": null,
-    "system": 1743115912000,
-    "ideabot": 1743115912000,
-    "cron": 1743115912000,
-    "dashboard_ui": 1743115912000
+    "system": 1743124680000,
+    "ideabot": null,
+    "cron": 1743124680000,
+    "dashboard_ui": 1743124680000
   },
   "createdAt": "2026-03-17T13:55:00+08:00",
-  "lastSummary": "2026-03-27 08:41 - 所有cron正常（A股报告-16点仍error）；Ideabot无新想法；Dashboard 200 OK"
+  "lastSummary": "2026-03-27 10:38 - ⚠️ History Atlas UI优化(40446f5b)新增error；A股报告-16点仍error；Dashboard 200 OK"
 }
