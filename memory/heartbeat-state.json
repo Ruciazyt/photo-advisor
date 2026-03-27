@@ -4,11 +4,11 @@
     "calendar": null,
     "mentions": null,
     "weather": null,
-    "system": 1743135240000,
+    "system": 1743137100000,
     "ideabot": null,
-    "cron": 1743135240000,
-    "dashboard_ui": 1743135240000
+    "cron": 1743137100000,
+    "dashboard_ui": 1743137100000
   },
   "createdAt": "2026-03-17T13:55:00+08:00",
-  "lastSummary": "2026-03-27 13:34 - ⚠️ 对比模块改进(730256f1)和A股报告-16点仍error；Dashboard OK"
+  "lastSummary": "2026-03-27 14:05 - 对比模块改进已恢复；仅剩A股报告-16点仍error；Dashboard OK"
 }
