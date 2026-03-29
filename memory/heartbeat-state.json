@@ -4,11 +4,11 @@
     "calendar": null,
     "mentions": null,
     "weather": null,
-    "system": 1743154560000,
-    "ideabot": 1743154560000,
-    "cron": 1743154560000,
-    "dashboard_ui": 1743154560000
+    "system": 1743301860000,
+    "ideabot": 1743301860000,
+    "cron": 1743301860000,
+    "dashboard_ui": 1774808997000
   },
   "createdAt": "2026-03-17T13:55:00+08:00",
-  "lastSummary": "2026-03-27 21:36 - ⚠️ History Atlas部署(fe9af719)新增error；反思-17点仍error；Ideabot新想法(21:08)；Dashboard OK"
+  "lastSummary": "2026-03-30 07:51 - Cron tasks ok; Ideabot运行正常(06:09更新); Dashboard UI未修改(无浏览器可用)"
 }
