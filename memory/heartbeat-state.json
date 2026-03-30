@@ -4,11 +4,11 @@
     "calendar": null,
     "mentions": null,
     "weather": null,
-    "system": 1743301860000,
-    "ideabot": 1743301860000,
-    "cron": 1743301860000,
-    "dashboard_ui": 1774808997000
+    "system": 1743368160000,
+    "ideabot": 1743368160000,
+    "cron": 1743368160000,
+    "dashboard_ui": 1774907744543
   },
   "createdAt": "2026-03-17T13:55:00+08:00",
-  "lastSummary": "2026-03-30 07:51 - Cron tasks ok; Ideabot运行正常(06:09更新); Dashboard UI未修改(无浏览器可用)"
+  "lastSummary": "2026-03-31 05:54 - ✅ Dashboard pulse-slow animation fix committed (b26d52e); Ideabot cron error noted"
 }
