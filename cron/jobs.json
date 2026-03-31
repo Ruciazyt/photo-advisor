@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "10058cd2-7020-4802-a20c-77e064f26020",
+      "name": "daily-reflection-11",
+      "description": "Daily self-iteration & reflection at 11:00 (Asia/Shanghai)",
+      "enabled": true,
+      "createdAtMs": 1772441488486,
+      "updatedAtMs": 1773208972284,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 0 11 * * *",
+        "tz": "Asia/Shanghai"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "请进行每日自我迭代与反思：1) 回顾过去24小时的对话/任务/错误；2) 总结3条可执行改进；3) 如有需要，更新workspace里的SOUL.md/AGENTS.md/TOOLS.md或memory当日文件（避免泄露隐私）；4) 输出简洁报告。",
+        "model": "github-copilot/gpt-5.2"
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "feishu",
+        "to": "chat:oc_5407b2d8c04a1a08d841dcebacfd49a1"
+      },
+      "state": {
+        "nextRunAtMs": 1773284400000,
+        "lastRunAtMs": 1773208931557,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 40727,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0,
+        "runningAtMs": 1773284400036
+      }
+    },
+    {
+      "id": "bbd023c5-c553-4bfe-b9f5-8e6fa348d847",
+      "agentId": "main",
+      "name": "History Atlas - 国际化与UI优化",
+      "enabled": true,
+      "createdAtMs": 1773111763339,
+      "updatedAtMs": 1773281184408,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/15 * * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "请执行 History Atlas 项目的优化改进工作，按以下三个方向依次进行：\n\n## 方向1：国际化(i18n)补全\n1. 扫描 src/components 中所有使用 t('xxx') 的组件\n2. 检查 src/messages/zh.json、en.json、ja.json 是否都有对应翻译\n3. 搜索代码中的 || '中文' 或 || \"中文\" 后备文本，这些往往是缺失的i18n键\n4. 特别注意 commanders/ 目录下的组件（已有发现遗漏的键）\n5. 补全所有缺失的翻译 keys\n\n## 方向2：地名演化模块手机端显示修复\n1. 查看 src/components/world/PlaceNameEvolution.tsx\n2. 检查手机端(layout)上的渲染问题：\n   - 水平滚动是否正常工作\n   - 地图tooltip是否被遮挡\n   - 字体大小是否适配小屏\n   - 地区分类筛选是否可用\n3. 修复手机端显示问题\n\n## 方向3：欧亚对比模块网格优化\n1. 查看 src/components/world/EurasianGrid.tsx\n2. 使用 UI 设计 Agent (superdesign skill) 来获取专业的 UI 优化建议\n3. 重点优化：网格布局、颜色对比度、响应式设计、tooltip展示\n4. 应用改进\n\n## 执行要求\n- 每次只做一个方向的改进，完成后再做下一个\n- 每个方向完成后 git add + commit + push\n- 汇报每个方向的改动内容",
+        "timeoutSeconds": 900
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "feishu"
+      },
+      "state": {
+        "nextRunAtMs": 1773284784408,
+        "lastRunAtMs": 1773280631698,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 552710,
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 0,
+        "lastError": "cron: job execution timed out"
+      },
+      "description": "History Atlas项目优化：i18n补全、地名演化手机端修复、欧亚对比网格UI优化"
+    },
+    {
+      "id": "shishumi-improve-001",
+      "name": "史书墨 - 持续改进",
+      "description": "不断优化完善史书墨项目的代码质量、UI设计、架构，在不破坏现有逻辑的前提下使项目更加健壮可用",
+      "enabled": true,
+      "createdAtMs": 1743372000000,
+      "updatedAtMs": 1743372000000,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 */20 * * * *",
+        "tz": "Asia/Shanghai"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "请执行史书墨项目的优化改进工作：\n1. 进入 /home/zyt/.openclaw/workspace/shishumi-novel 查看项目结构和代码\n2. 分析代码质量和UI设计，寻找改进点\n3. 在不破坏任何现有逻辑的前提下进行优化\n4. 每次只做 1-2 个改进点，优先选择高价值小改动\n5. 确保修改后 TypeScript 编译通过 (npx tsc --noEmit)\n6. 如有修改，git add + git commit + git push\n\n重要限制：\n- timeoutSeconds=600（10分钟），不要超出\n- 如果超时，整个任务直接 abort，不要 partial commit\n- 每次只做 1-2 个改进点，不要贪多\n\n文件写入安全规则：\n- 使用 exec cat heredoc 方式写入文件，禁止直接用 edit 工具写入 .tsx/.ts/.css 文件\n\n完成后汇报结果（无论成功或失败）。",
+        "timeoutSeconds": 900
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "feishu",
+        "to": "user:ou_5cdb0db73cce565d90f113de67f1aaec"
+      },
+      "state": {
+        "lastRunAtMs": 0,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok"
+      }
+    }
+  ]
+}
