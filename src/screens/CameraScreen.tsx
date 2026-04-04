@@ -11,19 +11,18 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../constants/colors';
-import { loadApiConfig, streamChatCompletion } from '../services/api';
+import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic, MINIMAX_MODELS } from '../services/api';
 import { StreamingDrawer } from '../components/StreamingDrawer';
 
 export function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [facing] = useState<CameraType>('back');
+  const [facing, setFacing] = useState<CameraType>('back');
   const [cameraReady, setCameraReady] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [loading, setLoading] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(false);
-  const [captureFlash, setCaptureFlash] = useState(false);
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -42,28 +41,6 @@ export function CameraScreen() {
       return photo?.base64 ?? null;
     } catch {
       return null;
-    }
-  }, [cameraReady]);
-
-  const handleCapture = useCallback(async () => {
-    if (!cameraRef.current || !cameraReady) return;
-
-    // Flash feedback
-    setCaptureFlash(true);
-    setTimeout(() => setCaptureFlash(false), 150);
-
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        skipProcessing: true,
-      });
-
-      if (photo?.uri) {
-        // Optionally save to gallery or show success
-        Alert.alert('已拍摄', '照片已保存');
-      }
-    } catch {
-      Alert.alert('拍摄失败', '请重试');
     }
   }, [cameraReady]);
 
@@ -86,19 +63,31 @@ export function CameraScreen() {
     }
 
     try {
-      await streamChatCompletion(
-        config.apiKey,
-        config.baseUrl,
-        config.model,
-        base64,
-        (text, done) => {
-          if (done) {
-            setLoading(false);
-          } else {
+      if (config.apiType === 'minimax') {
+        await analyzeImageAnthropic(
+          base64,
+          config.apiKey,
+          config.model,
+          (text) => {
             setStreamingText((prev) => prev + text);
-          }
-        },
-      );
+          },
+        );
+        setLoading(false);
+      } else {
+        await streamChatCompletion(
+          config.apiKey,
+          config.baseUrl,
+          config.model,
+          base64,
+          (text, done) => {
+            if (done) {
+              setLoading(false);
+            } else {
+              setStreamingText((prev) => prev + text);
+            }
+          },
+        );
+      }
     } catch (err: unknown) {
       setLoading(false);
       const msg = err instanceof Error ? err.message : String(err);
@@ -136,19 +125,31 @@ export function CameraScreen() {
     setLoading(true);
 
     try {
-      await streamChatCompletion(
-        config.apiKey,
-        config.baseUrl,
-        config.model,
-        base64,
-        (text, done) => {
-          if (done) {
-            setLoading(false);
-          } else {
+      if (config.apiType === 'minimax') {
+        await analyzeImageAnthropic(
+          base64,
+          config.apiKey,
+          config.model,
+          (text) => {
             setStreamingText((prev) => prev + text);
-          }
-        },
-      );
+          },
+        );
+        setLoading(false);
+      } else {
+        await streamChatCompletion(
+          config.apiKey,
+          config.baseUrl,
+          config.model,
+          base64,
+          (text, done) => {
+            if (done) {
+              setLoading(false);
+            } else {
+              setStreamingText((prev) => prev + text);
+            }
+          },
+        );
+      }
     } catch (err: unknown) {
       setLoading(false);
       const msg = err instanceof Error ? err.message : String(err);
@@ -185,16 +186,13 @@ export function CameraScreen() {
         facing={facing}
         onCameraReady={() => setCameraReady(true)}
       >
-        {/* Flash overlay */}
-        {captureFlash && <View style={styles.flashOverlay} />}
-
         {!apiConfigured && (
           <View style={styles.configWarning}>
             <Text style={styles.configWarningText}>⚠️ 请先配置API</Text>
           </View>
         )}
 
-        {/* Bottom toolbar: Gallery | Capture | Ask AI */}
+        {/* Bottom toolbar: Gallery | Ask AI | Switch Camera */}
         <View style={styles.toolbar}>
           {/* Left: Gallery */}
           <TouchableOpacity
@@ -205,22 +203,22 @@ export function CameraScreen() {
             <Ionicons name="images-outline" size={28} color="#fff" />
           </TouchableOpacity>
 
-          {/* Center: Capture */}
+          {/* Center: Ask AI */}
           <TouchableOpacity
             style={styles.captureBtn}
-            onPress={handleCapture}
+            onPress={handleAskAI}
             activeOpacity={0.7}
           >
             <View style={styles.captureBtnInner} />
           </TouchableOpacity>
 
-          {/* Right: Ask AI */}
+          {/* Right: Switch Camera */}
           <TouchableOpacity
             style={styles.toolBtn}
-            onPress={handleAskAI}
+            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
             activeOpacity={0.7}
           >
-            <Ionicons name="chatbubbles-outline" size={28} color="#fff" />
+            <Ionicons name="camera-reverse-outline" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
       </CameraView>
@@ -246,11 +244,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     justifyContent: 'space-between',
-  },
-  flashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#fff',
-    opacity: 0.6,
   },
   configWarning: {
     backgroundColor: 'rgba(0,0,0,0.6)',

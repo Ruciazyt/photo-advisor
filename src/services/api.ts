@@ -129,7 +129,8 @@ export async function loadApiConfig(): Promise<{
 }
 
 export async function fetchAvailableModels(apiKey: string, baseUrl: string): Promise<Model[]> {
-  const response = await axios.get(`${baseUrl}/models`, {
+  const cleanUrl = baseUrl.replace(/\/+$/, '').replace(/\/chat\/completions\/?$/, '');
+  const response = await axios.get(`${cleanUrl}/models`, {
     headers: { Authorization: `Bearer ${apiKey}` },
     timeout: 15000,
   });
