@@ -1,21 +1,38 @@
-import Constants from 'expo-constants';
 import * as Application from 'expo-application';
 import * as Linking from 'expo-linking';
+import axios from 'axios';
 
 export interface ReleaseInfo {
   version: string;
   downloadUrl?: string;
   htmlUrl?: string;
+  body?: string;
 }
 
 export const getAppVersion = (): string => {
-  return Application.nativeApplicationVersion || Constants.expoConfig?.version || '1.0.0';
+  return Application.nativeApplicationVersion || '1.0.0';
 };
 
-// For now, just return current version - update checking can be added later
-// when you have a GitHub releases or custom backend
 export const checkForUpdate = async (): Promise<ReleaseInfo | null> => {
-  return null; // No auto-update server configured yet
+  try {
+    const response = await axios.get(
+      'https://api.github.com/repos/Ruciazyt/photo-advisor/releases/latest',
+      { timeout: 8000 }
+    );
+    const data = response.data;
+    if (data.tag_name) {
+      const version = data.tag_name.startsWith('v') ? data.tag_name.slice(1) : data.tag_name;
+      return {
+        version,
+        downloadUrl: data.html_url,
+        htmlUrl: data.html_url,
+        body: data.body || '',
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
 };
 
 export const compareVersions = (current: string, latest: string): number => {

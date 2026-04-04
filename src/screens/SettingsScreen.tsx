@@ -22,6 +22,7 @@ import {
 import {
   getAppVersion,
   checkForUpdate,
+  compareVersions,
   openReleasePage,
   ReleaseInfo,
 } from '../services/update';
@@ -50,36 +51,30 @@ export function SettingsScreen({ onSaved }: Props) {
     });
   }, []);
 
+  const currentVersion = getAppVersion();
+
   const handleCheckUpdate = useCallback(async () => {
     setCheckingUpdate(true);
     try {
-      const release: ReleaseInfo | null = await checkForUpdate();
-      if (!release) {
-        Alert.alert('暂无可用更新', '暂无可用更新，或无法连接到更新服务器', [
-          { text: '确定' },
-        ]);
-      } else {
+      const release = await checkForUpdate();
+      if (release && compareVersions(currentVersion, release.version) > 0) {
         Alert.alert(
-          `发现新版本 ${release.version}`,
-          '是否前往下载页面？',
+          `发现新版本 v${release.version}`,
+          release.body || '点击查看更新详情',
           [
             { text: '取消', style: 'cancel' },
-            {
-              text: '前往下载',
-              onPress: () => {
-                if (release.htmlUrl) openReleasePage(release.htmlUrl);
-              },
-            },
+            { text: '查看', onPress: () => openReleasePage(release.htmlUrl!) },
           ]
         );
+      } else {
+        Alert.alert('已是最新版本', `当前版本 v${currentVersion} 已是最新版本`);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert('检查更新失败', msg);
+      Alert.alert('暂无可用更新', '暂无可用更新，或无法连接到更新服务器');
     } finally {
       setCheckingUpdate(false);
     }
-  }, []);
+  }, [currentVersion]);
 
   const handleFetchModels = useCallback(async () => {
     if (!apiKey.trim() || !baseUrl.trim()) {
