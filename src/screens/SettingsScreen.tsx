@@ -25,7 +25,8 @@ import {
 import {
   getAppVersion,
   checkForUpdate,
-  compareVersions,
+  showUpdateDialog,
+  downloadAndInstall,
   openReleasePage,
 } from '../services/update';
 
@@ -71,20 +72,25 @@ export function SettingsScreen({ onSaved }: Props) {
     setCheckingUpdate(true);
     try {
       const release = await checkForUpdate();
-      if (release && compareVersions(currentVersion, release.version) > 0) {
-        Alert.alert(
-          `发现新版本 v${release.version}`,
-          release.body || '点击查看更新详情',
-          [
-            { text: '取消', style: 'cancel' },
-            { text: '查看', onPress: () => openReleasePage(release.htmlUrl!) },
-          ]
-        );
-      } else {
-        Alert.alert('已是最新版本', `当前版本 v${currentVersion} 已是最新版本`);
+      if (!release) {
+        Alert.alert('暂无可用更新', '暂无可用更新');
+        return;
       }
-    } catch {
-      Alert.alert('暂无可用更新', '暂无可用更新，或无法连接到更新服务器');
+      if (release.version === currentVersion) {
+        Alert.alert('已是最新版本', `当前版本 v${currentVersion} 已是最新版本`);
+        return;
+      }
+      showUpdateDialog(
+        release,
+        () => {
+          if (release.downloadUrl) {
+            downloadAndInstall(release.downloadUrl);
+          } else {
+            openReleasePage(release.htmlUrl);
+          }
+        },
+        () => {}
+      );
     } finally {
       setCheckingUpdate(false);
     }
