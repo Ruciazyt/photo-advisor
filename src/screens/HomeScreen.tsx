@@ -104,6 +104,7 @@ export function HomeScreen() {
 
     const asset = result.assets[0];
     const base64 = asset.base64 ?? '';
+    Alert.alert('调试-选图', `图片长度:${base64.length}\nURI:${asset.uri?.slice(0,30)}`);
     if (!base64) {
       Alert.alert('错误', '无法读取图片，请重试');
       return;

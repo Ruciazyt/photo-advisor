@@ -270,29 +270,27 @@ export async function analyzeImageAnthropic(
   }
 
   const json = await response.json();
-  console.log('[analyzeImageAnthropic] content length:', json.content?.length);
-
-  // Extract content from MiniMax response
-  let fullText = '';
   const content = json.content ?? [];
-  console.log('[analyzeImageAnthropic] content blocks:', content.map((b: any) => b.type));
+  console.log('[analyzeImageAnthropic] response keys:', Object.keys(json), 'content blocks:', content.length);
+
+  // Extract text from response blocks
+  let fullText = '';
+  let hasThinkingOnly = true;
   for (const block of content) {
     if (block.type === 'text' && block.text) {
       fullText += block.text;
-    }
-    // MiniMax may return thinking blocks - skip or extract
-    if (block.type === 'thinking' && block.thinking) {
-      // Optionally append thinking, or just ignore
+      hasThinkingOnly = false;
     }
   }
 
-  // Simulate streaming: call onChunk for each sentence
-  // Ensure the callback is always called
-  const trimmedText = fullText.trim();
-  if (!trimmedText) {
-    onChunk('（AI 未返回内容，请检查图片是否正确传输）');
+  // If no text blocks at all, add error message
+  if (hasThinkingOnly || !fullText.trim()) {
+    console.log('[analyzeImageAnthropic] No text in response, content:', JSON.stringify(content).slice(0, 300));
+    onChunk('（AI未返回文字内容，请检查图片数据是否正确传输）');
   } else {
-    const sentences = trimmedText.split(/(?<=[。！？；])/);
+    console.log('[analyzeImageAnthropic] AI text:', fullText.slice(0, 100));
+    // Simulate streaming by sentences
+    const sentences = fullText.split(/(?<=[。！？；])/);
     for (const sentence of sentences) {
       if (sentence.trim()) {
         onChunk(sentence);
