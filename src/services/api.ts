@@ -1,7 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
+export const MINIMAX_MODELS = [
+  { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7（最新·高精度）' },
+  { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5（均衡）' },
+  { id: 'MiniMax-M2.5-Lightning', name: 'MiniMax-M2.5-Lightning（快速）' },
+  { id: 'MiniMax-M2.5-Highspeed', name: 'MiniMax-M2.5-Highspeed（极速）' },
+];
+
+export const MINIMAX_BASE_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
+
 const STORAGE_KEYS = {
+  API_TYPE: 'photo_advisor_api_type',
   API_KEY: 'photo_advisor_api_key',
   BASE_URL: 'photo_advisor_base_url',
   MODEL: 'photo_advisor_model',
@@ -23,8 +33,14 @@ export interface ChatMessage {
   content: string | ChatMessageContent[];
 }
 
-export async function saveApiConfig(apiKey: string, baseUrl: string, model: string): Promise<void> {
+export async function saveApiConfig(
+  apiKey: string,
+  baseUrl: string,
+  model: string,
+  apiType: 'openai' | 'minimax' = 'openai'
+): Promise<void> {
   await AsyncStorage.multiSet([
+    [STORAGE_KEYS.API_TYPE, apiType],
     [STORAGE_KEYS.API_KEY, apiKey],
     [STORAGE_KEYS.BASE_URL, baseUrl],
     [STORAGE_KEYS.MODEL, model],
@@ -35,16 +51,25 @@ export async function loadApiConfig(): Promise<{
   apiKey: string;
   baseUrl: string;
   model: string;
+  apiType: 'openai' | 'minimax';
 } | null> {
   const results = await AsyncStorage.multiGet([
+    STORAGE_KEYS.API_TYPE,
     STORAGE_KEYS.API_KEY,
     STORAGE_KEYS.BASE_URL,
     STORAGE_KEYS.MODEL,
   ]);
-  const [apiKey, baseUrl, model] = results.map(([, v]) => v ?? '');
-  if (!apiKey || !baseUrl || !model) return null;
-  if (apiKey === 'null' || baseUrl === 'null' || model === 'null') return null;
-  return { apiKey, baseUrl, model };
+  const [apiType, apiKey, baseUrl, model] = results.map(([, v]) => v ?? '');
+  if (!apiKey || apiKey === 'null') return null;
+  // For MiniMax, baseUrl is not required
+  if (apiType !== 'minimax' && (!baseUrl || !model || baseUrl === 'null' || model === 'null')) return null;
+  if (apiType === 'minimax' && (!model || model === 'null')) return null;
+  return {
+    apiType: (apiType === 'minimax' ? 'minimax' : 'openai') as 'openai' | 'minimax',
+    apiKey,
+    baseUrl: baseUrl ?? '',
+    model,
+  };
 }
 
 export async function fetchAvailableModels(apiKey: string, baseUrl: string): Promise<Model[]> {
@@ -145,3 +170,67 @@ export async function streamChatCompletion(
 
   onChunk('', true);
 }
+
+export interface AnthropicStreamCallback {
+  (text: string): void;
+}
+
+export async function analyzeImageAnthropic(
+  imageBase64: string,
+  apiKey: string,
+  model: string,
+  onChunk: AnthropicStreamCallback,
+): Promise<string> {
+  const response = await fetch(MINIMAX_BASE_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 },
+          },
+          {
+            type: 'text',
+            text: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
+          },
+        ],
+      }],
+    }),
+  });
+
+  if (!response.body) throw new Error('No response body');
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    // Parse SSE lines: data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"..."}}
+    for (const line of chunk.split('\n')) {
+      if (line.startsWith('data: ')) {
+        try {
+          const json = JSON.parse(line.slice(6));
+          if (json.type === 'content_block_delta' && json.delta?.text) {
+            fullText += json.delta.text;
+            onChunk(json.delta.text);
+          }
+        } catch { /* skip malformed */ }
+      }
+    }
+  }
+  return fullText;
+}
+

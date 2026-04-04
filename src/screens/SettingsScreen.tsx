@@ -18,13 +18,13 @@ import {
   saveApiConfig,
   fetchAvailableModels,
   Model,
+  MINIMAX_MODELS,
 } from '../services/api';
 import {
   getAppVersion,
   checkForUpdate,
   compareVersions,
   openReleasePage,
-  ReleaseInfo,
 } from '../services/update';
 
 interface Props {
@@ -32,6 +32,7 @@ interface Props {
 }
 
 export function SettingsScreen({ onSaved }: Props) {
+  const [apiType, setApiType] = useState<'openai' | 'minimax'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
@@ -44,6 +45,7 @@ export function SettingsScreen({ onSaved }: Props) {
   useEffect(() => {
     loadApiConfig().then((config) => {
       if (config) {
+        setApiType(config.apiType);
         setApiKey(config.apiKey);
         setBaseUrl(config.baseUrl);
         setSelectedModel(config.model);
@@ -52,6 +54,15 @@ export function SettingsScreen({ onSaved }: Props) {
   }, []);
 
   const currentVersion = getAppVersion();
+
+  const handleApiTypeChange = (type: 'openai' | 'minimax') => {
+    setApiType(type);
+    setModels([]);
+    setSelectedModel('');
+    if (type === 'minimax') {
+      setBaseUrl('');
+    }
+  };
 
   const handleCheckUpdate = useCallback(async () => {
     setCheckingUpdate(true);
@@ -69,7 +80,7 @@ export function SettingsScreen({ onSaved }: Props) {
       } else {
         Alert.alert('已是最新版本', `当前版本 v${currentVersion} 已是最新版本`);
       }
-    } catch (err: unknown) {
+    } catch {
       Alert.alert('暂无可用更新', '暂无可用更新，或无法连接到更新服务器');
     } finally {
       setCheckingUpdate(false);
@@ -106,7 +117,7 @@ export function SettingsScreen({ onSaved }: Props) {
       Alert.alert('请填写 API Key');
       return;
     }
-    if (!baseUrl.trim()) {
+    if (apiType === 'openai' && !baseUrl.trim()) {
       Alert.alert('请填写 Base URL');
       return;
     }
@@ -116,7 +127,7 @@ export function SettingsScreen({ onSaved }: Props) {
     }
     setSaving(true);
     try {
-      await saveApiConfig(apiKey.trim(), baseUrl.trim(), selectedModel);
+      await saveApiConfig(apiKey.trim(), baseUrl.trim(), selectedModel, apiType);
       Alert.alert('保存成功', 'API 配置已保存', [
         { text: '确定', onPress: () => onSaved?.() },
       ]);
@@ -126,7 +137,7 @@ export function SettingsScreen({ onSaved }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [apiKey, baseUrl, selectedModel, onSaved]);
+  }, [apiKey, baseUrl, selectedModel, apiType, onSaved]);
 
   return (
     <KeyboardAvoidingView
@@ -144,6 +155,40 @@ export function SettingsScreen({ onSaved }: Props) {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.label}>API 类型</Text>
+          <View style={styles.apiTypeRow}>
+            <TouchableOpacity
+              style={[styles.apiTypeBtn, apiType === 'openai' && styles.apiTypeBtnActive]}
+              onPress={() => handleApiTypeChange('openai')}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={apiType === 'openai' ? 'radio-button-on' : 'radio-button-off'}
+                size={16}
+                color={apiType === 'openai' ? Colors.accent : Colors.textSecondary}
+              />
+              <Text style={[styles.apiTypeText, apiType === 'openai' && styles.apiTypeTextActive]}>
+                OpenAI 兼容
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.apiTypeBtn, apiType === 'minimax' && styles.apiTypeBtnActive]}
+              onPress={() => handleApiTypeChange('minimax')}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={apiType === 'minimax' ? 'radio-button-on' : 'radio-button-off'}
+                size={16}
+                color={apiType === 'minimax' ? Colors.accent : Colors.textSecondary}
+              />
+              <Text style={[styles.apiTypeText, apiType === 'minimax' && styles.apiTypeTextActive]}>
+                MiniMax
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.label}>API Key</Text>
           <TextInput
             style={styles.input}
@@ -157,48 +202,84 @@ export function SettingsScreen({ onSaved }: Props) {
           />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Base URL</Text>
-          <TextInput
-            style={styles.input}
-            value={baseUrl}
-            onChangeText={setBaseUrl}
-            placeholder="https://api.example.com/v1"
-            placeholderTextColor={Colors.textSecondary}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-          />
-        </View>
+        {apiType === 'openai' && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.label}>Base URL</Text>
+              <TextInput
+                style={styles.input}
+                value={baseUrl}
+                onChangeText={setBaseUrl}
+                placeholder="https://api.example.com/v1"
+                placeholderTextColor={Colors.textSecondary}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+            </View>
 
-        <TouchableOpacity
-          style={[styles.fetchBtn, fetching && styles.fetchBtnDisabled]}
-          onPress={handleFetchModels}
-          disabled={fetching}
-          activeOpacity={0.8}
-        >
-          {fetching ? (
-            <ActivityIndicator color={Colors.accent} size="small" />
-          ) : (
-            <>
-              <Ionicons name="cloud-download-outline" size={18} color={Colors.accent} />
-              <Text style={styles.fetchBtnText}>获取模型列表</Text>
-            </>
-          )}
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.fetchBtn, fetching && styles.fetchBtnDisabled]}
+              onPress={handleFetchModels}
+              disabled={fetching}
+              activeOpacity={0.8}
+            >
+              {fetching ? (
+                <ActivityIndicator color={Colors.accent} size="small" />
+              ) : (
+                <>
+                  <Ionicons name="cloud-download-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.fetchBtnText}>获取模型列表</Text>
+                </>
+              )}
+            </TouchableOpacity>
 
-        {loadingModels && (
-          <View style={styles.modelsLoading}>
-            <ActivityIndicator color={Colors.accent} />
-            <Text style={styles.modelsLoadingText}>正在获取模型...</Text>
-          </View>
+            {loadingModels && (
+              <View style={styles.modelsLoading}>
+                <ActivityIndicator color={Colors.accent} />
+                <Text style={styles.modelsLoadingText}>正在获取模型...</Text>
+              </View>
+            )}
+
+            {models.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.label}>选择模型</Text>
+                <View style={styles.modelList}>
+                  {models.map((m) => (
+                    <TouchableOpacity
+                      key={m.id}
+                      style={[
+                        styles.modelItem,
+                        selectedModel === m.id && styles.modelItemSelected,
+                      ]}
+                      onPress={() => setSelectedModel(m.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.modelItemText,
+                          selectedModel === m.id && styles.modelItemTextSelected,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {m.name || m.id}
+                      </Text>
+                      {selectedModel === m.id && (
+                        <Ionicons name="checkmark" size={16} color={Colors.accent} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+          </>
         )}
 
-        {models.length > 0 && (
+        {apiType === 'minimax' && (
           <View style={styles.section}>
             <Text style={styles.label}>选择模型</Text>
             <View style={styles.modelList}>
-              {models.map((m) => (
+              {MINIMAX_MODELS.map((m) => (
                 <TouchableOpacity
                   key={m.id}
                   style={[
@@ -215,7 +296,7 @@ export function SettingsScreen({ onSaved }: Props) {
                     ]}
                     numberOfLines={1}
                   >
-                    {m.name || m.id}
+                    {m.name}
                   </Text>
                   {selectedModel === m.id && (
                     <Ionicons name="checkmark" size={16} color={Colors.accent} />
@@ -302,6 +383,34 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
+  },
+  apiTypeRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  apiTypeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.cardBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: 14,
+  },
+  apiTypeBtnActive: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(232,213,183,0.1)',
+  },
+  apiTypeText: {
+    color: Colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  apiTypeTextActive: {
+    color: Colors.accent,
   },
   input: {
     backgroundColor: Colors.cardBg,

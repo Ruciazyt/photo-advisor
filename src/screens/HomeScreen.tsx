@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
-import { loadApiConfig, streamChatCompletion } from '../services/api';
+import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../services/api';
 import { StreamingDrawer } from '../components/StreamingDrawer';
 
 export function HomeScreen() {
@@ -87,19 +87,31 @@ export function HomeScreen() {
     setLoading(true);
 
     try {
-      await streamChatCompletion(
-        config.apiKey,
-        config.baseUrl,
-        config.model,
-        imageBase64,
-        (text, done) => {
-          if (done) {
-            setLoading(false);
-          } else {
+      if (config.apiType === 'minimax') {
+        await analyzeImageAnthropic(
+          imageBase64,
+          config.apiKey,
+          config.model,
+          (text) => {
             setStreamingText((prev) => prev + text);
-          }
-        },
-      );
+          },
+        );
+        setLoading(false);
+      } else {
+        await streamChatCompletion(
+          config.apiKey,
+          config.baseUrl,
+          config.model,
+          imageBase64,
+          (text, done) => {
+            if (done) {
+              setLoading(false);
+            } else {
+              setStreamingText((prev) => prev + text);
+            }
+          },
+        );
+      }
     } catch (err: unknown) {
       setLoading(false);
       const msg = err instanceof Error ? err.message : String(err);
