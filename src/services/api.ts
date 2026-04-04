@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
+export const MINIMAX_BASE_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
+
 export function extractErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   if (typeof e === 'string') return e;
@@ -63,8 +65,6 @@ export const MINIMAX_MODELS = [
   { id: 'MiniMax-M2.5-Lightning', name: 'MiniMax-M2.5-Lightning（快速）' },
   { id: 'MiniMax-M2.5-Highspeed', name: 'MiniMax-M2.5-Highspeed（极速）' },
 ];
-
-export const MINIMAX_BASE_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
 
 const STORAGE_KEYS = {
   API_TYPE: 'photo_advisor_api_type',
@@ -243,7 +243,6 @@ export async function analyzeImageAnthropic(
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
@@ -265,29 +264,35 @@ export async function analyzeImageAnthropic(
     }),
   });
 
-  if (!response.body) throw new Error('No response body');
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`API错误: ${response.status} ${text.slice(0, 100)}`);
+  }
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const json = await response.json();
+
+  // Extract content from MiniMax response
   let fullText = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value);
-    // Parse SSE lines: data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"..."}}
-    for (const line of chunk.split('\n')) {
-      if (line.startsWith('data: ')) {
-        try {
-          const json = JSON.parse(line.slice(6));
-          if (json.type === 'content_block_delta' && json.delta?.text) {
-            fullText += json.delta.text;
-            onChunk(json.delta.text);
-          }
-        } catch { /* skip malformed */ }
-      }
+  const content = json.content ?? [];
+  for (const block of content) {
+    if (block.type === 'text' && block.text) {
+      fullText += block.text;
+    }
+    // MiniMax may return thinking blocks - skip or extract
+    if (block.type === 'thinking' && block.thinking) {
+      // Optionally append thinking, or just ignore
     }
   }
+
+  // Simulate streaming: call onChunk for each sentence
+  const sentences = fullText.split(/(?<=[。！？；])/);
+  for (const sentence of sentences) {
+    if (sentence.trim()) {
+      onChunk(sentence);
+      await new Promise(resolve => setTimeout(resolve, 50)); // small delay for effect
+    }
+  }
+
   return fullText;
 }
 
