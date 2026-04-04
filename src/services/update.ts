@@ -3,6 +3,9 @@ import * as Linking from 'expo-linking';
 import Constants from 'expo-constants';
 import axios from 'axios';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PACKAGE_JSON = require('../../package.json') as { version: string };
+
 export interface ReleaseInfo {
   version: string;
   downloadUrl?: string;
@@ -11,13 +14,15 @@ export interface ReleaseInfo {
 }
 
 export const getAppVersion = (): string => {
-  // Try native version first (available after native build)
+  // Try native version first (available in standalone/production builds)
   if (Application.nativeApplicationVersion) {
     return Application.nativeApplicationVersion;
   }
-  // Fall back to app.json version (available in Expo managed workflow)
+  // Try expo constants (available in Expo managed workflow)
   const configVersion = Constants.expoConfig?.version;
   if (configVersion) return configVersion;
+  // Fall back to package.json version (works in Expo Go / development)
+  if (PACKAGE_JSON?.version) return PACKAGE_JSON.version;
   // Hard fallback
   return '1.0.0';
 };
@@ -26,7 +31,7 @@ export const checkForUpdate = async (): Promise<ReleaseInfo | null> => {
   try {
     const response = await axios.get(
       'https://api.github.com/repos/Ruciazyt/photo-advisor/releases/latest',
-      { timeout: 8000 }
+      { timeout: 10000 }
     );
     const data = response.data;
     if (data.tag_name) {
