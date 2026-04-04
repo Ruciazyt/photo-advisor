@@ -30,6 +30,50 @@ export function HomeScreen() {
     });
   }, []);
 
+  const triggerAnalysis = async (base64: string) => {
+    setDrawerVisible(true);
+    const config = await loadApiConfig();
+    if (!config) {
+      setDrawerVisible(false);
+      Alert.alert('请先在设置中配置API');
+      return;
+    }
+    setStreamingText('');
+    setLoading(true);
+
+    try {
+      if (config.apiType === 'minimax') {
+        await analyzeImageAnthropic(
+          base64,
+          config.apiKey,
+          config.model,
+          (text) => {
+            setStreamingText((prev) => prev + text);
+          },
+        );
+        setLoading(false);
+      } else {
+        await streamChatCompletion(
+          config.apiKey,
+          config.baseUrl,
+          config.model,
+          base64,
+          (text, done) => {
+            if (done) {
+              setLoading(false);
+            } else {
+              setStreamingText((prev) => prev + text);
+            }
+          },
+        );
+      }
+    } catch (err: unknown) {
+      setLoading(false);
+      const msg = err instanceof Error ? err.message : String(err);
+      setStreamingText(`错误: ${msg}`);
+    }
+  };
+
   const pickImage = async (useCamera: boolean) => {
     const permission = useCamera
       ? await ImagePicker.requestCameraPermissionsAsync()
@@ -56,9 +100,12 @@ export function HomeScreen() {
 
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
-      setImageUri(asset.uri);
-      setImageBase64(asset.base64 ?? null);
-      setStreamingText('');
+      const base64 = asset.base64 ?? '';
+      if (base64) {
+        setImageUri(asset.uri);
+        setImageBase64(base64);
+        await triggerAnalysis(base64);
+      }
     }
   };
 
