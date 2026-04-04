@@ -12,9 +12,15 @@ export interface Model {
   name: string;
 }
 
+export interface ChatMessageContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: { url: string };
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  content: string | ChatMessageContent[];
 }
 
 export async function saveApiConfig(apiKey: string, baseUrl: string, model: string): Promise<void> {
@@ -37,6 +43,7 @@ export async function loadApiConfig(): Promise<{
   ]);
   const [apiKey, baseUrl, model] = results.map(([, v]) => v ?? '');
   if (!apiKey || !baseUrl || !model) return null;
+  if (apiKey === 'null' || baseUrl === 'null' || model === 'null') return null;
   return { apiKey, baseUrl, model };
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ interface StreamingDrawerProps {
 }
 
 export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDrawerProps) {
+  const [isClosed, setIsClosed] = useState(true);
   const slideAnim = useRef(new Animated.Value(DRAWER_HEIGHT)).current;
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;
@@ -29,6 +30,7 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
 
   useEffect(() => {
     if (visible) {
+      setIsClosed(false);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -41,7 +43,7 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
         duration: 250,
         useNativeDriver: true,
         easing: Easing.out(Easing.ease),
-      }).start();
+      }).start(() => setIsClosed(true));
     }
   }, [visible]);
 
@@ -84,7 +86,7 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
     };
   }, [loading]);
 
-  if (!visible && slideAnim._value === DRAWER_HEIGHT) return null;
+  if (isClosed) return null;
 
   return (
     <View style={[styles.overlay, !visible && styles.overlayHidden]}>
