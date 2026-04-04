@@ -17,6 +17,8 @@ import {
   loadApiConfig,
   saveApiConfig,
   fetchAvailableModels,
+  testOpenAIConnection,
+  testMinimaxConnection,
   Model,
   MINIMAX_MODELS,
 } from '../services/api';
@@ -40,6 +42,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [loadingModels, setLoadingModels] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
@@ -138,6 +141,33 @@ export function SettingsScreen({ onSaved }: Props) {
       setSaving(false);
     }
   }, [apiKey, baseUrl, selectedModel, apiType, onSaved]);
+
+  const handleTestConnection = useCallback(async () => {
+    if (!apiKey.trim()) {
+      Alert.alert('请先填写 API Key');
+      return;
+    }
+    if (apiType === 'openai' && !baseUrl.trim()) {
+      Alert.alert('请先填写 Base URL');
+      return;
+    }
+    setTesting(true);
+    try {
+      let result: { ok: boolean; error?: string };
+      if (apiType === 'openai') {
+        result = await testOpenAIConnection(apiKey.trim(), baseUrl.trim());
+      } else {
+        result = await testMinimaxConnection(apiKey.trim());
+      }
+      if (result.ok) {
+        Alert.alert('✅ 连接成功', 'API 配置正常，可以正常使用');
+      } else {
+        Alert.alert('❌ 连接失败', result.error ?? '未知错误');
+      }
+    } finally {
+      setTesting(false);
+    }
+  }, [apiKey, baseUrl, apiType]);
 
   return (
     <KeyboardAvoidingView
@@ -320,6 +350,19 @@ export function SettingsScreen({ onSaved }: Props) {
           )}
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.testButton, testing && styles.testButtonDisabled]}
+          onPress={handleTestConnection}
+          disabled={testing}
+          activeOpacity={0.8}
+        >
+          {testing ? (
+            <ActivityIndicator size="small" color={Colors.accent} />
+          ) : (
+            <Text style={styles.testButtonText}>🔗 Test Connection</Text>
+          )}
+        </TouchableOpacity>
+
         <View style={styles.versionSection}>
           <View style={styles.versionRow}>
             <Text style={styles.versionLabel}>当前版本</Text>
@@ -494,6 +537,24 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 17,
     fontWeight: '700',
+  },
+  testButton: {
+    backgroundColor: Colors.cardBg,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  testButtonDisabled: {
+    opacity: 0.6,
+  },
+  testButtonText: {
+    fontSize: 14,
+    color: Colors.accent,
+    fontWeight: '600',
   },
   versionSection: {
     marginTop: 32,

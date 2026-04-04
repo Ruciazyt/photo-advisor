@@ -1,6 +1,62 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
+export function extractErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === 'string') return e;
+  const err = e as Record<string, unknown>;
+  if (err.message && typeof err.message === 'string') return err.message;
+  if (err.msg && typeof err.msg === 'string') return err.msg;
+  return String(e);
+}
+
+export const testOpenAIConnection = async (
+  apiKey: string,
+  baseUrl: string
+): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    const cleanUrl = baseUrl.replace(/\/+$/, '').replace(/\/chat\/completions\/?$/, '');
+    const modelsUrl = cleanUrl + '/models';
+    const response = await axios.get(modelsUrl, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      timeout: 10000,
+    });
+    if (response.status === 200) return { ok: true };
+    return { ok: false, error: `HTTP ${response.status}` };
+  } catch (e: unknown) {
+    return { ok: false, error: extractErrorMessage(e) };
+  }
+};
+
+export const testMinimaxConnection = async (
+  apiKey: string
+): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    const response = await fetch(MINIMAX_BASE_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'MiniMax-M2.7',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'hi' }],
+      }),
+    });
+    if (response.ok) return { ok: true };
+    const text = await response.text();
+    return { ok: false, error: `HTTP ${response.status}: ${text.slice(0, 100)}` };
+  } catch (e: unknown) {
+    const err = e as Record<string, unknown>;
+    const code = err.code as string | undefined;
+    if (code === 'ECONNABORTED') return { ok: false, error: '连接超时，请检查网络' };
+    if (code === 'ERR_NETWORK') return { ok: false, error: '网络错误，请检查网络连接' };
+    return { ok: false, error: '连接失败' };
+  }
+};
+
 export const MINIMAX_MODELS = [
   { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7（最新·高精度）' },
   { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5（均衡）' },
