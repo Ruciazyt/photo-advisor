@@ -104,8 +104,8 @@ export function CameraScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 0.8,
+      allowsEditing: false,
+      quality: 0.9,
       base64: true,
     });
 

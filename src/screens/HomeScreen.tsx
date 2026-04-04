@@ -86,27 +86,31 @@ export function HomeScreen() {
 
     const result = useCamera
       ? await ImagePicker.launchCameraAsync({
-          mediaTypes: ['images'],
-          allowsEditing: true,
-          quality: 0.8,
+          quality: 0.9,
           base64: true,
+          allowsEditing: false,
         })
       : await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ['images'],
-          allowsEditing: true,
-          quality: 0.8,
+          quality: 0.9,
           base64: true,
+          allowsEditing: false,
         });
 
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      const base64 = asset.base64 ?? '';
-      if (base64) {
-        setImageUri(asset.uri);
-        setImageBase64(base64);
-        await triggerAnalysis(base64);
-      }
+    if (result.canceled || !result.assets[0]) {
+      return;
     }
+
+    const asset = result.assets[0];
+    const base64 = asset.base64 ?? '';
+    if (!base64) {
+      Alert.alert('错误', '无法读取图片，请重试');
+      return;
+    }
+
+    setImageUri(asset.uri);
+    setImageBase64(base64);
+    await triggerAnalysis(base64);
   };
 
   const showImageOptions = () => {
