@@ -43,7 +43,7 @@ export const testMinimaxConnection = async (
       },
       body: JSON.stringify({
         model: 'MiniMax-M2.7',
-        max_tokens: 10,
+        max_tokens: 50,
         messages: [{ role: 'user', content: 'hi' }],
       }),
     });
@@ -247,7 +247,7 @@ export async function analyzeImageAnthropic(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{
         role: 'user',
         content: [
