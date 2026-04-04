@@ -103,16 +103,34 @@ export function HomeScreen() {
     }
 
     const asset = result.assets[0];
-    const base64 = asset.base64 ?? '';
-    Alert.alert('调试-选图', `图片长度:${base64.length}\nURI:${asset.uri?.slice(0,30)}`);
-    if (!base64) {
-      Alert.alert('错误', '无法读取图片，请重试');
+    const uri = asset.uri;
+    if (!uri) {
+      Alert.alert('错误', '无法读取图片URI，请重试');
       return;
     }
 
-    setImageUri(asset.uri);
-    setImageBase64(base64);
-    await triggerAnalysis(base64);
+    setImageUri(uri);
+    setLoading(true);
+    setDrawerVisible(true);
+    setStreamingText('');
+
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      });
+      Alert.alert('调试', `base64长度:${base64.length}`);
+      if (!base64 || base64.length < 100) {
+        Alert.alert('错误', `图片数据异常(长度:${base64.length})，请重试`);
+        setLoading(false);
+        return;
+      }
+      setImageBase64(base64);
+      await triggerAnalysis(base64);
+    } catch (err: unknown) {
+      setLoading(false);
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert('读取失败', msg);
+    }
   };
 
   const showImageOptions = () => {

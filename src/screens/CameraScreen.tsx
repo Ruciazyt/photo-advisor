@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import * as FileSystem from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../constants/colors';
@@ -31,14 +32,17 @@ export function CameraScreen() {
   }, []);
 
   const takePicture = useCallback(async () => {
-    if (!cameraRef.current || !cameraReady) return;
+    if (!cameraRef.current || !cameraReady) return null;
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        base64: true,
-        
+        quality: 0.9,
       });
-      return photo?.base64 ?? null;
+      if (!photo?.uri) return null;
+      // Use FileSystem to read base64 - more reliable than takePictureAsync base64 option
+      const base64 = await FileSystem.readAsStringAsync(photo.uri, {
+        encoding: 'base64',
+      });
+      return base64;
     } catch {
       return null;
     }
@@ -110,12 +114,27 @@ export function CameraScreen() {
     });
 
     if (result.canceled || !result.assets[0]) return;
-
     const asset = result.assets[0];
-    const base64 = asset.base64 ?? '';
+    const uri = asset.uri;
+    if (!uri) {
+      Alert.alert('错误', '无法读取图片');
+      return;
+    }
+
+    let base64: string;
+    try {
+      base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      });
+    } catch {
+      setLoading(false);
+      setStreamingText('错误: 无法读取图片');
+      return;
+    }
 
     const config = await loadApiConfig();
     if (!config) {
+      setLoading(false);
       Alert.alert('请先在设置中配置API');
       return;
     }
