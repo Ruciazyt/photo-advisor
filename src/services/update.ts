@@ -1,5 +1,6 @@
 import * as Application from 'expo-application';
 import * as Linking from 'expo-linking';
+import Constants from 'expo-constants';
 import axios from 'axios';
 
 export interface ReleaseInfo {
@@ -10,7 +11,15 @@ export interface ReleaseInfo {
 }
 
 export const getAppVersion = (): string => {
-  return Application.nativeApplicationVersion || '1.0.0';
+  // Try native version first (available after native build)
+  if (Application.nativeApplicationVersion) {
+    return Application.nativeApplicationVersion;
+  }
+  // Fall back to app.json version (available in Expo managed workflow)
+  const configVersion = Constants.expoConfig?.version;
+  if (configVersion) return configVersion;
+  // Hard fallback
+  return '1.0.0';
 };
 
 export const checkForUpdate = async (): Promise<ReleaseInfo | null> => {
