@@ -287,11 +287,17 @@ export async function analyzeImageAnthropic(
   }
 
   // Simulate streaming: call onChunk for each sentence
-  const sentences = fullText.split(/(?<=[。！？；])/);
-  for (const sentence of sentences) {
-    if (sentence.trim()) {
-      onChunk(sentence);
-      await new Promise(resolve => setTimeout(resolve, 50)); // small delay for effect
+  // Ensure the callback is always called
+  const trimmedText = fullText.trim();
+  if (!trimmedText) {
+    onChunk('（AI 未返回内容，请检查图片是否正确传输）');
+  } else {
+    const sentences = trimmedText.split(/(?<=[。！？；])/);
+    for (const sentence of sentences) {
+      if (sentence.trim()) {
+        onChunk(sentence);
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
     }
   }
 
