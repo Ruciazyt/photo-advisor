@@ -19,6 +19,12 @@ import {
   fetchAvailableModels,
   Model,
 } from '../services/api';
+import {
+  getAppVersion,
+  checkForUpdate,
+  openReleasePage,
+  ReleaseInfo,
+} from '../services/update';
 
 interface Props {
   onSaved?: () => void;
@@ -32,6 +38,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [loadingModels, setLoadingModels] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -41,6 +48,37 @@ export function SettingsScreen({ onSaved }: Props) {
         setSelectedModel(config.model);
       }
     });
+  }, []);
+
+  const handleCheckUpdate = useCallback(async () => {
+    setCheckingUpdate(true);
+    try {
+      const release: ReleaseInfo | null = await checkForUpdate();
+      if (!release) {
+        Alert.alert('暂无可用更新', '暂无可用更新，或无法连接到更新服务器', [
+          { text: '确定' },
+        ]);
+      } else {
+        Alert.alert(
+          `发现新版本 ${release.version}`,
+          '是否前往下载页面？',
+          [
+            { text: '取消', style: 'cancel' },
+            {
+              text: '前往下载',
+              onPress: () => {
+                if (release.htmlUrl) openReleasePage(release.htmlUrl);
+              },
+            },
+          ]
+        );
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert('检查更新失败', msg);
+    } finally {
+      setCheckingUpdate(false);
+    }
   }, []);
 
   const handleFetchModels = useCallback(async () => {
@@ -205,6 +243,28 @@ export function SettingsScreen({ onSaved }: Props) {
             <Text style={styles.saveBtnText}>保存配置</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.versionSection}>
+          <View style={styles.versionRow}>
+            <Text style={styles.versionLabel}>当前版本</Text>
+            <Text style={styles.versionValue}>{getAppVersion()}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.updateBtn, checkingUpdate && styles.updateBtnDisabled]}
+            onPress={handleCheckUpdate}
+            disabled={checkingUpdate}
+            activeOpacity={0.8}
+          >
+            {checkingUpdate ? (
+              <ActivityIndicator color={Colors.accent} size="small" />
+            ) : (
+              <>
+                <Ionicons name="refresh-outline" size={16} color={Colors.accent} />
+                <Text style={styles.updateBtnText}>检查更新</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -330,5 +390,48 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 17,
     fontWeight: '700',
+  },
+  versionSection: {
+    marginTop: 32,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: 12,
+  },
+  versionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  versionLabel: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  versionValue: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  updateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.cardBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    paddingVertical: 12,
+  },
+  updateBtnDisabled: {
+    opacity: 0.6,
+  },
+  updateBtnText: {
+    color: Colors.accent,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
