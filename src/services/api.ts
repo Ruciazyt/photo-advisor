@@ -272,7 +272,6 @@ export async function analyzeImageAnthropic(
 
   const json = await response.json();
   const content = json.content ?? [];
-  console.log('[analyzeImageAnthropic] response keys:', Object.keys(json), 'content blocks:', content.length);
 
   // Extract text from response blocks
   let fullText = '';
@@ -286,8 +285,7 @@ export async function analyzeImageAnthropic(
 
   // If no text blocks at all, add error message
   if (hasThinkingOnly || !fullText.trim()) {
-    console.log('[analyzeImageAnthropic] No text in response, content:', JSON.stringify(content).slice(0, 300));
-    onChunk('（AI未返回文字内容，请检查图片数据是否正确传输）');
+      onChunk('（AI未返回文字内容，请检查图片数据是否正确传输）');
   } else {
     console.log('[analyzeImageAnthropic] AI text:', fullText.slice(0, 100));
     // Simulate streaming by sentences

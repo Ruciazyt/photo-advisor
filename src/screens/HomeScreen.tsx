@@ -118,8 +118,7 @@ export function HomeScreen() {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: 'base64',
       });
-      Alert.alert('调试', `base64长度:${base64.length}`);
-      if (!base64 || base64.length < 100) {
+if (!base64 || base64.length < 100) {
         Alert.alert('错误', `图片数据异常(长度:${base64.length})，请重试`);
         setLoading(false);
         return;
