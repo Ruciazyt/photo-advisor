@@ -36,7 +36,7 @@ export function CameraScreen() {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         base64: true,
-        skipProcessing: true,
+        
       });
       return photo?.base64 ?? null;
     } catch {

@@ -87,13 +87,13 @@ export function HomeScreen() {
 
     const result = useCamera
       ? await ImagePicker.launchCameraAsync({
-          quality: 0.9,
+          
           base64: true,
           allowsEditing: false,
         })
       : await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ['images'],
-          quality: 0.9,
+          
           base64: true,
           allowsEditing: false,
         });

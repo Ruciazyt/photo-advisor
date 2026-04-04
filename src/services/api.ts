@@ -247,7 +247,8 @@ export async function analyzeImageAnthropic(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 4096,
+      max_tokens: 8192,
+      stream: false,
       messages: [{
         role: 'user',
         content: [
