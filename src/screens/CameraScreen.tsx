@@ -63,6 +63,7 @@ export function CameraScreen() {
     }
 
     try {
+      Alert.alert('相机调试', `API类型:${config.apiType}\n模型:${config.model}\n图片长度:${base64.length}`);
       if (config.apiType === 'minimax') {
         await analyzeImageAnthropic(
           base64,
@@ -125,6 +126,7 @@ export function CameraScreen() {
     setLoading(true);
 
     try {
+      Alert.alert('相机调试', `API类型:${config.apiType}\n模型:${config.model}\n图片长度:${base64.length}`);
       if (config.apiType === 'minimax') {
         await analyzeImageAnthropic(
           base64,

@@ -270,7 +270,7 @@ export async function analyzeImageAnthropic(
   }
 
   const json = await response.json();
-  console.log('[analyzeImageAnthropic] status ok, content length:', json.content?.length, 'full response keys:', Object.keys(json));
+  console.log('[analyzeImageAnthropic] content length:', json.content?.length);
 
   // Extract content from MiniMax response
   let fullText = '';

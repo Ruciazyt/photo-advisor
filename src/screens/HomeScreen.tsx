@@ -42,7 +42,7 @@ export function HomeScreen() {
     setLoading(true);
 
     try {
-      console.log('[triggerAnalysis] minimax base64 length:', base64.length, 'model:', config.model, 'apiType:', config.apiType);
+      Alert.alert('调试', `API类型:${config.apiType}\n模型:${config.model}\n图片数据长度:${base64.length}`);
       if (config.apiType === 'minimax') {
         await analyzeImageAnthropic(
           base64,
