@@ -35,13 +35,16 @@ export function CameraScreen() {
     if (!cameraRef.current || !cameraReady) return null;
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.9,
+        quality: 0.8,
       });
       if (!photo?.uri) return null;
+      // Wait for file to flush, then read
+      await new Promise(resolve => setTimeout(resolve, 200));
       // Use FileSystem to read base64 - more reliable than takePictureAsync base64 option
       const base64 = await FileSystem.readAsStringAsync(photo.uri, {
         encoding: 'base64',
       });
+      if (!base64 || base64.length < 1000) return null;
       return base64;
     } catch {
       return null;
@@ -123,12 +126,20 @@ export function CameraScreen() {
 
     let base64: string;
     try {
+      // Small delay to ensure file is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
       base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: 'base64',
       });
     } catch {
       setLoading(false);
       setStreamingText('错误: 无法读取图片');
+      return;
+    }
+
+    if (!base64 || base64.length < 1000) {
+      setLoading(false);
+      setStreamingText('错误: 图片数据异常');
       return;
     }
 
