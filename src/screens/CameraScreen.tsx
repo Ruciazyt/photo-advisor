@@ -23,6 +23,7 @@ export function CameraScreen() {
   const [streamingText, setStreamingText] = useState('');
   const [loading, setLoading] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(false);
+  const [captureFlash, setCaptureFlash] = useState(false);
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -41,6 +42,28 @@ export function CameraScreen() {
       return photo?.base64 ?? null;
     } catch {
       return null;
+    }
+  }, [cameraReady]);
+
+  const handleCapture = useCallback(async () => {
+    if (!cameraRef.current || !cameraReady) return;
+
+    // Flash feedback
+    setCaptureFlash(true);
+    setTimeout(() => setCaptureFlash(false), 150);
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+        skipProcessing: true,
+      });
+
+      if (photo?.uri) {
+        // Optionally save to gallery or show success
+        Alert.alert('已拍摄', '照片已保存');
+      }
+    } catch {
+      Alert.alert('拍摄失败', '请重试');
     }
   }, [cameraReady]);
 
@@ -162,13 +185,18 @@ export function CameraScreen() {
         facing={facing}
         onCameraReady={() => setCameraReady(true)}
       >
+        {/* Flash overlay */}
+        {captureFlash && <View style={styles.flashOverlay} />}
+
         {!apiConfigured && (
           <View style={styles.configWarning}>
             <Text style={styles.configWarningText}>⚠️ 请先配置API</Text>
           </View>
         )}
 
+        {/* Bottom toolbar: Gallery | Capture | Ask AI */}
         <View style={styles.toolbar}>
+          {/* Left: Gallery */}
           <TouchableOpacity
             style={styles.toolBtn}
             onPress={handleGallery}
@@ -177,21 +205,22 @@ export function CameraScreen() {
             <Ionicons name="images-outline" size={28} color="#fff" />
           </TouchableOpacity>
 
+          {/* Center: Capture */}
           <TouchableOpacity
             style={styles.captureBtn}
+            onPress={handleCapture}
+            activeOpacity={0.7}
+          >
+            <View style={styles.captureBtnInner} />
+          </TouchableOpacity>
+
+          {/* Right: Ask AI */}
+          <TouchableOpacity
+            style={styles.toolBtn}
             onPress={handleAskAI}
             activeOpacity={0.7}
           >
-            <Ionicons name="bulb-outline" size={22} color={Colors.primary} />
-            <Text style={styles.askAIText}>问AI</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.toolBtn}
-            onPress={() => {}}
-            activeOpacity={0.7}
-          >
-            <View style={{ width: 28 }} />
+            <Ionicons name="chatbubbles-outline" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
       </CameraView>
@@ -217,6 +246,11 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     justifyContent: 'space-between',
+  },
+  flashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#fff',
+    opacity: 0.6,
   },
   configWarning: {
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -245,18 +279,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   captureBtn: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: Colors.accent,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
-  askAIText: {
-    color: Colors.primary,
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
+  captureBtnInner: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#fff',
   },
   permissionTitle: {
     color: Colors.accent,
