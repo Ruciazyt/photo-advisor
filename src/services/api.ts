@@ -238,7 +238,15 @@ export async function analyzeImageAnthropic(
   model: string,
   onChunk: AnthropicStreamCallback,
 ): Promise<string> {
-  console.log('[analyzeImageAnthropic] base64 length:', imageBase64.length, 'model:', model);
+  // Step 1: Show base64 info
+  const step1 = `\n[步骤1] 图片数据: base64长度=${imageBase64.length}`;
+  console.log('[analyzeImageAnthropic]', step1);
+  onChunk(step1);
+
+  // Step 2: Send request
+  const step2 = `\n[步骤2] 发送请求到 ${MINIMAX_BASE_URL} 模型=${model}`;
+  console.log('[analyzeImageAnthropic]', step2);
+  onChunk(step2);
 
   const requestBody = {
     model,
@@ -269,55 +277,62 @@ export async function analyzeImageAnthropic(
     body: JSON.stringify(requestBody),
   });
 
-  console.log('[analyzeImageAnthropic] response status:', response.status, 'ok:', response.ok);
+  const step3 = `\n[步骤3] 收到响应: HTTP ${response.status} ok=${response.ok}`;
+  console.log('[analyzeImageAnthropic]', step3);
+  onChunk(step3);
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    console.log('[analyzeImageAnthropic] error body:', text.slice(0, 300));
-    const errMsg = `API错误: ${response.status} ${text.slice(0, 200)}`;
+    const errMsg = `\n[错误] HTTP失败: ${response.status} ${text.slice(0, 300)}`;
+    console.log('[analyzeImageAnthropic]', errMsg);
     onChunk(errMsg);
     return errMsg;
   }
 
   const json = await response.json();
-  console.log('[analyzeImageAnthropic] response json:', JSON.stringify(json).slice(0, 500));
-  console.log('[analyzeImageAnthropic] error field:', json.error);
-  console.log('[analyzeImageAnthropic] type field:', json.type);
+
+  const step4 = `\n[步骤4] 解析响应: id=${json.id ?? 'none'} type=${json.type ?? 'none'} stop_reason=${json.stop_reason ?? 'none'}`;
+  console.log('[analyzeImageAnthropic]', step4);
+  onChunk(step4);
 
   // Check for API-level error even when HTTP status is 200
   if (json.error || json.type === 'error') {
-    const errMsg = `API错误: ${json.error?.type ?? 'unknown'} - ${json.error?.message ?? JSON.stringify(json.error)}`;
-    console.log('[analyzeImageAnthropic] API error detected:', errMsg);
+    const errMsg = `\n[错误] API错误: ${json.error?.type ?? 'unknown'} - ${json.error?.message ?? JSON.stringify(json.error)}`;
+    console.log('[analyzeImageAnthropic]', errMsg);
     onChunk(errMsg);
     return errMsg;
   }
 
   const content = json.content ?? [];
+  const step5 = `\n[步骤5] content数组: ${JSON.stringify(content).slice(0, 300)}`;
+  console.log('[analyzeImageAnthropic]', step5);
+  onChunk(step5);
 
   // Extract text from response blocks
   let fullText = '';
-  let hasThinkingOnly = true;
   for (const block of content) {
     if (block.type === 'text' && block.text) {
       fullText += block.text;
-      hasThinkingOnly = false;
     }
   }
 
-  // If no text blocks at all, show the raw response for debugging
-  if (hasThinkingOnly || !fullText.trim()) {
-    const debugInfo = `调试信息: content=${JSON.stringify(content).slice(0, 200)} jsonId=${json.id ?? 'none'} stop=${json.stop_reason ?? 'none'}`;
-    console.log('[analyzeImageAnthropic] no text blocks, debug:', debugInfo);
-    onChunk(`（AI未返回文字内容）${debugInfo}`);
-  } else {
-    console.log('[analyzeImageAnthropic] AI text:', fullText.slice(0, 100));
-    // Simulate streaming by sentences
-    const sentences = fullText.split(/(?<=[。！？；])/);
-    for (const sentence of sentences) {
-      if (sentence.trim()) {
-        onChunk(sentence);
-        await new Promise(resolve => setTimeout(resolve, 30));
-      }
+  if (!fullText.trim()) {
+    const debug = `\n[调试] 没有文本内容，完整响应: ${JSON.stringify(json).slice(0, 500)}`;
+    console.log('[analyzeImageAnthropic]', debug);
+    onChunk(debug);
+    return debug;
+  }
+
+  const step6 = `\n[步骤6] AI回复长度=${fullText.length}字符`;
+  console.log('[analyzeImageAnthropic]', step6);
+  onChunk(step6);
+
+  // Simulate streaming by sentences
+  const sentences = fullText.split(/(?<=[。！？；])/);
+  for (const sentence of sentences) {
+    if (sentence.trim()) {
+      onChunk(sentence);
+      await new Promise(resolve => setTimeout(resolve, 30));
     }
   }
 
