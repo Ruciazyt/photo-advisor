@@ -267,7 +267,9 @@ export async function analyzeImageAnthropic(
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(`API错误: ${response.status} ${text.slice(0, 100)}`);
+    const errMsg = `API错误: ${response.status} ${text.slice(0, 200)}`;
+    onChunk(errMsg);
+    return errMsg;
   }
 
   const json = await response.json();
