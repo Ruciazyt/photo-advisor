@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-export const MINIMAX_BASE_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
+// MiniMax Vision (VL-01) 专用端点
+export const MINIMAX_VLM_URL = 'https://api.minimaxi.com/v1/coding_plan/vlm';
+// MiniMax Anthropic API 端点（纯文本，无图片支持）
+const MINIMAX_ANTHROPIC_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
 
 export function extractErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -34,7 +37,7 @@ export const testMinimaxConnection = async (
   apiKey: string
 ): Promise<{ ok: boolean; error?: string }> => {
   try {
-    const response = await fetch(MINIMAX_BASE_URL, {
+    const response = await fetch(MINIMAX_ANTHROPIC_URL, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -79,9 +82,14 @@ export interface Model {
 }
 
 export interface ChatMessageContent {
-  type: 'text' | 'image_url';
+  type: 'text' | 'image' | 'image_url';
   text?: string;
   image_url?: { url: string };
+  source?: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
 }
 
 export interface ChatMessage {
@@ -244,36 +252,22 @@ export async function analyzeImageAnthropic(
   onChunk(step1);
 
   // Step 2: Send request
-  const step2 = `\n[步骤2] 发送请求到 ${MINIMAX_BASE_URL} 模型=${model}`;
+  const step2 = `\n[步骤2] 发送请求到 ${MINIMAX_VLM_URL}`;
   console.log('[analyzeImageAnthropic]', step2);
   onChunk(step2);
 
-  // Use image_url format (data URI) — more widely supported by vision APIs
+  // MiniMax VL-01 专用端点，使用 { prompt, image_url } 格式
   const requestBody = {
-    model,
-    max_tokens: 8192,
-    stream: false,
-    messages: [{
-      role: 'user',
-      content: [
-        {
-          type: 'image_url',
-          image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
-        },
-        {
-          type: 'text',
-          text: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
-        },
-      ],
-    }],
+    prompt: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
+    image_url: `data:image/jpeg;base64,${imageBase64}`,
   };
 
-  const response = await fetch(MINIMAX_BASE_URL, {
+  const response = await fetch(MINIMAX_VLM_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
+      'MM-API-Source': 'photo-advisor',
     },
     body: JSON.stringify(requestBody),
   });
@@ -292,33 +286,20 @@ export async function analyzeImageAnthropic(
 
   const json = await response.json();
 
-  const step4 = `\n[步骤4] 解析响应: id=${json.id ?? 'none'} type=${json.type ?? 'none'} stop_reason=${json.stop_reason ?? 'none'}`;
+  const step4 = `\n[步骤4] 解析响应: content字段=${typeof json.content} base_resp=${JSON.stringify(json.base_resp ?? json.base_resp)?.slice(0,100)}`;
   console.log('[analyzeImageAnthropic]', step4);
   onChunk(step4);
 
-  // Check for API-level error even when HTTP status is 200
-  if (json.error || json.type === 'error') {
-    const errMsg = `\n[错误] API错误: ${json.error?.type ?? 'unknown'} - ${json.error?.message ?? JSON.stringify(json.error)}`;
+  // Check for API-level error
+  const baseResp = json.base_resp ?? {};
+  if (baseResp.status_code !== 0) {
+    const errMsg = `\n[错误] API错误(${baseResp.status_code}): ${baseResp.status_msg ?? JSON.stringify(json).slice(0, 200)}`;
     console.log('[analyzeImageAnthropic]', errMsg);
     onChunk(errMsg);
     return errMsg;
   }
 
-  const content = json.content ?? [];
-  // Filter out thinking/internal blocks before displaying in UI
-  const visibleContent = (content as Array<{ type: string }>).filter((b) => b.type !== 'thinking');
-  const step5 = `\n[步骤5] content数组: ${JSON.stringify(visibleContent).slice(0, 300)}`;
-  console.log('[analyzeImageAnthropic]', step5);
-  onChunk(step5);
-
-  // Extract text from response blocks (skip thinking/internal blocks)
-  let fullText = '';
-  for (const block of content as Array<{ type: string; text?: string }>) {
-    if (block.type === 'text' && block.text) {
-      fullText += block.text;
-    }
-    // Skip thinking blocks — they are internal reasoning, not for users
-  }
+  const fullText = (json.content as string) ?? '';
 
   if (!fullText.trim()) {
     const debug = `\n[调试] 没有文本内容，完整响应: ${JSON.stringify(json).slice(0, 500)}`;
@@ -327,9 +308,9 @@ export async function analyzeImageAnthropic(
     return debug;
   }
 
-  const step6 = `\n[步骤6] AI回复长度=${fullText.length}字符`;
-  console.log('[analyzeImageAnthropic]', step6);
-  onChunk(step6);
+  const step5 = `\n[步骤5] AI回复长度=${fullText.length}字符`;
+  console.log('[analyzeImageAnthropic]', step5);
+  onChunk(step5);
 
   // Simulate streaming by sentences
   const sentences = fullText.split(/(?<=[。！？；])/);
