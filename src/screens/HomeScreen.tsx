@@ -88,14 +88,12 @@ export function HomeScreen() {
 
     const result = useCamera
       ? await ImagePicker.launchCameraAsync({
-          
-          base64: true,
+          quality: 0.8,
           allowsEditing: false,
         })
       : await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ['images'],
-          
-          base64: true,
+          quality: 0.8,
           allowsEditing: false,
         });
 
@@ -116,10 +114,16 @@ export function HomeScreen() {
     setStreamingText('');
 
     try {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
+      // Resize to max 1024px (maintaining aspect ratio) before base64 encoding
+      const resized = await manipulateAsync(
+        uri,
+        [{ resize: { width: 1024 } }],
+        { compress: 0.8, format: SaveFormat.JPEG }
+      );
+      const base64 = await FileSystem.readAsStringAsync(resized.uri, {
         encoding: 'base64',
       });
-if (!base64 || base64.length < 100) {
+      if (!base64 || base64.length < 100) {
         Alert.alert('错误', `图片数据异常(长度:${base64.length})，请重试`);
         setLoading(false);
         return;

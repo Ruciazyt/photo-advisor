@@ -39,10 +39,15 @@ export function CameraScreen() {
         quality: 0.8,
       });
       if (!photo?.uri) return null;
-      // Wait for file to flush, then read
+      // Wait for file to flush
       await new Promise(resolve => setTimeout(resolve, 200));
-      // Use FileSystem to read base64 - more reliable than takePictureAsync base64 option
-      const base64 = await FileSystem.readAsStringAsync(photo.uri, {
+      // Resize to 1024px before base64 encoding to avoid oversized payloads
+      const resized = await manipulateAsync(
+        photo.uri,
+        [{ resize: { width: 1024 } }],
+        { compress: 0.8, format: SaveFormat.JPEG }
+      );
+      const base64 = await FileSystem.readAsStringAsync(resized.uri, {
         encoding: 'base64',
       });
       if (!base64 || base64.length < 1000) return null;
@@ -113,8 +118,7 @@ export function CameraScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
-      quality: 0.9,
-      base64: true,
+      quality: 0.8,
     });
 
     if (result.canceled || !result.assets[0]) return;
@@ -127,9 +131,14 @@ export function CameraScreen() {
 
     let base64: string;
     try {
-      // Small delay to ensure file is ready
+      // Resize to 1024px before base64 encoding to avoid oversized payloads
+      const resized = await manipulateAsync(
+        uri,
+        [{ resize: { width: 1024 } }],
+        { compress: 0.8, format: SaveFormat.JPEG }
+      );
       await new Promise(resolve => setTimeout(resolve, 100));
-      base64 = await FileSystem.readAsStringAsync(uri, {
+      base64 = await FileSystem.readAsStringAsync(resized.uri, {
         encoding: 'base64',
       });
     } catch {
