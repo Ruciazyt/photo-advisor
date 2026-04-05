@@ -304,16 +304,19 @@ export async function analyzeImageAnthropic(
   }
 
   const content = json.content ?? [];
-  const step5 = `\n[步骤5] content数组: ${JSON.stringify(content).slice(0, 300)}`;
+  // Filter out thinking/internal blocks before displaying in UI
+  const visibleContent = (content as Array<{ type: string }>).filter((b) => b.type !== 'thinking');
+  const step5 = `\n[步骤5] content数组: ${JSON.stringify(visibleContent).slice(0, 300)}`;
   console.log('[analyzeImageAnthropic]', step5);
   onChunk(step5);
 
-  // Extract text from response blocks
+  // Extract text from response blocks (skip thinking/internal blocks)
   let fullText = '';
-  for (const block of content) {
+  for (const block of content as Array<{ type: string; text?: string }>) {
     if (block.type === 'text' && block.text) {
       fullText += block.text;
     }
+    // Skip thinking blocks — they are internal reasoning, not for users
   }
 
   if (!fullText.trim()) {
