@@ -114,19 +114,35 @@ export function HomeScreen() {
     setStreamingText('');
 
     try {
-      // Resize to max 1024px (maintaining aspect ratio) before base64 encoding
-      const resized = await manipulateAsync(
-        uri,
-        [{ resize: { width: 1024 } }],
-        { compress: 0.8, format: SaveFormat.JPEG }
-      );
-      console.log('[pickImage] resized uri:', resized.uri, 'width:', resized.width, 'height:', resized.height);
-      const base64 = await FileSystem.readAsStringAsync(resized.uri, {
-        encoding: 'base64',
-      });
-      console.log('[pickImage] base64 length:', base64.length);
+      let base64 = '';
+      
+      // Try resize first; if it fails or produces tiny output, fall back to original
+      try {
+        const resized = await manipulateAsync(
+          uri,
+          [{ resize: { width: 1024 } }],
+          { compress: 0.8, format: SaveFormat.JPEG }
+        );
+        console.log('[pickImage] resized uri:', resized.uri, resized.width, 'x', resized.height);
+        base64 = await FileSystem.readAsStringAsync(resized.uri, {
+          encoding: 'base64',
+        });
+        console.log('[pickImage] resized base64 length:', base64.length);
+      } catch (resizeErr) {
+        console.log('[pickImage] resize failed, using original, err:', resizeErr);
+      }
+      
+      // Fallback: if resize failed or base64 is too small, read original
+      if (!base64 || base64.length < 1000) {
+        console.log('[pickImage] reading from original uri, current length:', base64?.length);
+        base64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: 'base64',
+        });
+        console.log('[pickImage] original base64 length:', base64.length);
+      }
+      
       if (!base64 || base64.length < 100) {
-        Alert.alert('错误', `图片数据异常(长度:${base64.length})，请重试`);
+        Alert.alert('错误', `图片数据异常(长度:${base64?.length ?? 0})，请重试`);
         setLoading(false);
         return;
       }

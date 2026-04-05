@@ -39,18 +39,28 @@ export function CameraScreen() {
         quality: 0.8,
       });
       if (!photo?.uri) return null;
-      // Wait for file to flush
       await new Promise(resolve => setTimeout(resolve, 200));
-      // Resize to 1024px before base64 encoding to avoid oversized payloads
-      const resized = await manipulateAsync(
-        photo.uri,
-        [{ resize: { width: 1024 } }],
-        { compress: 0.8, format: SaveFormat.JPEG }
-      );
-      console.log('[takePicture] resized:', resized.uri, resized.width, 'x', resized.height);
-      const base64 = await FileSystem.readAsStringAsync(resized.uri, {
-        encoding: 'base64',
-      });
+      
+      let base64 = '';
+      try {
+        const resized = await manipulateAsync(
+          photo.uri,
+          [{ resize: { width: 1024 } }],
+          { compress: 0.8, format: SaveFormat.JPEG }
+        );
+        console.log('[takePicture] resized:', resized.uri, resized.width, 'x', resized.height);
+        base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
+        console.log('[takePicture] resized base64 length:', base64.length);
+      } catch (e) {
+        console.log('[takePicture] resize failed, using original:', e);
+      }
+      
+      if (!base64 || base64.length < 1000) {
+        console.log('[takePicture] reading from original photo.uri');
+        base64 = await FileSystem.readAsStringAsync(photo.uri, { encoding: 'base64' });
+        console.log('[takePicture] original base64 length:', base64.length);
+      }
+      
       if (!base64 || base64.length < 1000) return null;
       return base64;
     } catch {
@@ -130,19 +140,27 @@ export function CameraScreen() {
       return;
     }
 
-    let base64: string;
+    let base64 = '';
     try {
-      // Resize to 1024px before base64 encoding to avoid oversized payloads
-      const resized = await manipulateAsync(
-        uri,
-        [{ resize: { width: 1024 } }],
-        { compress: 0.8, format: SaveFormat.JPEG }
-      );
-      console.log('[handleGallery] resized:', resized.uri, resized.width, 'x', resized.height);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      base64 = await FileSystem.readAsStringAsync(resized.uri, {
-        encoding: 'base64',
-      });
+      try {
+        const resized = await manipulateAsync(
+          uri,
+          [{ resize: { width: 1024 } }],
+          { compress: 0.8, format: SaveFormat.JPEG }
+        );
+        console.log('[handleGallery] resized:', resized.uri, resized.width, 'x', resized.height);
+        base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
+        console.log('[handleGallery] resized base64 length:', base64.length);
+      } catch (e) {
+        console.log('[handleGallery] resize failed:', e);
+      }
+      
+      if (!base64 || base64.length < 1000) {
+        console.log('[handleGallery] reading from original uri');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+        console.log('[handleGallery] original base64 length:', base64.length);
+      }
     } catch {
       setLoading(false);
       setStreamingText('错误: 无法读取图片');
