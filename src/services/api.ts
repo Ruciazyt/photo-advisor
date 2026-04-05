@@ -283,6 +283,15 @@ export async function analyzeImageAnthropic(
   console.log('[analyzeImageAnthropic] response json:', JSON.stringify(json).slice(0, 500));
   console.log('[analyzeImageAnthropic] error field:', json.error);
   console.log('[analyzeImageAnthropic] type field:', json.type);
+
+  // Check for API-level error even when HTTP status is 200
+  if (json.error || json.type === 'error') {
+    const errMsg = `API错误: ${json.error?.type ?? 'unknown'} - ${json.error?.message ?? JSON.stringify(json.error)}`;
+    console.log('[analyzeImageAnthropic] API error detected:', errMsg);
+    onChunk(errMsg);
+    return errMsg;
+  }
+
   const content = json.content ?? [];
 
   // Extract text from response blocks
@@ -295,9 +304,11 @@ export async function analyzeImageAnthropic(
     }
   }
 
-  // If no text blocks at all, add error message
+  // If no text blocks at all, show the raw response for debugging
   if (hasThinkingOnly || !fullText.trim()) {
-      onChunk('（AI未返回文字内容，请检查图片数据是否正确传输）');
+    const debugInfo = `调试信息: content=${JSON.stringify(content).slice(0, 200)} jsonId=${json.id ?? 'none'} stop=${json.stop_reason ?? 'none'}`;
+    console.log('[analyzeImageAnthropic] no text blocks, debug:', debugInfo);
+    onChunk(`（AI未返回文字内容）${debugInfo}`);
   } else {
     console.log('[analyzeImageAnthropic] AI text:', fullText.slice(0, 100));
     // Simulate streaming by sentences

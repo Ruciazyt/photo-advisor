@@ -120,9 +120,11 @@ export function HomeScreen() {
         [{ resize: { width: 1024 } }],
         { compress: 0.8, format: SaveFormat.JPEG }
       );
+      console.log('[pickImage] resized uri:', resized.uri, 'width:', resized.width, 'height:', resized.height);
       const base64 = await FileSystem.readAsStringAsync(resized.uri, {
         encoding: 'base64',
       });
+      console.log('[pickImage] base64 length:', base64.length);
       if (!base64 || base64.length < 100) {
         Alert.alert('错误', `图片数据异常(长度:${base64.length})，请重试`);
         setLoading(false);

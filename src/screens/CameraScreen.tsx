@@ -47,6 +47,7 @@ export function CameraScreen() {
         [{ resize: { width: 1024 } }],
         { compress: 0.8, format: SaveFormat.JPEG }
       );
+      console.log('[takePicture] resized:', resized.uri, resized.width, 'x', resized.height);
       const base64 = await FileSystem.readAsStringAsync(resized.uri, {
         encoding: 'base64',
       });
@@ -137,6 +138,7 @@ export function CameraScreen() {
         [{ resize: { width: 1024 } }],
         { compress: 0.8, format: SaveFormat.JPEG }
       );
+      console.log('[handleGallery] resized:', resized.uri, resized.width, 'x', resized.height);
       await new Promise(resolve => setTimeout(resolve, 100));
       base64 = await FileSystem.readAsStringAsync(resized.uri, {
         encoding: 'base64',
