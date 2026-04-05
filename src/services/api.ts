@@ -238,6 +238,27 @@ export async function analyzeImageAnthropic(
   model: string,
   onChunk: AnthropicStreamCallback,
 ): Promise<string> {
+  console.log('[analyzeImageAnthropic] base64 length:', imageBase64.length, 'model:', model);
+
+  const requestBody = {
+    model,
+    max_tokens: 8192,
+    stream: false,
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 },
+        },
+        {
+          type: 'text',
+          text: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
+        },
+      ],
+    }],
+  };
+
   const response = await fetch(MINIMAX_BASE_URL, {
     method: 'POST',
     headers: {
@@ -245,34 +266,23 @@ export async function analyzeImageAnthropic(
       'Content-Type': 'application/json',
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: 8192,
-      stream: false,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 },
-          },
-          {
-            type: 'text',
-            text: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
-          },
-        ],
-      }],
-    }),
+    body: JSON.stringify(requestBody),
   });
+
+  console.log('[analyzeImageAnthropic] response status:', response.status, 'ok:', response.ok);
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
+    console.log('[analyzeImageAnthropic] error body:', text.slice(0, 300));
     const errMsg = `API错误: ${response.status} ${text.slice(0, 200)}`;
     onChunk(errMsg);
     return errMsg;
   }
 
   const json = await response.json();
+  console.log('[analyzeImageAnthropic] response json:', JSON.stringify(json).slice(0, 500));
+  console.log('[analyzeImageAnthropic] error field:', json.error);
+  console.log('[analyzeImageAnthropic] type field:', json.type);
   const content = json.content ?? [];
 
   // Extract text from response blocks
