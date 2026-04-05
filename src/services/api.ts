@@ -248,6 +248,7 @@ export async function analyzeImageAnthropic(
   console.log('[analyzeImageAnthropic]', step2);
   onChunk(step2);
 
+  // Use image_url format (data URI) — more widely supported by vision APIs
   const requestBody = {
     model,
     max_tokens: 8192,
@@ -256,8 +257,8 @@ export async function analyzeImageAnthropic(
       role: 'user',
       content: [
         {
-          type: 'image',
-          source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 },
+          type: 'image_url',
+          image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
         },
         {
           type: 'text',
