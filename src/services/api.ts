@@ -243,20 +243,10 @@ export interface AnthropicStreamCallback {
 export async function analyzeImageAnthropic(
   imageBase64: string,
   apiKey: string,
-  model: string,
+  _model: string,
   onChunk: AnthropicStreamCallback,
 ): Promise<string> {
-  // Step 1: Show base64 info
-  const step1 = `\n[步骤1] 图片数据: base64长度=${imageBase64.length}`;
-  console.log('[analyzeImageAnthropic]', step1);
-  onChunk(step1);
-
-  // Step 2: Send request
-  const step2 = `\n[步骤2] 发送请求到 ${MINIMAX_VLM_URL}`;
-  console.log('[analyzeImageAnthropic]', step2);
-  onChunk(step2);
-
-  // MiniMax VL-01 专用端点，使用 { prompt, image_url } 格式
+  // MiniMax VL-01 专用端点
   const requestBody = {
     prompt: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
     image_url: `data:image/jpeg;base64,${imageBase64}`,
@@ -272,45 +262,23 @@ export async function analyzeImageAnthropic(
     body: JSON.stringify(requestBody),
   });
 
-  const step3 = `\n[步骤3] 收到响应: HTTP ${response.status} ok=${response.ok}`;
-  console.log('[analyzeImageAnthropic]', step3);
-  onChunk(step3);
-
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    const errMsg = `\n[错误] HTTP失败: ${response.status} ${text.slice(0, 300)}`;
-    console.log('[analyzeImageAnthropic]', errMsg);
-    onChunk(errMsg);
-    return errMsg;
+    throw new Error(`HTTP ${response.status}: ${text.slice(0, 300)}`);
   }
 
   const json = await response.json();
 
-  const step4 = `\n[步骤4] 解析响应: content字段=${typeof json.content} base_resp=${JSON.stringify(json.base_resp ?? json.base_resp)?.slice(0,100)}`;
-  console.log('[analyzeImageAnthropic]', step4);
-  onChunk(step4);
-
   // Check for API-level error
   const baseResp = json.base_resp ?? {};
   if (baseResp.status_code !== 0) {
-    const errMsg = `\n[错误] API错误(${baseResp.status_code}): ${baseResp.status_msg ?? JSON.stringify(json).slice(0, 200)}`;
-    console.log('[analyzeImageAnthropic]', errMsg);
-    onChunk(errMsg);
-    return errMsg;
+    throw new Error(`API错误(${baseResp.status_code}): ${baseResp.status_msg ?? '未知错误'}`);
   }
 
   const fullText = (json.content as string) ?? '';
-
   if (!fullText.trim()) {
-    const debug = `\n[调试] 没有文本内容，完整响应: ${JSON.stringify(json).slice(0, 500)}`;
-    console.log('[analyzeImageAnthropic]', debug);
-    onChunk(debug);
-    return debug;
+    throw new Error('未收到有效回复');
   }
-
-  const step5 = `\n[步骤5] AI回复长度=${fullText.length}字符`;
-  console.log('[analyzeImageAnthropic]', step5);
-  onChunk(step5);
 
   // Simulate streaming by sentences
   const sentences = fullText.split(/(?<=[。！？；])/);
