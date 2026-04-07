@@ -163,15 +163,17 @@ export async function streamChatCompletion(
   model: string,
   imageBase64: string,
   onChunk: StreamCallback,
+  extraPrompt?: string,
 ): Promise<void> {
   const url = `${baseUrl}/chat/completions`;
+  const baseText = '你是一位专业的摄影顾问。请分析这张照片，从构图、光线、色彩、主题表达等角度给出详细的评价和改进建议。用中文回答。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
   const messages: ChatMessage[] = [
     {
       role: 'user',
       content: [
         {
           type: 'text',
-          text: '你是一位专业的摄影顾问。请分析这张照片，从构图、光线、色彩、主题表达等角度给出详细的评价和改进建议。用中文回答。',
+          text: baseText,
         },
         {
           type: 'image_url',
@@ -245,10 +247,12 @@ export async function analyzeImageAnthropic(
   apiKey: string,
   _model: string,
   onChunk: AnthropicStreamCallback,
+  extraPrompt?: string,
 ): Promise<string> {
   // MiniMax VL-01 专用端点
+  const basePrompt = '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
   const requestBody = {
-    prompt: '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。',
+    prompt: basePrompt,
     image_url: `data:image/jpeg;base64,${imageBase64}`,
   };
 

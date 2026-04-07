@@ -16,6 +16,8 @@ import { Colors } from '../constants/colors';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic, MINIMAX_MODELS } from '../services/api';
 import { StreamingDrawer } from '../components/StreamingDrawer';
 
+type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
+
 export function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
@@ -25,6 +27,7 @@ export function CameraScreen() {
   const [streamingText, setStreamingText] = useState('');
   const [loading, setLoading] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<CameraMode>('photo');
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -86,6 +89,8 @@ export function CameraScreen() {
       return;
     }
 
+    const gridPromptNote = '画面已叠加三分法网格线（横竖各2条等分线）。请根据网格线区域提供构图位置建议。';
+
     try {
       if (config.apiType === 'minimax') {
         await analyzeImageAnthropic(
@@ -95,6 +100,7 @@ export function CameraScreen() {
           (text) => {
             setStreamingText((prev) => prev + text);
           },
+          gridPromptNote,
         );
         setLoading(false);
       } else {
@@ -110,6 +116,7 @@ export function CameraScreen() {
               setStreamingText((prev) => prev + text);
             }
           },
+          gridPromptNote,
         );
       }
     } catch (err: unknown) {
@@ -252,34 +259,70 @@ export function CameraScreen() {
           </View>
         )}
 
-        {/* Bottom toolbar: Gallery | Ask AI | Switch Camera */}
-        <View style={styles.toolbar}>
-          {/* Left: Gallery */}
-          <TouchableOpacity
-            style={styles.toolBtn}
-            onPress={handleGallery}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="images-outline" size={28} color="#fff" />
-          </TouchableOpacity>
+        {/* AI Suggestion Overlay — centered on camera preview */}
+        {streamingText.length > 0 && (
+          <View style={styles.aiOverlay} pointerEvents="none">
+            <View style={styles.aiOverlayBg}>
+              <Text style={styles.aiOverlayText}>{streamingText}</Text>
+            </View>
+          </View>
+        )}
 
-          {/* Center: Ask AI */}
-          <TouchableOpacity
-            style={styles.captureBtn}
-            onPress={handleAskAI}
-            activeOpacity={0.7}
-          >
-            <View style={styles.captureBtnInner} />
-          </TouchableOpacity>
+        {/* Grid Overlay — rule of thirds */}
+        <GridOverlay />
 
-          {/* Right: Switch Camera */}
-          <TouchableOpacity
-            style={styles.toolBtn}
-            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="camera-reverse-outline" size={28} color="#fff" />
-          </TouchableOpacity>
+        {/* Toolbar wrapper: flex column, fills camera bottom space */}
+        <View style={styles.toolbarWrapper}>
+          {/* Mode selector bar */}
+          <View style={styles.modeSelector}>
+            {(['photo', 'scan', 'video', 'portrait'] as CameraMode[]).map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.modeBtn, selectedMode === mode && styles.modeBtnActive]}
+                onPress={() => setSelectedMode(mode)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.modeBtnText,
+                    selectedMode === mode && styles.modeBtnTextActive,
+                  ]}
+                >
+                  {mode === 'photo' ? '拍照' : mode === 'scan' ? '扫码' : mode === 'video' ? '视频' : '人像'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Bottom toolbar: Gallery | Ask AI | Switch Camera */}
+          <View style={styles.toolbar}>
+            {/* Left: Gallery */}
+            <TouchableOpacity
+              style={styles.toolBtn}
+              onPress={handleGallery}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="images-outline" size={28} color="#fff" />
+            </TouchableOpacity>
+
+            {/* Center: Ask AI */}
+            <TouchableOpacity
+              style={styles.captureBtn}
+              onPress={handleAskAI}
+              activeOpacity={0.7}
+            >
+              <View style={styles.captureBtnInner} />
+            </TouchableOpacity>
+
+            {/* Right: Switch Camera */}
+            <TouchableOpacity
+              style={styles.toolBtn}
+              onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="camera-reverse-outline" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
       </CameraView>
 
@@ -293,17 +336,66 @@ export function CameraScreen() {
   );
 }
 
+function GridOverlay() {
+  return (
+    <View style={gridStyles.overlay} pointerEvents="none">
+      {/* Horizontal lines: 1/3 and 2/3 */}
+      <View style={gridStyles.h1} />
+      <View style={gridStyles.h2} />
+      {/* Vertical lines: 1/3 and 2/3 */}
+      <View style={gridStyles.v1} />
+      <View style={gridStyles.v2} />
+    </View>
+  );
+}
+
+const gridStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  h1: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '33.33%',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  h2: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '66.66%',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  v1: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: '33.33%',
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  v2: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: '66.66%',
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   camera: {
     flex: 1,
     width: '100%',
-    justifyContent: 'space-between',
   },
   configWarning: {
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -312,16 +404,71 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    zIndex: 10,
   },
   configWarningText: {
     color: Colors.accent,
     fontSize: 13,
   },
+  aiOverlay: {
+    position: 'absolute',
+    top: '20%',
+    left: 16,
+    right: 16,
+    zIndex: 5,
+    alignItems: 'center',
+  },
+  aiOverlayBg: {
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    maxWidth: '100%',
+  },
+  aiOverlayText: {
+    color: '#fff',
+    fontSize: 20,
+    lineHeight: 28,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  toolbarWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modeSelector: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    gap: 4,
+  },
+  modeBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginHorizontal: 4,
+  },
+  modeBtnActive: {
+    backgroundColor: Colors.accent,
+  },
+  modeBtnText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  modeBtnTextActive: {
+    color: Colors.primary,
+  },
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingBottom: 40,
+    paddingBottom: 12,
     paddingTop: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
