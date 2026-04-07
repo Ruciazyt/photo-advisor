@@ -166,7 +166,7 @@ export async function streamChatCompletion(
   extraPrompt?: string,
 ): Promise<void> {
   const url = `${baseUrl}/chat/completions`;
-  const baseText = '你是一位专业的摄影顾问。请分析这张照片，从构图、光线、色彩、主题表达等角度给出详细的评价和改进建议。用中文回答。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
+  const baseText = '你是一位严格的摄影顾问。直接指出这张照片存在的1-3个核心问题，并给出具体改进方法。不要铺垫、不用夸赞、不说"整体不错"之类的话。用中文，简洁直接，总字数不超过150字。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
   const messages: ChatMessage[] = [
     {
       role: 'user',
@@ -193,6 +193,7 @@ export async function streamChatCompletion(
       model,
       messages,
       stream: true,
+      max_tokens: 200,
     }),
   });
 
@@ -250,7 +251,7 @@ export async function analyzeImageAnthropic(
   extraPrompt?: string,
 ): Promise<string> {
   // MiniMax VL-01 专用端点
-  const basePrompt = '请分析这张照片，从构图、光线、色彩、拍摄角度等方面给出专业的摄影调整建议，用中文回复。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
+  const basePrompt = '你是一位严格的摄影顾问。直接指出这张照片存在的1-3个核心问题，给出具体改进方法。不要铺垫、不用夸赞、不说"整体不错"。用中文，简洁直接，总字数不超过150字。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
   const requestBody = {
     prompt: basePrompt,
     image_url: `data:image/jpeg;base64,${imageBase64}`,
@@ -289,7 +290,7 @@ export async function analyzeImageAnthropic(
   for (const sentence of sentences) {
     if (sentence.trim()) {
       onChunk(sentence);
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise(resolve => setTimeout(resolve, 15));
     }
   }
 
