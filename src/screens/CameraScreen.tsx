@@ -14,20 +14,48 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../constants/colors';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic, MINIMAX_MODELS } from '../services/api';
-import { StreamingDrawer } from '../components/StreamingDrawer';
+import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
+
+/** Parse a raw text stream chunk into complete suggestion sentences.
+ *  Splits on newlines or Chinese sentence-ending punctuation. */
+function parseSuggestions(buffer: string, newChunk: string): { done: string[]; remaining: string } {
+  const combined = buffer + newChunk;
+  // Split on newlines or sentences ending with 。！？；
+  const parts = combined.split(/(?<=[。！？；\n])/);
+  const remaining = parts.pop() ?? '';
+  const done = parts.map(p => p.trim()).filter(p => p.length > 0 && p.startsWith('['));
+  return { done, remaining };
+}
+
+function textToBubbleItem(text: string, index: number): BubbleItem {
+  const positionMap: Record<string, BubbleItem['position']> = {
+    '[左上]': 'top-left',
+    '[右上]': 'top-right',
+    '[左下]': 'bottom-left',
+    '[右下]': 'bottom-right',
+    '[中间]': 'center',
+  };
+  let position: BubbleItem['position'] = 'center';
+  for (const [tag, pos] of Object.entries(positionMap)) {
+    if (text.includes(tag)) { position = pos; break; }
+  }
+  return { id: index, text, position };
+}
 
 export function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [cameraReady, setCameraReady] = useState(false);
   const cameraRef = useRef<CameraView>(null);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [streamingText, setStreamingText] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(false);
   const [selectedMode, setSelectedMode] = useState<CameraMode>('photo');
+
+  // Buffer for streaming text that hasn't formed a complete sentence yet
+  const textBufferRef = useRef('');
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -71,25 +99,17 @@ export function CameraScreen() {
     }
   }, [cameraReady]);
 
-  const handleAskAI = useCallback(async () => {
+  const runAnalysis = useCallback(async (base64: string, extraPrompt?: string) => {
+    textBufferRef.current = '';
+    setSuggestions([]);
+    setLoading(true);
+
     const config = await loadApiConfig();
     if (!config) {
+      setLoading(false);
       Alert.alert('请先在设置中配置API');
       return;
     }
-
-    setDrawerVisible(true);
-    setStreamingText('');
-    setLoading(true);
-
-    const base64 = await takePicture();
-    if (!base64) {
-      setLoading(false);
-      setStreamingText('错误: 无法获取相机画面');
-      return;
-    }
-
-    const gridPromptNote = '画面已叠加三分法网格线（横竖各2条等分线）。请根据网格线区域提供构图位置建议。';
 
     try {
       if (config.apiType === 'minimax') {
@@ -97,11 +117,19 @@ export function CameraScreen() {
           base64,
           config.apiKey,
           config.model,
-          (text) => {
-            setStreamingText((prev) => prev + text);
+          (chunk) => {
+            const { done, remaining } = parseSuggestions(textBufferRef.current, chunk);
+            textBufferRef.current = remaining;
+            if (done.length > 0) {
+              setSuggestions(prev => [...prev, ...done]);
+            }
           },
-          gridPromptNote,
+          extraPrompt,
         );
+        // Flush remaining buffer
+        if (textBufferRef.current.trim()) {
+          setSuggestions(prev => [...prev, textBufferRef.current.trim()]);
+        }
         setLoading(false);
       } else {
         await streamChatCompletion(
@@ -109,22 +137,39 @@ export function CameraScreen() {
           config.baseUrl,
           config.model,
           base64,
-          (text, done) => {
+          (chunk, done) => {
             if (done) {
+              if (textBufferRef.current.trim()) {
+                setSuggestions(prev => [...prev, textBufferRef.current.trim()]);
+              }
               setLoading(false);
             } else {
-              setStreamingText((prev) => prev + text);
+              const { done: doneParts, remaining } = parseSuggestions(textBufferRef.current, chunk);
+              textBufferRef.current = remaining;
+              if (doneParts.length > 0) {
+                setSuggestions(prev => [...prev, ...doneParts]);
+              }
             }
           },
-          gridPromptNote,
+          extraPrompt,
         );
       }
     } catch (err: unknown) {
       setLoading(false);
       const msg = err instanceof Error ? err.message : String(err);
-      setStreamingText(`错误: ${msg}`);
+      setSuggestions([`错误: ${msg}`]);
     }
-  }, [takePicture]);
+  }, []);
+
+  const handleAskAI = useCallback(async () => {
+    const base64 = await takePicture();
+    if (!base64) {
+      setSuggestions(['错误: 无法获取相机画面']);
+      return;
+    }
+    const gridPromptNote = '画面已叠加三分法网格线（横竖各2条等分线）。请根据网格线区域提供构图位置建议。';
+    await runAnalysis(base64, gridPromptNote);
+  }, [takePicture, runAnalysis]);
 
   const handleGallery = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -143,7 +188,7 @@ export function CameraScreen() {
     const asset = result.assets[0];
     const uri = asset.uri;
     if (!uri) {
-      Alert.alert('错误', '无法读取图片');
+      setSuggestions(['错误: 无法读取图片']);
       return;
     }
 
@@ -169,60 +214,28 @@ export function CameraScreen() {
         console.log('[handleGallery] original base64 length:', base64.length);
       }
     } catch {
-      setLoading(false);
-      setStreamingText('错误: 无法读取图片');
+      setSuggestions(['错误: 无法读取图片']);
       return;
     }
 
     if (!base64 || base64.length < 1000) {
-      setLoading(false);
-      setStreamingText('错误: 图片数据异常');
+      setSuggestions(['错误: 图片数据异常']);
       return;
     }
 
-    const config = await loadApiConfig();
-    if (!config) {
-      setLoading(false);
-      Alert.alert('请先在设置中配置API');
-      return;
-    }
+    await runAnalysis(base64);
+  }, [runAnalysis]);
 
-    setDrawerVisible(true);
-    setStreamingText('');
-    setLoading(true);
-
-    try {
-      if (config.apiType === 'minimax') {
-        await analyzeImageAnthropic(
-          base64,
-          config.apiKey,
-          config.model,
-          (text) => {
-            setStreamingText((prev) => prev + text);
-          },
-        );
-        setLoading(false);
-      } else {
-        await streamChatCompletion(
-          config.apiKey,
-          config.baseUrl,
-          config.model,
-          base64,
-          (text, done) => {
-            if (done) {
-              setLoading(false);
-            } else {
-              setStreamingText((prev) => prev + text);
-            }
-          },
-        );
-      }
-    } catch (err: unknown) {
-      setLoading(false);
-      const msg = err instanceof Error ? err.message : String(err);
-      setStreamingText(`错误: ${msg}`);
-    }
+  const handleDismiss = useCallback((id: number) => {
+    setSuggestions(prev => prev.filter((_, i) => i !== id));
   }, []);
+
+  const handleDismissAll = useCallback(() => {
+    setSuggestions([]);
+  }, []);
+
+  const bubbleItems: BubbleItem[] = suggestions
+    .map((text, i) => textToBubbleItem(text, i));
 
   if (!permission) {
     return (
@@ -256,15 +269,6 @@ export function CameraScreen() {
         {!apiConfigured && (
           <View style={styles.configWarning}>
             <Text style={styles.configWarningText}>⚠️ 请先配置API</Text>
-          </View>
-        )}
-
-        {/* AI Suggestion Overlay — centered on camera preview */}
-        {streamingText.length > 0 && (
-          <View style={styles.aiOverlay} pointerEvents="none">
-            <View style={styles.aiOverlayBg}>
-              <Text style={styles.aiOverlayText}>{streamingText}</Text>
-            </View>
           </View>
         )}
 
@@ -326,11 +330,11 @@ export function CameraScreen() {
         </View>
       </CameraView>
 
-      <StreamingDrawer
-        visible={drawerVisible}
-        text={streamingText}
+      <BubbleOverlay
+        items={bubbleItems}
         loading={loading}
-        onClose={() => setDrawerVisible(false)}
+        onDismiss={handleDismiss}
+        onDismissAll={handleDismissAll}
       />
     </View>
   );
@@ -409,30 +413,6 @@ const styles = StyleSheet.create({
   configWarningText: {
     color: Colors.accent,
     fontSize: 13,
-  },
-  aiOverlay: {
-    position: 'absolute',
-    top: '20%',
-    left: 16,
-    right: 16,
-    zIndex: 5,
-    alignItems: 'center',
-  },
-  aiOverlayBg: {
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    maxWidth: '100%',
-  },
-  aiOverlayText: {
-    color: '#fff',
-    fontSize: 20,
-    lineHeight: 28,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
   },
   toolbarWrapper: {
     flex: 1,

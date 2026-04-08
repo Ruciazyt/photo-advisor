@@ -166,7 +166,7 @@ export async function streamChatCompletion(
   extraPrompt?: string,
 ): Promise<void> {
   const url = `${baseUrl}/chat/completions`;
-  const baseText = '你是一位严格的摄影顾问。直接指出这张照片存在的1-3个核心问题，并给出具体改进方法。不要铺垫、不用夸赞、不说"整体不错"之类的话。用中文，简洁直接，总字数不超过150字。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
+  const baseText = '你是一位严格的摄影顾问。返回1-3条构图建议，每条格式为：`[位置] 具体建议内容`\n位置从[左上/右上/左下/右下/中间]选取。\n单条建议不超过25字。\n不同建议用换行分隔。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
   const messages: ChatMessage[] = [
     {
       role: 'user',
@@ -193,7 +193,7 @@ export async function streamChatCompletion(
       model,
       messages,
       stream: true,
-      max_tokens: 200,
+      max_tokens: 150,
     }),
   });
 
@@ -251,7 +251,7 @@ export async function analyzeImageAnthropic(
   extraPrompt?: string,
 ): Promise<string> {
   // MiniMax VL-01 专用端点
-  const basePrompt = '你是一位严格的摄影顾问。直接指出这张照片存在的1-3个核心问题，给出具体改进方法。不要铺垫、不用夸赞、不说"整体不错"。用中文，简洁直接，总字数不超过150字。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
+  const basePrompt = '你是一位严格的摄影顾问。返回1-3条构图建议，每条格式为：`[位置] 具体建议内容`\n位置从[左上/右上/左下/右下/中间]选取。\n单条建议不超过25字。\n不同建议用换行分隔。' + (extraPrompt ? `\n\n${extraPrompt}` : '');
   const requestBody = {
     prompt: basePrompt,
     image_url: `data:image/jpeg;base64,${imageBase64}`,
