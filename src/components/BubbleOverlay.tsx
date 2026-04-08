@@ -119,12 +119,30 @@ export function BubbleOverlay({ items, loading, onDismiss, onDismissAll }: Bubbl
   );
 }
 
+// Parse raw suggestion text into structured BubbleItem
+// Supports formats: "[区域] 内容" or plain "内容"
 export function parseBubbleItems(rawTexts: string[]): BubbleItem[] {
-  return rawTexts.map((text, i) => ({
-    id: i,
-    text,
-    position: parsePosition(text),
-  }));
+  return rawTexts
+    .filter(text => text.trim().length > 0)
+    .map((text, i) => {
+      const match = text.match(/^\[([^\]]+)\]\s*(.*)$/);
+      if (match) {
+        const pos = match[1];
+        const content = match[2].trim();
+        const position = (
+          pos.includes('左上') ? 'top-left' :
+          pos.includes('右上') ? 'top-right' :
+          pos.includes('左下') ? 'bottom-left' :
+          pos.includes('右下') ? 'bottom-right' :
+          pos.includes('中间') ? 'center' :
+          'center'
+        );
+        return { id: i, text: `[${pos}] ${content}`, position };
+      }
+      // No position tag — use a round-robin default
+      const defaults: BubbleItem['position'][] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      return { id: i, text, position: defaults[i % defaults.length] };
+    });
 }
 
 const styles = StyleSheet.create({

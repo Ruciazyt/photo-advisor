@@ -25,7 +25,7 @@ function parseSuggestions(buffer: string, newChunk: string): { done: string[]; r
   // Split on newlines or sentences ending with 。！？；
   const parts = combined.split(/(?<=[。！？；\n])/);
   const remaining = parts.pop() ?? '';
-  const done = parts.map(p => p.trim()).filter(p => p.length > 0 && p.startsWith('['));
+  const done = parts.map(p => p.trim()).filter(p => p.length > 3);
   return { done, remaining };
 }
 
@@ -37,7 +37,8 @@ function textToBubbleItem(text: string, index: number): BubbleItem {
     '[右下]': 'bottom-right',
     '[中间]': 'center',
   };
-  let position: BubbleItem['position'] = 'center';
+  const roundRobin: BubbleItem['position'][] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  let position: BubbleItem['position'] = roundRobin[index % roundRobin.length];
   for (const [tag, pos] of Object.entries(positionMap)) {
     if (text.includes(tag)) { position = pos; break; }
   }
