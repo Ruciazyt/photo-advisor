@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Colors } from '../constants/colors';
 
+export type BubblePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+
 export interface BubbleItem {
   id: number;
   text: string; // format: "[区域] 内容"
-  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+  position: BubblePosition;
 }
 
 interface BubbleOverlayProps {

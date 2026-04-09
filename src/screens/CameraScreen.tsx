@@ -12,9 +12,11 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { Colors } from '../constants/colors';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic, MINIMAX_MODELS } from '../services/api';
 import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
+import { KeypointOverlay, Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -54,6 +56,8 @@ export function CameraScreen() {
   const [loading, setLoading] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(false);
   const [selectedMode, setSelectedMode] = useState<CameraMode>('photo');
+  const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
+  const [showKeypoints, setShowKeypoints] = useState(false);
 
   // Buffer for streaming text that hasn't formed a complete sentence yet
   const textBufferRef = useRef('');
@@ -64,19 +68,20 @@ export function CameraScreen() {
     });
   }, []);
 
-  const takePicture = useCallback(async () => {
+  const takePicture = useCallback(async (): Promise<{ base64: string; uri: string } | null> => {
     if (!cameraRef.current || !cameraReady) return null;
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
       if (!photo?.uri) return null;
+      const originalUri = photo.uri;
       await new Promise(resolve => setTimeout(resolve, 200));
       
       let base64 = '';
       try {
         const resized = await manipulateAsync(
-          photo.uri,
+          originalUri,
           [{ resize: { width: 1024 } }],
           { compress: 0.8, format: SaveFormat.JPEG }
         );
@@ -89,12 +94,12 @@ export function CameraScreen() {
       
       if (!base64 || base64.length < 1000) {
         console.log('[takePicture] reading from original photo.uri');
-        base64 = await FileSystem.readAsStringAsync(photo.uri, { encoding: 'base64' });
+        base64 = await FileSystem.readAsStringAsync(originalUri, { encoding: 'base64' });
         console.log('[takePicture] original base64 length:', base64.length);
       }
       
       if (!base64 || base64.length < 1000) return null;
-      return base64;
+      return { base64, uri: originalUri };
     } catch {
       return null;
     }
@@ -122,14 +127,37 @@ export function CameraScreen() {
             const { done, remaining } = parseSuggestions(textBufferRef.current, chunk);
             textBufferRef.current = remaining;
             if (done.length > 0) {
-              setSuggestions(prev => [...prev, ...done]);
+              setSuggestions(prev => {
+                const baseId = prev.length;
+                const newSuggestions = [...prev, ...done];
+                // Populate keypoints from suggestion texts
+                const newKeypoints: Keypoint[] = [];
+                done.forEach((text, idx) => {
+                  const kp = bubbleTextToKeypoint(text, baseId + idx);
+                  if (kp) newKeypoints.push(kp);
+                });
+                if (newKeypoints.length > 0) {
+                  setKeypoints(newKeypoints);
+                  setShowKeypoints(true);
+                }
+                return newSuggestions;
+              });
             }
           },
           extraPrompt,
         );
         // Flush remaining buffer
         if (textBufferRef.current.trim()) {
-          setSuggestions(prev => [...prev, textBufferRef.current.trim()]);
+          setSuggestions(prev => {
+            const newText = textBufferRef.current.trim();
+            const newSuggestions = [...prev, newText];
+            const kp = bubbleTextToKeypoint(newText, newSuggestions.length - 1);
+            if (kp) {
+              setKeypoints(prevKps => [...prevKps, kp]);
+              setShowKeypoints(true);
+            }
+            return newSuggestions;
+          });
         }
         setLoading(false);
       } else {
@@ -141,14 +169,32 @@ export function CameraScreen() {
           (chunk, done) => {
             if (done) {
               if (textBufferRef.current.trim()) {
-                setSuggestions(prev => [...prev, textBufferRef.current.trim()]);
+                setSuggestions(prev => {
+                  const newText = textBufferRef.current.trim();
+                  const newSuggestions = [...prev, newText];
+                  const kp = bubbleTextToKeypoint(newText, newSuggestions.length - 1);
+                  if (kp) {
+                    setKeypoints(prevKps => [...prevKps, kp]);
+                    setShowKeypoints(true);
+                  }
+                  return newSuggestions;
+                });
               }
               setLoading(false);
             } else {
               const { done: doneParts, remaining } = parseSuggestions(textBufferRef.current, chunk);
               textBufferRef.current = remaining;
               if (doneParts.length > 0) {
-                setSuggestions(prev => [...prev, ...doneParts]);
+                const baseId = suggestions.length;
+                const newSuggestions = [...suggestions, ...doneParts];
+                const newKeypoints = doneParts
+                  .map((text, idx) => bubbleTextToKeypoint(text, baseId + idx))
+                  .filter((kp): kp is Keypoint => kp !== null);
+                setSuggestions(newSuggestions);
+                if (newKeypoints.length > 0) {
+                  setKeypoints(prev => [...prev, ...newKeypoints]);
+                  setShowKeypoints(true);
+                }
               }
             }
           },
@@ -163,11 +209,24 @@ export function CameraScreen() {
   }, []);
 
   const handleAskAI = useCallback(async () => {
-    const base64 = await takePicture();
-    if (!base64) {
+    const result = await takePicture();
+    if (!result) {
       setSuggestions(['错误: 无法获取相机画面']);
       return;
     }
+    const { base64, uri: originalUri } = result;
+
+    // Save original photo to gallery before analysis
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status === 'granted') {
+        await MediaLibrary.saveToLibraryAsync(originalUri);
+      }
+    } catch (e) {
+      // Silent fail for saving - don't block analysis
+      console.log('[handleAskAI] save photo failed:', e);
+    }
+
     const gridPromptNote = '画面已叠加三分法网格线（横竖各2条等分线）。请根据网格线区域提供构图位置建议。';
     await runAnalysis(base64, gridPromptNote);
   }, [takePicture, runAnalysis]);
@@ -229,10 +288,17 @@ export function CameraScreen() {
 
   const handleDismiss = useCallback((id: number) => {
     setSuggestions(prev => prev.filter((_, i) => i !== id));
+    setKeypoints(prev => {
+      const next = prev.filter(kp => kp.id !== id);
+      if (next.length === 0) setShowKeypoints(false);
+      return next;
+    });
   }, []);
 
   const handleDismissAll = useCallback(() => {
     setSuggestions([]);
+    setKeypoints([]);
+    setShowKeypoints(false);
   }, []);
 
   const bubbleItems: BubbleItem[] = suggestions
@@ -275,6 +341,9 @@ export function CameraScreen() {
 
         {/* Grid Overlay — rule of thirds */}
         <GridOverlay />
+
+        {/* Keypoint overlay — shows reference positions from AI */}
+        <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />
 
         {/* Toolbar wrapper: flex column, fills camera bottom space */}
         <View style={styles.toolbarWrapper}>
