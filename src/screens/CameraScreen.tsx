@@ -16,6 +16,8 @@ import { PermissionGate } from '../components/PermissionGate';
 import { LevelIndicator } from '../components/LevelIndicator';
 import { CountdownOverlay } from '../components/CountdownOverlay';
 import { useCountdown, TimerDuration } from '../hooks/useCountdown';
+import { HistogramOverlay } from '../components/HistogramOverlay';
+import { useHistogram } from '../hooks/useHistogram';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -59,6 +61,8 @@ export function CameraScreen() {
   const [showKeypoints, setShowKeypoints] = useState(false);
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
+  const [showHistogram, setShowHistogram] = useState(false);
+  const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
     cameraRef,
@@ -68,6 +72,8 @@ export function CameraScreen() {
     onKeypointsChange: setKeypoints,
     onShowKeypointsChange: setShowKeypoints,
   });
+
+  const { histogramData, capture: captureHistogram } = useHistogram();
 
   const doCapture = useCallback(async () => {
     const result = await takePicture();
@@ -190,6 +196,35 @@ export function CameraScreen() {
     setGridVariant(GRID_ORDER[(idx + 1) % GRID_ORDER.length]);
   }, [gridVariant]);
 
+  const handleHistogramToggle = useCallback(async () => {
+    if (showHistogram) {
+      setShowHistogram(false);
+      return;
+    }
+    await captureHistogram(cameraRef);
+    setShowHistogram(true);
+    if (histogramTimerRef.current) clearTimeout(histogramTimerRef.current);
+    histogramTimerRef.current = setTimeout(() => {
+      setShowHistogram(false);
+    }, 5000);
+  }, [showHistogram, captureHistogram]);
+
+  const handleHistogramPressIn = useCallback(async () => {
+    if (histogramTimerRef.current) {
+      clearTimeout(histogramTimerRef.current);
+      histogramTimerRef.current = null;
+    }
+    await captureHistogram(cameraRef);
+    setShowHistogram(true);
+  }, [captureHistogram]);
+
+  const handleHistogramPressOut = useCallback(() => {
+    if (histogramTimerRef.current) clearTimeout(histogramTimerRef.current);
+    histogramTimerRef.current = setTimeout(() => {
+      setShowHistogram(false);
+    }, 2000);
+  }, []);
+
   const bubbleItems: BubbleItem[] = suggestions
     .map((text, i) => textToBubbleItem(text, i));
 
@@ -225,6 +260,7 @@ export function CameraScreen() {
 
         <GridOverlay variant={gridVariant} />
         <LevelIndicator />
+        <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
 
         {/* Grid Type Selector */}
         <TouchableOpacity
@@ -233,6 +269,17 @@ export function CameraScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
+        </TouchableOpacity>
+
+        {/* Histogram Toggle */}
+        <TouchableOpacity
+          style={[styles.histogramSelector, showHistogram && styles.histogramSelectorActive]}
+          onPress={handleHistogramToggle}
+          onPressIn={handleHistogramPressIn}
+          onPressOut={handleHistogramPressOut}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.histogramSelectorText}>📊 直方图</Text>
         </TouchableOpacity>
 
         {/* Timer Duration Selector */}
@@ -304,6 +351,27 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.15)',
   },
   gridSelectorText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  histogramSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 244,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  histogramSelectorActive: {
+    backgroundColor: 'rgba(232,213,183,0.35)',
+    borderColor: 'rgba(232,213,183,0.6)',
+  },
+  histogramSelectorText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
