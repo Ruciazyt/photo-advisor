@@ -74,6 +74,7 @@ export function CameraScreen() {
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [showHistogram, setShowHistogram] = useState(false);
+  const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -401,7 +402,7 @@ export function CameraScreen() {
           onSelect={(v) => { setGridVariant(v); setShowGridModal(false); }}
           onClose={() => setShowGridModal(false)}
         />
-        <LevelIndicator />
+        {showLevel && <LevelIndicator />}
         <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
         <FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} />
         <SunPositionOverlay visible={showSunOverlay} />
@@ -432,6 +433,15 @@ export function CameraScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.histogramSelectorText}>📊 直方图</Text>
+        </TouchableOpacity>
+
+        {/* Level Toggle */}
+        <TouchableOpacity
+          style={[styles.levelSelector, showLevel && styles.levelSelectorActive]}
+          onPress={() => setShowLevel(v => !v)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.levelSelectorText, showLevel && styles.levelSelectorTextActive]}>🔮 水平仪</Text>
         </TouchableOpacity>
 
         {/* Sun Position Toggle */}
@@ -629,6 +639,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+  },
+  levelSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 330,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  levelSelectorActive: {
+    backgroundColor: 'rgba(232,213,183,0.35)',
+    borderColor: 'rgba(232,213,183,0.6)',
+  },
+  levelSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  levelSelectorTextActive: {
+    color: '#FFFFFF',
   },
   timerSelector: {
     position: 'absolute',
