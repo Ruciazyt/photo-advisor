@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -10,11 +10,21 @@ import { KeypointOverlay, Keypoint, bubbleTextToKeypoint } from '../components/K
 import { useCameraCapture } from '../hooks/useCameraCapture';
 import { ModeSelector } from '../components/ModeSelector';
 import { CameraToolbar } from '../components/CameraToolbar';
-import { GridOverlay } from '../components/GridOverlay';
+import { GridOverlay, GridVariant } from '../components/GridOverlay';
 import { ConfigWarning } from '../components/ConfigWarning';
 import { PermissionGate } from '../components/PermissionGate';
+import { LevelIndicator } from '../components/LevelIndicator';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
+
+const GRID_ORDER: GridVariant[] = ['thirds', 'golden', 'diagonal', 'spiral', 'none'];
+const GRID_LABELS: Record<GridVariant, string> = {
+  thirds: '三分法',
+  golden: '黄金分割',
+  diagonal: '对角线',
+  spiral: '螺旋线',
+  none: '关闭',
+};
 
 function textToBubbleItem(text: string, index: number): BubbleItem {
   const positionMap: Record<string, BubbleItem['position']> = {
@@ -43,6 +53,7 @@ export function CameraScreen() {
   const [selectedMode, setSelectedMode] = useState<CameraMode>('photo');
   const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
   const [showKeypoints, setShowKeypoints] = useState(false);
+  const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
 
   const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
     cameraRef,
@@ -71,9 +82,16 @@ export function CameraScreen() {
 
     await savePhotoToGallery(originalUri);
 
-    const gridPromptNote = '画面已叠加三分法网格线（横竖各2条等分线）。请根据网格线区域提供构图位置建议。';
+    const gridPromptMap: Record<GridVariant, string> = {
+      thirds: '三分法网格',
+      golden: '黄金分割网格',
+      diagonal: '对角线网格',
+      spiral: '螺旋线网格',
+      none: '无网格',
+    };
+    const gridPromptNote = `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`;
     await runAnalysis(base64, gridPromptNote);
-  }, [takePicture, runAnalysis, savePhotoToGallery]);
+  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant]);
 
   const handleGallery = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -148,6 +166,11 @@ export function CameraScreen() {
     setFacing((f) => (f === 'back' ? 'front' : 'back'));
   }, []);
 
+  const cycleGridVariant = useCallback(() => {
+    const idx = GRID_ORDER.indexOf(gridVariant);
+    setGridVariant(GRID_ORDER[(idx + 1) % GRID_ORDER.length]);
+  }, [gridVariant]);
+
   const bubbleItems: BubbleItem[] = suggestions
     .map((text, i) => textToBubbleItem(text, i));
 
@@ -181,7 +204,17 @@ export function CameraScreen() {
       >
         <ConfigWarning visible={!apiConfigured} />
 
-        <GridOverlay variant="thirds" />
+        <GridOverlay variant={gridVariant} />
+        <LevelIndicator />
+
+        {/* Grid Type Selector */}
+        <TouchableOpacity
+          style={styles.gridSelector}
+          onPress={cycleGridVariant}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
+        </TouchableOpacity>
 
         <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />
 
@@ -218,5 +251,22 @@ const styles = StyleSheet.create({
   toolbarWrapper: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  gridSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  gridSelectorText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
