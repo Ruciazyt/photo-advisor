@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
 import { EventSubscription } from 'expo-modules-core';
 
@@ -19,26 +19,30 @@ function computeOrientation({ x, y, z }: AccelerometerMeasurement): DeviceOrient
 
 export function useDeviceOrientation(updateIntervalMs = 100) {
   const [orientation, setOrientation] = useState<DeviceOrientation>({ pitch: 0, roll: 0 });
-  const [available, setAvailable] = useState(true);
+  const [available, setAvailable] = useState(false);
   const subscriptionRef = useRef<EventSubscription | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     Accelerometer.isAvailableAsync().then((isAvailable) => {
+      if (!mountedRef.current) return;
       setAvailable(isAvailable);
       if (!isAvailable) return;
-    });
 
-    if (available) {
       Accelerometer.setUpdateInterval(updateIntervalMs);
       subscriptionRef.current = Accelerometer.addListener((measurement) => {
+        if (!mountedRef.current) return;
         setOrientation(computeOrientation(measurement));
       });
-    }
+    });
 
     return () => {
+      mountedRef.current = false;
       subscriptionRef.current?.remove();
     };
-  }, [available, updateIntervalMs]);
+  }, [updateIntervalMs]);
 
   return { orientation, available };
 }
