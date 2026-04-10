@@ -14,6 +14,8 @@ import { GridOverlay, GridVariant } from '../components/GridOverlay';
 import { ConfigWarning } from '../components/ConfigWarning';
 import { PermissionGate } from '../components/PermissionGate';
 import { LevelIndicator } from '../components/LevelIndicator';
+import { CountdownOverlay } from '../components/CountdownOverlay';
+import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -25,6 +27,8 @@ const GRID_LABELS: Record<GridVariant, string> = {
   spiral: '螺旋线',
   none: '关闭',
 };
+
+const TIMER_DURATIONS: TimerDuration[] = [3, 5, 10];
 
 function textToBubbleItem(text: string, index: number): BubbleItem {
   const positionMap: Record<string, BubbleItem['position']> = {
@@ -54,6 +58,7 @@ export function CameraScreen() {
   const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
   const [showKeypoints, setShowKeypoints] = useState(false);
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
+  const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
 
   const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
     cameraRef,
@@ -64,24 +69,15 @@ export function CameraScreen() {
     onShowKeypointsChange: setShowKeypoints,
   });
 
-  useEffect(() => {
-    import('../services/api').then(({ loadApiConfig }) => {
-      loadApiConfig().then((config) => {
-        setApiConfigured(!!config);
-      });
-    });
-  }, []);
-
-  const handleAskAI = useCallback(async () => {
+  const doCapture = useCallback(async () => {
     const result = await takePicture();
     if (!result) {
       setSuggestions(['错误: 无法获取相机画面']);
+      setLoading(false);
       return;
     }
     const { base64, uri: originalUri } = result;
-
     await savePhotoToGallery(originalUri);
-
     const gridPromptMap: Record<GridVariant, string> = {
       thirds: '三分法网格',
       golden: '黄金分割网格',
@@ -92,6 +88,29 @@ export function CameraScreen() {
     const gridPromptNote = `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`;
     await runAnalysis(base64, gridPromptNote);
   }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant]);
+
+  const { active: countdownActive, count: countdownCount, startCountdown, cancelCountdown } = useCountdown({
+    onComplete: doCapture,
+  });
+
+  const cycleTimerDuration = useCallback(() => {
+    const nextIdx = (TIMER_DURATIONS.indexOf(timerDuration) + 1) % TIMER_DURATIONS.length;
+    setTimerDuration(TIMER_DURATIONS[nextIdx]);
+  }, [timerDuration]);
+
+  useEffect(() => {
+    import('../services/api').then(({ loadApiConfig }) => {
+      loadApiConfig().then((config) => {
+        setApiConfigured(!!config);
+      });
+    });
+  }, []);
+
+  const handleAskAI = useCallback(async () => {
+    if (countdownActive || loading) return;
+    setLoading(true);
+    startCountdown(timerDuration);
+  }, [countdownActive, loading, startCountdown, timerDuration]);
 
   const handleGallery = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -216,7 +235,27 @@ export function CameraScreen() {
           <Text style={styles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
         </TouchableOpacity>
 
+        {/* Timer Duration Selector */}
+        <TouchableOpacity
+          style={[styles.timerSelector, countdownActive && styles.timerSelectorActive]}
+          onPress={countdownActive ? cancelCountdown : cycleTimerDuration}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.timerSelectorText}>
+            {countdownActive ? '✕ 取消' : `⏱ ${timerDuration}s`}
+          </Text>
+        </TouchableOpacity>
+
         <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />
+
+        {/* Countdown Overlay */}
+        {countdownActive && (
+          <CountdownOverlay
+            key={countdownCount}
+            count={countdownCount}
+            onComplete={doCapture}
+          />
+        )}
 
         <View style={styles.toolbarWrapper}>
           <ModeSelector selectedMode={selectedMode} onModeChange={setSelectedMode} />
@@ -265,6 +304,27 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.15)',
   },
   gridSelectorText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  timerSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 130,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  timerSelectorActive: {
+    backgroundColor: 'rgba(255,82,82,0.6)',
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  timerSelectorText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
