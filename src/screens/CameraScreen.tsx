@@ -8,6 +8,7 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Colors } from '../constants/colors';
 import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
 import { KeypointOverlay, Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
+import { ComparisonOverlay } from '../components/ComparisonOverlay';
 import { useCameraCapture } from '../hooks/useCameraCapture';
 import { ModeSelector } from '../components/ModeSelector';
 import { CameraToolbar } from '../components/CameraToolbar';
@@ -66,6 +67,7 @@ export function CameraScreen() {
   const [showHistogram, setShowHistogram] = useState(false);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
   const [toastOpacity] = useState(new Animated.Value(0));
 
   const { saveFavorite } = useFavorites();
@@ -324,6 +326,17 @@ export function CameraScreen() {
           <Ionicons name="heart" size={18} color={lastCapturedUri ? '#FF6B8A' : '#555'} />
         </TouchableOpacity>
 
+        {/* Compare Mode */}
+        {lastCapturedUri && !showKeypoints && (
+          <TouchableOpacity
+            style={styles.compareBtn}
+            onPress={() => setShowComparison(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.compareBtnText}>🖼️ 对比</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Toast */}
         <Animated.View style={[styles.toast, { opacity: toastOpacity }]} pointerEvents="none">
           <Text style={styles.toastText}>已收藏！</Text>
@@ -356,6 +369,14 @@ export function CameraScreen() {
         loading={loading}
         onDismiss={handleDismiss}
         onDismissAll={handleDismissAll}
+      />
+
+      <ComparisonOverlay
+        imageUri={lastCapturedUri!}
+        keypoints={keypoints}
+        bubbles={bubbleItems}
+        visible={showComparison}
+        onClose={() => setShowComparison(false)}
       />
     </View>
   );
@@ -449,6 +470,23 @@ const styles = StyleSheet.create({
   },
   favoriteSelectorDisabled: {
     opacity: 0.5,
+  },
+  compareBtn: {
+    position: 'absolute',
+    top: 60,
+    right: 70,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 15,
+  },
+  compareBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   toast: {
     position: 'absolute',
