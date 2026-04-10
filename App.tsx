@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { CameraScreen } from './src/screens/CameraScreen';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
+import { ShootLogScreen } from './src/screens/ShootLogScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { Colors } from './src/constants/colors';
 
-type Tab = 'home' | 'camera' | 'favorites' | 'settings';
+type Tab = 'home' | 'camera' | 'favorites' | 'log' | 'settings';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -19,6 +20,7 @@ export default function App() {
         {activeTab === 'home' && <HomeScreen />}
         {activeTab === 'camera' && <CameraScreen />}
         {activeTab === 'favorites' && <FavoritesScreen />}
+        {activeTab === 'log' && <ShootLogScreen />}
         {activeTab === 'settings' && <SettingsScreen onSaved={() => setActiveTab('home')} />}
       </View>
       <View style={styles.tabBar}>
@@ -79,6 +81,26 @@ export default function App() {
             ]}
           >
             收藏
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => setActiveTab('log')}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={activeTab === 'log' ? 'newspaper' : 'newspaper-outline'}
+            size={24}
+            color={activeTab === 'log' ? Colors.accent : Colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === 'log' && styles.tabLabelActive,
+            ]}
+          >
+            日志
           </Text>
         </TouchableOpacity>
 
