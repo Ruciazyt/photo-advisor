@@ -18,6 +18,16 @@ const POSITIVE_KEYWORDS = [
   '棒',
 ];
 
+// Standalone speak function for use outside of React components
+export function speak(text: string) {
+  Speech.stop();
+  Speech.speak(text, {
+    language: 'zh-CN',
+    pitch: 1.1,
+    rate: 0.9,
+  });
+}
+
 export function useVoiceFeedback() {
   const [speaking, setSpeaking] = useState(false);
 

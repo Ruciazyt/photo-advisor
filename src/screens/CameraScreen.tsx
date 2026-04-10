@@ -30,6 +30,7 @@ import { BurstSuggestionOverlay, detectBurstMoment } from '../components/BurstSu
 import { CompositionScoreOverlay } from '../components/CompositionScoreOverlay';
 import { useCompositionScore } from '../hooks/useCompositionScore';
 import { recognizeScene, loadApiConfig } from '../services/api';
+import { loadAppSettings } from '../services/settings';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -97,6 +98,14 @@ export function CameraScreen() {
   const burstSuggestionText = useRef('');
 
   const { checkAndSpeak } = useVoiceFeedback();
+
+  // Load app-wide settings on mount
+  useEffect(() => {
+    loadAppSettings().then((settings) => {
+      setVoiceEnabled(settings.voiceEnabled);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { saveFavorite } = useFavorites();
 
   // ---- Composition scoring ----

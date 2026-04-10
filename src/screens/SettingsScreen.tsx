@@ -29,6 +29,8 @@ import {
   downloadAndInstall,
   openReleasePage,
 } from '../services/update';
+import { loadAppSettings, saveAppSettings } from '../services/settings';
+import { speak } from '../hooks/useVoiceFeedback';
 
 interface Props {
   onSaved?: () => void;
@@ -55,6 +57,9 @@ export function SettingsScreen({ onSaved }: Props) {
         setBaseUrl(config.baseUrl);
         setSelectedModel(config.model);
       }
+    });
+    loadAppSettings().then((settings) => {
+      setVoiceEnabled(settings.voiceEnabled);
     });
   }, []);
 
@@ -378,7 +383,14 @@ export function SettingsScreen({ onSaved }: Props) {
             </View>
             <TouchableOpacity
               style={[styles.voiceToggle, voiceEnabled && styles.voiceToggleActive]}
-              onPress={() => setVoiceEnabled(v => !v)}
+              onPress={async () => {
+                const next = !voiceEnabled;
+                setVoiceEnabled(next);
+                await saveAppSettings({ voiceEnabled: next });
+                if (next) {
+                  speak('语音反馈已开启');
+                }
+              }}
               activeOpacity={0.7}
             >
               <Ionicons
