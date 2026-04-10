@@ -26,6 +26,23 @@ function formatDate(iso: string): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+function getStarConfig(score: number) {
+  if (score >= 90) return { stars: 5, color: Colors.success };
+  if (score >= 75) return { stars: 4, color: '#8BC34A' };
+  if (score >= 60) return { stars: 3, color: '#FFC107' };
+  if (score >= 40) return { stars: 2, color: '#FF9800' };
+  return { stars: 1, color: Colors.error };
+}
+
+function StarRating({ score, size = 12 }: { score: number; size?: number }) {
+  const { stars, color } = getStarConfig(score);
+  return (
+    <Text style={{ fontSize: size, color }}>
+      {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
+    </Text>
+  );
+}
+
 function FavoriteCard({ item, onDelete, onPress }: {
   item: FavoriteItem;
   onDelete: (id: string) => void;
@@ -51,7 +68,7 @@ function FavoriteCard({ item, onDelete, onPress }: {
       </View>
       <View style={styles.cardFooter}>
         <Text style={styles.gridLabel}>{item.gridType}</Text>
-        <Text style={styles.dateLabel}>{formatDate(item.date)}</Text>
+        <StarRating score={item.score} size={11} />
       </View>
       {item.sceneTag ? (
         <View style={styles.sceneTagBadge}>
@@ -77,9 +94,15 @@ function FullScreenModal({ item, visible, onClose }: {
         <Image source={{ uri: item.uri }} style={styles.fullImage} resizeMode="contain" />
         <View style={styles.modalInfo}>
           <View style={styles.modalScoreRow}>
-            <Text style={styles.modalScore}>{item.score}</Text>
-            <Text style={styles.modalScoreLabel}>分</Text>
+            <StarRating score={item.score} size={20} />
+            <View style={styles.modalScoreBadge}>
+              <Text style={styles.modalScore}>{item.score}</Text>
+              <Text style={styles.modalScoreLabel}>分</Text>
+            </View>
           </View>
+          {item.scoreReason ? (
+            <Text style={styles.scoreReason}>{item.scoreReason}</Text>
+          ) : null}
           <Text style={styles.modalGrid}>{item.gridType}</Text>
           {item.sceneTag ? (
             <View style={styles.sceneTagBadge}>
@@ -275,12 +298,17 @@ const styles = StyleSheet.create({
   },
   modalScoreRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalScoreBadge: {
+    flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4,
+    gap: 2,
   },
   modalScore: {
     color: Colors.accent,
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '700',
   },
   modalScoreLabel: {
@@ -315,5 +343,11 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontSize: 11,
     fontWeight: '600',
+  },
+  scoreReason: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    marginTop: 6,
+    fontStyle: 'italic',
   },
 });

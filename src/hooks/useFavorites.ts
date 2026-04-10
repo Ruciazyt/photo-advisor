@@ -25,11 +25,12 @@ export function useFavorites() {
   }, [refresh]);
 
   const saveFavorite = useCallback(
-    async (uri: string, gridType: string, suggestion: string = '', sceneTag?: string) => {
+    async (uri: string, gridType: string, suggestion: string = '', sceneTag?: string, score?: number, scoreReason?: string) => {
       const item: FavoriteItem = {
         id: generateFavoriteId(),
         uri,
-        score: 85, // placeholder until AI scoring is integrated
+        score: score ?? 85,
+        scoreReason,
         date: new Date().toISOString(),
         gridType,
         suggestion,

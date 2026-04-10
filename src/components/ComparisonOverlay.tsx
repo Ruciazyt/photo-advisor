@@ -21,6 +21,8 @@ interface ComparisonOverlayProps {
   bubbles: BubbleItem[];
   visible: boolean;
   onClose: () => void;
+  score?: number;
+  scoreReason?: string;
 }
 
 export function ComparisonOverlay({
@@ -29,6 +31,8 @@ export function ComparisonOverlay({
   bubbles,
   visible,
   onClose,
+  score,
+  scoreReason,
 }: ComparisonOverlayProps) {
   const [showAnnotated, setShowAnnotated] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -71,6 +75,18 @@ export function ComparisonOverlay({
         <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
           <Text style={styles.closeBtnText}>✕</Text>
         </TouchableOpacity>
+
+        {/* Top score display */}
+        {score !== undefined && (
+          <View style={styles.scoreContainer}>
+            <Text style={styles.starsText}>
+              {'★'.repeat(score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 40 ? 2 : 1)}
+              {'☆'.repeat(score >= 90 ? 0 : score >= 75 ? 1 : score >= 60 ? 2 : score >= 40 ? 3 : 4)}
+            </Text>
+            <Text style={styles.scoreBadge}>{score}分</Text>
+            {scoreReason ? <Text style={styles.scoreReasonSmall}>{scoreReason}</Text> : null}
+          </View>
+        )}
 
         {/* Bottom toggle */}
         <View style={styles.toggleContainer}>
@@ -164,5 +180,33 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: '#000',
+  },
+  scoreContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  starsText: {
+    fontSize: 16,
+    color: Colors.accent,
+  },
+  scoreBadge: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  scoreReasonSmall: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    maxWidth: 120,
   },
 });

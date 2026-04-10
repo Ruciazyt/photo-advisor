@@ -6,6 +6,7 @@ export interface FavoriteItem {
   id: string;
   uri: string;
   score: number;
+  scoreReason?: string;
   date: string;
   gridType: string;
   suggestion: string;

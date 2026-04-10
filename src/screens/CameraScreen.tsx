@@ -73,6 +73,8 @@ export function CameraScreen() {
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
+  const [lastCapturedScore, setLastCapturedScore] = useState<number | null>(null);
+  const [lastCapturedScoreReason, setLastCapturedScoreReason] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [showGridModal, setShowGridModal] = useState(false);
   const [toastOpacity] = useState(new Animated.Value(0));
@@ -255,18 +257,35 @@ export function CameraScreen() {
     ]).start();
   };
 
+  const computeScoreFromSuggestions = (sugs: string[]): { score: number; reason: string } => {
+    const positive = ['好', '优秀', '完美', '不错', '佳'];
+    const negative = ['欠曝', '过曝', '倾斜', '偏移', '不足'];
+    let pos = 0;
+    let neg = 0;
+    for (const s of sugs) {
+      for (const p of positive) { if (s.includes(p)) pos++; }
+      for (const n of negative) { if (s.includes(n)) neg++; }
+    }
+    let score = 50 + Math.min(pos * 20, 40) - Math.min(neg * 15, 45);
+    score = Math.max(0, Math.min(100, score));
+    const reason = sugs.length > 0 ? sugs[0].replace(/^[^\u4e00-\u9fa5]*/, '').trim().slice(0, 30) : '';
+    return { score, reason };
+  };
+
   const handleSaveToFavorites = useCallback(async () => {
     if (!lastCapturedUri) return;
     const config = await loadApiConfig();
     let sceneTag = '';
     if (config && lastCapturedBase64Ref.current) {
-      // Show "正在识别场景..." toast briefly
       showToast('正在识别场景...');
       sceneTag = await recognizeScene(lastCapturedBase64Ref.current, config);
     }
-    await saveFavorite(lastCapturedUri, GRID_LABELS[gridVariant], '', sceneTag || undefined);
+    const { score, reason } = computeScoreFromSuggestions(suggestions);
+    setLastCapturedScore(score);
+    setLastCapturedScoreReason(reason);
+    await saveFavorite(lastCapturedUri, GRID_LABELS[gridVariant], '', sceneTag || undefined, score, reason);
     showToast('已收藏！');
-  }, [lastCapturedUri, saveFavorite, gridVariant]);
+  }, [lastCapturedUri, saveFavorite, gridVariant, suggestions]);
 
   const bubbleItems: BubbleItem[] = suggestions
     .map((text, i) => textToBubbleItem(text, i));
@@ -426,6 +445,8 @@ export function CameraScreen() {
         bubbles={bubbleItems}
         visible={showComparison}
         onClose={() => setShowComparison(false)}
+        score={lastCapturedScore ?? undefined}
+        scoreReason={lastCapturedScoreReason ?? undefined}
       />
     </View>
   );
