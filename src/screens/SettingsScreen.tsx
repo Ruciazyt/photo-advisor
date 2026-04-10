@@ -45,6 +45,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [fetching, setFetching] = useState(false);
   const [testing, setTesting] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -369,6 +370,29 @@ export function SettingsScreen({ onSaved }: Props) {
           )}
         </TouchableOpacity>
 
+        <View style={styles.voiceSection}>
+          <View style={styles.voiceSectionRow}>
+            <View style={styles.voiceSectionInfo}>
+              <Text style={styles.voiceSectionTitle}>语音反馈</Text>
+              <Text style={styles.voiceSectionDesc}>构图建议达标时播放语音提示</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.voiceToggle, voiceEnabled && styles.voiceToggleActive]}
+              onPress={() => setVoiceEnabled(v => !v)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={voiceEnabled ? 'volume-high' : 'volume-mute'}
+                size={18}
+                color={voiceEnabled ? Colors.accent : Colors.textSecondary}
+              />
+              <Text style={[styles.voiceToggleText, voiceEnabled && styles.voiceToggleTextActive]}>
+                {voiceEnabled ? '开' : '关'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.versionSection}>
           <View style={styles.versionRow}>
             <Text style={styles.versionLabel}>当前版本</Text>
@@ -561,6 +585,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.accent,
     fontWeight: '600',
+  },
+  voiceSection: {
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  voiceSectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  voiceSectionInfo: {
+    flex: 1,
+  },
+  voiceSectionTitle: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  voiceSectionDesc: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  voiceToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.cardBg,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  voiceToggleActive: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(232,213,183,0.1)',
+  },
+  voiceToggleText: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  voiceToggleTextActive: {
+    color: Colors.accent,
   },
   versionSection: {
     marginTop: 32,

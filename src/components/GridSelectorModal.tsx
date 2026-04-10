@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -108,6 +108,7 @@ export function GridSelectorModal({
 }: GridSelectorModalProps) {
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const [isShown, setIsShown] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -123,6 +124,7 @@ export function GridSelectorModal({
           useNativeDriver: true,
         }),
       ]).start();
+      setIsShown(true);
     } else {
       Animated.parallel([
         Animated.timing(translateY, {
@@ -135,11 +137,13 @@ export function GridSelectorModal({
           duration: 200,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        setIsShown(false);
+      });
     }
   }, [visible, translateY, opacity]);
 
-  if (!visible && translateY._value === SHEET_HEIGHT) return null;
+  if (!isShown) return null;
 
   return (
     <View style={styles.overlay} pointerEvents={visible ? 'auto' : 'none'}>

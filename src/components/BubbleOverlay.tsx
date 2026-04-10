@@ -15,6 +15,7 @@ interface BubbleOverlayProps {
   loading: boolean;
   onDismiss: (id: number) => void;
   onDismissAll: () => void;
+  onBubbleAppear?: (text: string) => void;
 }
 
 function parsePosition(text: string): BubbleItem['position'] {
@@ -57,7 +58,7 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
   );
 }
 
-export function BubbleOverlay({ items, loading, onDismiss, onDismissAll }: BubbleOverlayProps) {
+export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbleAppear }: BubbleOverlayProps) {
   const [visibleItems, setVisibleItems] = useState<BubbleItem[]>([]);
   const [nextId, setNextId] = useState(0);
   const loadingRef = useRef(loading);
@@ -78,6 +79,7 @@ export function BubbleOverlay({ items, loading, onDismiss, onDismissAll }: Bubbl
           if (prev.find(i => i.id === item.id)) return prev;
           return [...prev, item];
         });
+        onBubbleAppear?.(item.text);
         setNextId(item.id + 1);
       }, delay);
     }

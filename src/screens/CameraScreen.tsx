@@ -22,6 +22,7 @@ import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
 import { useFavorites } from '../hooks/useFavorites';
+import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -71,6 +72,9 @@ export function CameraScreen() {
   const [showComparison, setShowComparison] = useState(false);
   const [showGridModal, setShowGridModal] = useState(false);
   const [toastOpacity] = useState(new Animated.Value(0));
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+
+  const { checkAndSpeak } = useVoiceFeedback();
 
   const { saveFavorite } = useFavorites();
 
@@ -314,6 +318,20 @@ export function CameraScreen() {
           <Text style={styles.histogramSelectorText}>📊 直方图</Text>
         </TouchableOpacity>
 
+        {/* Voice Toggle */}
+        <TouchableOpacity
+          style={[styles.voiceSelector, voiceEnabled && styles.voiceSelectorActive]}
+          onPress={() => setVoiceEnabled(v => !v)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={voiceEnabled ? 'volume-high' : 'volume-mute'}
+            size={16}
+            color={voiceEnabled ? Colors.accent : 'rgba(255,255,255,0.6)'}
+          />
+          <Text style={[styles.voiceSelectorText, voiceEnabled && styles.voiceSelectorTextActive]}>语音</Text>
+        </TouchableOpacity>
+
         {/* Timer Duration Selector */}
         <TouchableOpacity
           style={[styles.timerSelector, countdownActive && styles.timerSelectorActive]}
@@ -378,6 +396,7 @@ export function CameraScreen() {
         loading={loading}
         onDismiss={handleDismiss}
         onDismissAll={handleDismissAll}
+        onBubbleAppear={(text) => { if (voiceEnabled) checkAndSpeak(text); }}
       />
 
       <ComparisonOverlay
@@ -511,5 +530,32 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
+  },
+  voiceSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 195,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  voiceSelectorActive: {
+    backgroundColor: 'rgba(232,213,183,0.2)',
+    borderColor: Colors.accent,
+  },
+  voiceSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  voiceSelectorTextActive: {
+    color: Colors.accent,
   },
 });
