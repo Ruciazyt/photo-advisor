@@ -21,6 +21,7 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
+import { SunPositionOverlay, SunToggleButton } from '../components/SunPositionOverlay';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { recognizeScene, loadApiConfig } from '../services/api';
@@ -68,6 +69,7 @@ export function CameraScreen() {
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [showHistogram, setShowHistogram] = useState(false);
+  const [showSunOverlay, setShowSunOverlay] = useState(false);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
@@ -309,6 +311,7 @@ export function CameraScreen() {
         />
         <LevelIndicator />
         <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
+        <SunPositionOverlay visible={showSunOverlay} />
 
         {/* Grid Type Selector */}
         <TouchableOpacity
@@ -329,6 +332,12 @@ export function CameraScreen() {
         >
           <Text style={styles.histogramSelectorText}>📊 直方图</Text>
         </TouchableOpacity>
+
+        {/* Sun Position Toggle */}
+        <SunToggleButton
+          visible={showSunOverlay}
+          onPress={() => setShowSunOverlay(v => !v)}
+        />
 
         {/* Voice Toggle */}
         <TouchableOpacity
