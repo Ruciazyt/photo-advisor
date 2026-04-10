@@ -13,6 +13,7 @@ import { useCameraCapture } from '../hooks/useCameraCapture';
 import { ModeSelector } from '../components/ModeSelector';
 import { CameraToolbar } from '../components/CameraToolbar';
 import { GridOverlay, GridVariant } from '../components/GridOverlay';
+import { GridSelectorModal } from '../components/GridSelectorModal';
 import { ConfigWarning } from '../components/ConfigWarning';
 import { PermissionGate } from '../components/PermissionGate';
 import { LevelIndicator } from '../components/LevelIndicator';
@@ -68,6 +69,7 @@ export function CameraScreen() {
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [showGridModal, setShowGridModal] = useState(false);
   const [toastOpacity] = useState(new Animated.Value(0));
 
   const { saveFavorite } = useFavorites();
@@ -282,13 +284,20 @@ export function CameraScreen() {
         <ConfigWarning visible={!apiConfigured} />
 
         <GridOverlay variant={gridVariant} />
+
+        <GridSelectorModal
+          visible={showGridModal}
+          selectedVariant={gridVariant}
+          onSelect={(v) => { setGridVariant(v); setShowGridModal(false); }}
+          onClose={() => setShowGridModal(false)}
+        />
         <LevelIndicator />
         <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
 
         {/* Grid Type Selector */}
         <TouchableOpacity
           style={styles.gridSelector}
-          onPress={cycleGridVariant}
+          onPress={() => setShowGridModal(true)}
           activeOpacity={0.7}
         >
           <Text style={styles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
