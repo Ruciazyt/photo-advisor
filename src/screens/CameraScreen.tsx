@@ -26,6 +26,8 @@ import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { BurstSuggestionOverlay, detectBurstMoment } from '../components/BurstSuggestionOverlay';
+import { CompositionScoreOverlay } from '../components/CompositionScoreOverlay';
+import { useCompositionScore } from '../hooks/useCompositionScore';
 import { recognizeScene, loadApiConfig } from '../services/api';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
@@ -95,6 +97,19 @@ export function CameraScreen() {
   const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
 
+  // ---- Composition scoring ----
+  const [showScoreOverlay, setShowScoreOverlay] = useState(false);
+  const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
+  const lastCaptureIdRef = useRef<number>(0);
+  const {
+    computeScore,
+    session: challengeSession,
+    challengeMode,
+    toggleChallengeMode,
+    addScore,
+    resetSession,
+  } = useCompositionScore();
+
   const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
     cameraRef,
     cameraReady,
@@ -107,6 +122,11 @@ export function CameraScreen() {
   const { histogramData, capture: captureHistogram } = useHistogram();
 
   const doCapture = useCallback(async () => {
+    // Increment capture ID so score effect only fires for this capture
+    lastCaptureIdRef.current += 1;
+    const captureId = lastCaptureIdRef.current;
+    setShowScoreOverlay(false);
+
     const result = await takePicture();
     if (!result) {
       setSuggestions(['错误: 无法获取相机画面']);
@@ -172,6 +192,28 @@ export function CameraScreen() {
       });
     });
   }, []);
+
+  // ---- Score overlay: fires when keypoints are updated from analysis ----
+  const prevKeypointsRef = useRef<Keypoint[]>([]);
+  useEffect(() => {
+    if (!showKeypoints || keypoints.length === 0) return;
+    // Only respond to new keypoints (different from previous)
+    if (keypoints === prevKeypointsRef.current) return;
+    prevKeypointsRef.current = keypoints;
+
+    const currentCaptureId = lastCaptureIdRef.current;
+    // Defer slightly so keypoints are fully populated
+    const timer = setTimeout(() => {
+      if (lastCaptureIdRef.current !== currentCaptureId) return; // stale
+      const result = computeScore(keypoints, gridVariant);
+      setScoreOverlayResult(result);
+      setShowScoreOverlay(true);
+      if (challengeMode) {
+        addScore(result.score);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [keypoints, showKeypoints, computeScore, gridVariant, challengeMode, addScore]);
 
   const handleAskAI = useCallback(async () => {
     if (countdownActive || loading || burstActive) return;
@@ -420,6 +462,15 @@ export function CameraScreen() {
           <Text style={[styles.voiceSelectorText, voiceEnabled && styles.voiceSelectorTextActive]}>语音</Text>
         </TouchableOpacity>
 
+        {/* Challenge Mode Toggle */}
+        <TouchableOpacity
+          style={[styles.challengeSelector, challengeMode && styles.challengeSelectorActive]}
+          onPress={toggleChallengeMode}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.challengeSelectorText, challengeMode && styles.challengeSelectorTextActive]}>🎮 挑战</Text>
+        </TouchableOpacity>
+
         {/* Timer Duration Selector */}
         <TouchableOpacity
           style={[styles.timerSelector, countdownActive && styles.timerSelectorActive]}
@@ -466,6 +517,16 @@ export function CameraScreen() {
         </Animated.View>
 
         <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />
+
+        {/* Composition Score Overlay */}
+        {showScoreOverlay && scoreOverlayResult && (
+          <CompositionScoreOverlay
+            result={scoreOverlayResult}
+            challengeMode={challengeMode}
+            session={challengeSession}
+            onDismiss={() => setShowScoreOverlay(false)}
+          />
+        )}
 
         {/* Countdown Overlay */}
         {countdownActive && (
@@ -655,6 +716,33 @@ const styles = StyleSheet.create({
   },
   voiceSelectorTextActive: {
     color: Colors.accent,
+  },
+  challengeSelector: {
+    position: 'absolute',
+    top: 110,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  challengeSelectorActive: {
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderColor: 'rgba(255,215,0,0.6)',
+  },
+  challengeSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  challengeSelectorTextActive: {
+    color: '#FFD700',
   },
   focusGuideSelector: {
     position: 'absolute',
