@@ -9,6 +9,7 @@ export interface FavoriteItem {
   date: string;
   gridType: string;
   suggestion: string;
+  sceneTag?: string;
 }
 
 export async function loadFavorites(): Promise<FavoriteItem[]> {

@@ -53,6 +53,11 @@ function FavoriteCard({ item, onDelete, onPress }: {
         <Text style={styles.gridLabel}>{item.gridType}</Text>
         <Text style={styles.dateLabel}>{formatDate(item.date)}</Text>
       </View>
+      {item.sceneTag ? (
+        <View style={styles.sceneTagBadge}>
+          <Text style={styles.sceneTagText}>{item.sceneTag}</Text>
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 }
@@ -76,6 +81,11 @@ function FullScreenModal({ item, visible, onClose }: {
             <Text style={styles.modalScoreLabel}>分</Text>
           </View>
           <Text style={styles.modalGrid}>{item.gridType}</Text>
+          {item.sceneTag ? (
+            <View style={styles.sceneTagBadge}>
+              <Text style={styles.sceneTagText}>{item.sceneTag}</Text>
+            </View>
+          ) : null}
           <Text style={styles.modalDate}>{formatDate(item.date)}</Text>
           {item.suggestion ? (
             <Text style={styles.modalSuggestion}>{item.suggestion}</Text>
@@ -292,5 +302,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 12,
     lineHeight: 20,
+  },
+  sceneTagBadge: {
+    backgroundColor: 'rgba(232,213,183,0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  sceneTagText: {
+    color: Colors.accent,
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

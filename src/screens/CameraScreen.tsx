@@ -23,6 +23,7 @@ import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
+import { recognizeScene, loadApiConfig } from '../services/api';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -69,9 +70,11 @@ export function CameraScreen() {
   const [showHistogram, setShowHistogram] = useState(false);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
+  const lastCapturedBase64Ref = useRef<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [showGridModal, setShowGridModal] = useState(false);
   const [toastOpacity] = useState(new Animated.Value(0));
+  const [toastMessage, setToastMessage] = useState('已收藏！');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const { checkAndSpeak } = useVoiceFeedback();
@@ -99,6 +102,7 @@ export function CameraScreen() {
     const { base64, uri: originalUri } = result;
     await savePhotoToGallery(originalUri);
     setLastCapturedUri(originalUri);
+    lastCapturedBase64Ref.current = base64;
     const gridPromptMap: Record<GridVariant, string> = {
       thirds: '三分法网格',
       golden: '黄金分割网格',
@@ -240,7 +244,8 @@ export function CameraScreen() {
     }, 2000);
   }, []);
 
-  const showToast = () => {
+  const showToast = (message: string) => {
+    setToastMessage(message);
     Animated.sequence([
       Animated.timing(toastOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
       Animated.delay(1200),
@@ -250,8 +255,15 @@ export function CameraScreen() {
 
   const handleSaveToFavorites = useCallback(async () => {
     if (!lastCapturedUri) return;
-    await saveFavorite(lastCapturedUri, GRID_LABELS[gridVariant]);
-    showToast();
+    const config = await loadApiConfig();
+    let sceneTag = '';
+    if (config && lastCapturedBase64Ref.current) {
+      // Show "正在识别场景..." toast briefly
+      showToast('正在识别场景...');
+      sceneTag = await recognizeScene(lastCapturedBase64Ref.current, config);
+    }
+    await saveFavorite(lastCapturedUri, GRID_LABELS[gridVariant], '', sceneTag || undefined);
+    showToast('已收藏！');
   }, [lastCapturedUri, saveFavorite, gridVariant]);
 
   const bubbleItems: BubbleItem[] = suggestions
@@ -366,7 +378,7 @@ export function CameraScreen() {
 
         {/* Toast */}
         <Animated.View style={[styles.toast, { opacity: toastOpacity }]} pointerEvents="none">
-          <Text style={styles.toastText}>已收藏！</Text>
+          <Text style={styles.toastText}>{toastMessage}</Text>
         </Animated.View>
 
         <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />

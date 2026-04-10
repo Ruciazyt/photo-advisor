@@ -25,7 +25,7 @@ export function useFavorites() {
   }, [refresh]);
 
   const saveFavorite = useCallback(
-    async (uri: string, gridType: string, suggestion: string = '') => {
+    async (uri: string, gridType: string, suggestion: string = '', sceneTag?: string) => {
       const item: FavoriteItem = {
         id: generateFavoriteId(),
         uri,
@@ -33,6 +33,7 @@ export function useFavorites() {
         date: new Date().toISOString(),
         gridType,
         suggestion,
+        sceneTag,
       };
       const updated = await addFavorite(item);
       updated.sort((a, b) => b.score - a.score);

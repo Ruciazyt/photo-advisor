@@ -297,3 +297,51 @@ export async function analyzeImageAnthropic(
   return fullText;
 }
 
+export interface ApiConfig {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  apiType: 'openai' | 'minimax';
+}
+
+export async function recognizeScene(
+  base64: string,
+  config: ApiConfig,
+): Promise<string> {
+  try {
+    const prompt =
+      '请识别这张照片的场景类型，只需返回一个词：人像/风光/美食/建筑/夜景/微距/静物/其他。不超过2个字。';
+    const requestBody = {
+      prompt,
+      image_url: `data:image/jpeg;base64,${base64}`,
+    };
+
+    const response = await fetch(MINIMAX_VLM_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+        'MM-API-Source': 'photo-advisor',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      return '';
+    }
+
+    const json = await response.json();
+    const baseResp = json.base_resp ?? {};
+    if (baseResp.status_code !== 0) {
+      return '';
+    }
+
+    const content = ((json.content as string) ?? '').trim();
+    if (!content) return '';
+    // Return first 2 characters (max 2 Chinese chars)
+    return content.slice(0, 2);
+  } catch {
+    return '';
+  }
+}
+
