@@ -22,6 +22,7 @@ import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
 import { SunPositionOverlay, SunToggleButton } from '../components/SunPositionOverlay';
+import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { BurstSuggestionOverlay, detectBurstMoment } from '../components/BurstSuggestionOverlay';
@@ -71,6 +72,7 @@ export function CameraScreen() {
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [showHistogram, setShowHistogram] = useState(false);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
+  const [showFocusGuide, setShowFocusGuide] = useState(false);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
@@ -358,6 +360,7 @@ export function CameraScreen() {
         />
         <LevelIndicator />
         <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
+        <FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} />
         <SunPositionOverlay visible={showSunOverlay} />
 
         {/* Burst Suggestion Overlay */}
@@ -393,6 +396,15 @@ export function CameraScreen() {
           visible={showSunOverlay}
           onPress={() => setShowSunOverlay(v => !v)}
         />
+
+        {/* Focus Guide Toggle */}
+        <TouchableOpacity
+          style={[styles.focusGuideSelector, showFocusGuide && styles.focusGuideSelectorActive]}
+          onPress={() => setShowFocusGuide(v => !v)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.focusGuideSelectorText, showFocusGuide && styles.focusGuideSelectorTextActive]}>🎯 对焦</Text>
+        </TouchableOpacity>
 
         {/* Voice Toggle */}
         <TouchableOpacity
@@ -643,6 +655,33 @@ const styles = StyleSheet.create({
   },
   voiceSelectorTextActive: {
     color: Colors.accent,
+  },
+  focusGuideSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 300,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  focusGuideSelectorActive: {
+    backgroundColor: 'rgba(255,220,0,0.15)',
+    borderColor: 'rgba(255,220,0,0.5)',
+  },
+  focusGuideSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  focusGuideSelectorTextActive: {
+    color: '#FFDC00',
   },
   burstIndicator: {
     position: 'absolute',
