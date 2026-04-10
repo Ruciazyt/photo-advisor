@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { useFavorites } from '../hooks/useFavorites';
+import { StatsScreen } from './StatsScreen';
 import type { FavoriteItem } from '../services/favorites';
 
 const { width } = Dimensions.get('window');
@@ -123,6 +124,11 @@ export function FavoritesScreen() {
   const { favorites, loading, deleteFavorite } = useFavorites();
   const [selectedItem, setSelectedItem] = useState<FavoriteItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+
+  if (showStats) {
+    return <StatsScreen onBack={() => setShowStats(false)} />;
+  }
 
   const handlePress = (item: FavoriteItem) => {
     setSelectedItem(item);
@@ -155,7 +161,12 @@ export function FavoritesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>优秀照片</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>优秀照片</Text>
+          <TouchableOpacity onPress={() => setShowStats(true)} style={styles.statsBtn}>
+            <Text style={styles.statsBtnText}>📊 统计</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>收藏夹 · {favorites.length}张</Text>
       </View>
 
@@ -194,6 +205,26 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 16,
     alignItems: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  statsBtn: {
+    backgroundColor: Colors.cardBg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  statsBtnText: {
+    color: Colors.accent,
+    fontSize: 13,
+    fontWeight: '600',
   },
   title: {
     color: Colors.accent,
