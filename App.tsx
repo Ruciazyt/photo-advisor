@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } fro
 import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { CameraScreen } from './src/screens/CameraScreen';
+import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { Colors } from './src/constants/colors';
 
-type Tab = 'home' | 'camera' | 'settings';
+type Tab = 'home' | 'camera' | 'favorites' | 'settings';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -17,6 +18,7 @@ export default function App() {
       <View style={styles.content}>
         {activeTab === 'home' && <HomeScreen />}
         {activeTab === 'camera' && <CameraScreen />}
+        {activeTab === 'favorites' && <FavoritesScreen />}
         {activeTab === 'settings' && <SettingsScreen onSaved={() => setActiveTab('home')} />}
       </View>
       <View style={styles.tabBar}>
@@ -57,6 +59,26 @@ export default function App() {
             ]}
           >
             相机
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => setActiveTab('favorites')}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={activeTab === 'favorites' ? 'heart' : 'heart-outline'}
+            size={24}
+            color={activeTab === 'favorites' ? Colors.accent : Colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === 'favorites' && styles.tabLabelActive,
+            ]}
+          >
+            收藏
           </Text>
         </TouchableOpacity>
 

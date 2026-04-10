@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -18,6 +19,7 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
+import { useFavorites } from '../hooks/useFavorites';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -63,6 +65,10 @@ export function CameraScreen() {
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [showHistogram, setShowHistogram] = useState(false);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
+  const [toastOpacity] = useState(new Animated.Value(0));
+
+  const { saveFavorite } = useFavorites();
 
   const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
     cameraRef,
@@ -84,6 +90,7 @@ export function CameraScreen() {
     }
     const { base64, uri: originalUri } = result;
     await savePhotoToGallery(originalUri);
+    setLastCapturedUri(originalUri);
     const gridPromptMap: Record<GridVariant, string> = {
       thirds: '三分法网格',
       golden: '黄金分割网格',
@@ -225,6 +232,20 @@ export function CameraScreen() {
     }, 2000);
   }, []);
 
+  const showToast = () => {
+    Animated.sequence([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.delay(1200),
+      Animated.timing(toastOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const handleSaveToFavorites = useCallback(async () => {
+    if (!lastCapturedUri) return;
+    await saveFavorite(lastCapturedUri, GRID_LABELS[gridVariant]);
+    showToast();
+  }, [lastCapturedUri, saveFavorite, gridVariant]);
+
   const bubbleItems: BubbleItem[] = suggestions
     .map((text, i) => textToBubbleItem(text, i));
 
@@ -292,6 +313,21 @@ export function CameraScreen() {
             {countdownActive ? '✕ 取消' : `⏱ ${timerDuration}s`}
           </Text>
         </TouchableOpacity>
+
+        {/* Save to Favorites */}
+        <TouchableOpacity
+          style={[styles.favoriteSelector, !lastCapturedUri && styles.favoriteSelectorDisabled]}
+          onPress={handleSaveToFavorites}
+          disabled={!lastCapturedUri}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="heart" size={18} color={lastCapturedUri ? '#FF6B8A' : '#555'} />
+        </TouchableOpacity>
+
+        {/* Toast */}
+        <Animated.View style={[styles.toast, { opacity: toastOpacity }]} pointerEvents="none">
+          <Text style={styles.toastText}>已收藏！</Text>
+        </Animated.View>
 
         <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />
 
@@ -396,5 +432,37 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+  },
+  favoriteSelector: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  favoriteSelectorDisabled: {
+    opacity: 0.5,
+  },
+  toast: {
+    position: 'absolute',
+    top: 110,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,107,138,0.9)',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    zIndex: 20,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
