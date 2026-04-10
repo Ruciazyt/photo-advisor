@@ -23,6 +23,7 @@ import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
 import { SunPositionOverlay, SunToggleButton } from '../components/SunPositionOverlay';
 import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
+import { ShareButton } from '../components/ShareButton';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { BurstSuggestionOverlay, detectBurstMoment } from '../components/BurstSuggestionOverlay';
@@ -491,6 +492,15 @@ export function CameraScreen() {
         >
           <Ionicons name="heart" size={18} color={lastCapturedUri ? '#FF6B8A' : '#555'} />
         </TouchableOpacity>
+
+        {/* Share Button */}
+        <ShareButton
+          photoUri={lastCapturedUri ?? ''}
+          suggestions={suggestions}
+          gridType={GRID_LABELS[gridVariant]}
+          score={lastCapturedScore ?? undefined}
+          gridVariant={gridVariant}
+        />
 
         {/* Compare Mode */}
         {lastCapturedUri && !showKeypoints && (
