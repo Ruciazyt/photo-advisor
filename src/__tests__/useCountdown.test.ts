@@ -1,20 +1,16 @@
-/**
- * Tests for useCountdown hook
- * Uses real timers with spied setInterval for full control.
- */
-
 import { renderHook, act } from '@testing-library/react-native';
 import { useCountdown } from '../hooks/useCountdown';
-
-// Use real timers — we control setInterval manually via jest.spyOn
-jest.useRealTimers();
 
 describe('useCountdown', () => {
   const onComplete = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('initializes with active=false, count=3, duration=3', () => {
@@ -37,13 +33,6 @@ describe('useCountdown', () => {
   });
 
   it('count decrements each second when interval fires', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
@@ -65,25 +54,18 @@ describe('useCountdown', () => {
   });
 
   it('calls onComplete after count reaches 0 with 300ms delay', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
       result.current.startCountdown(3);
     });
 
-    // Advance 3 seconds
+    // Advance 3 seconds — onComplete not yet called (300ms delay)
     act(() => {
       jest.advanceTimersByTime(3000);
     });
     expect(result.current.count).toBe(0);
-    expect(onComplete).not.toHaveBeenCalled(); // 300ms setTimeout not yet fired
+    expect(onComplete).not.toHaveBeenCalled();
 
     // Advance past the 300ms delay
     act(() => {
@@ -93,13 +75,6 @@ describe('useCountdown', () => {
   });
 
   it('active becomes false after countdown completes', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
@@ -116,13 +91,6 @@ describe('useCountdown', () => {
   });
 
   it('cancelCountdown stops the countdown and resets count to duration', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
@@ -145,13 +113,6 @@ describe('useCountdown', () => {
   });
 
   it('cancelCountdown resets to current duration, not originally started duration', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
@@ -174,13 +135,6 @@ describe('useCountdown', () => {
   });
 
   it('calling startCountdown again resets the countdown', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
@@ -209,13 +163,6 @@ describe('useCountdown', () => {
   });
 
   it('setDuration updates duration without affecting active countdown', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const { result } = renderHook(() => useCountdown({ onComplete }));
 
     act(() => {
@@ -231,13 +178,6 @@ describe('useCountdown', () => {
   });
 
   it('onComplete uses latest callback via ref pattern (stale closure avoided)', () => {
-    jest.spyOn(global, 'setInterval').mockImplementation((callback) => {
-      return setInterval(callback, 1000) as any;
-    });
-    jest.spyOn(global, 'clearInterval').mockImplementation((id) => {
-      return clearInterval(id as any);
-    });
-
     const onCompleteA = jest.fn();
     const onCompleteB = jest.fn();
 
