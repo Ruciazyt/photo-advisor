@@ -7,7 +7,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Colors } from '../constants/colors';
 import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
-import { KeypointOverlay, Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
+import { KeypointOverlay, Keypoint } from '../components/KeypointOverlay';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
 import { useCameraCapture } from '../hooks/useCameraCapture';
 import { ModeSelector } from '../components/ModeSelector';
@@ -24,6 +24,7 @@ import { useHistogram } from '../hooks/useHistogram';
 import { SunPositionOverlay, SunToggleButton } from '../components/SunPositionOverlay';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
+import { BurstSuggestionOverlay, detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { recognizeScene, loadApiConfig } from '../services/api';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
@@ -81,8 +82,15 @@ export function CameraScreen() {
   const [toastMessage, setToastMessage] = useState('已收藏！');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
 
-  const { checkAndSpeak } = useVoiceFeedback();
+  // ---- Burst mode state ----
+  const [burstActive, setBurstActive] = useState(false);
+  const [burstCount, setBurstCount] = useState(0);
 
+  // ---- Burst suggestion state ----
+  const [showBurstSuggestion, setShowBurstSuggestion] = useState(false);
+  const burstSuggestionText = useRef('');
+
+  const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
 
   const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
@@ -116,7 +124,35 @@ export function CameraScreen() {
     };
     const gridPromptNote = `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`;
     await runAnalysis(base64, gridPromptNote);
-  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant]);
+
+    // After analysis, check if this is a burst-worthy moment
+    setTimeout(() => {
+      if (!burstActive && detectBurstMoment(suggestions)) {
+        burstSuggestionText.current = suggestions.find(s =>
+          ['完美', '精彩', '理想', '绝佳', '优秀', '抓拍', '瞬间', '表情'].some(k => s.includes(k))
+        ) || '检测到精彩画面，建议开启连拍捕捉更多瞬间！';
+        setShowBurstSuggestion(true);
+      }
+    }, 100);
+  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions]);
+
+  // Burst mode: rapid sequential capture
+  const startBurst = useCallback(() => {
+    if (burstActive) return;
+    setBurstActive(true);
+    setBurstCount(0);
+    let shot = 0;
+    const burstInterval = setInterval(() => {
+      doCapture();
+      shot++;
+      setBurstCount(shot);
+      if (shot >= 5) {
+        clearInterval(burstInterval);
+        setBurstActive(false);
+        setSuggestions(prev => [...prev, `连拍完成：共${shot}张`]);
+      }
+    }, 700);
+  }, [burstActive, doCapture]);
 
   const { active: countdownActive, count: countdownCount, startCountdown, cancelCountdown } = useCountdown({
     onComplete: doCapture,
@@ -136,10 +172,10 @@ export function CameraScreen() {
   }, []);
 
   const handleAskAI = useCallback(async () => {
-    if (countdownActive || loading) return;
+    if (countdownActive || loading || burstActive) return;
     setLoading(true);
     startCountdown(timerDuration);
-  }, [countdownActive, loading, startCountdown, timerDuration]);
+  }, [countdownActive, loading, burstActive, startCountdown, timerDuration]);
 
   const handleGallery = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -169,18 +205,9 @@ export function CameraScreen() {
           [{ resize: { width: 1024 } }],
           { compress: 0.8, format: SaveFormat.JPEG }
         );
-        console.log('[handleGallery] resized:', resized.uri, resized.width, 'x', resized.height);
         base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
-        console.log('[handleGallery] resized base64 length:', base64.length);
       } catch (e) {
-        console.log('[handleGallery] resize failed:', e);
-      }
-
-      if (!base64 || base64.length < 1000) {
-        console.log('[handleGallery] reading from original uri');
-        await new Promise(resolve => setTimeout(resolve, 100));
         base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-        console.log('[handleGallery] original base64 length:', base64.length);
       }
     } catch {
       setSuggestions(['错误: 无法读取图片']);
@@ -214,11 +241,6 @@ export function CameraScreen() {
     setFacing((f) => (f === 'back' ? 'front' : 'back'));
   }, []);
 
-  const cycleGridVariant = useCallback(() => {
-    const idx = GRID_ORDER.indexOf(gridVariant);
-    setGridVariant(GRID_ORDER[(idx + 1) % GRID_ORDER.length]);
-  }, [gridVariant]);
-
   const handleHistogramToggle = useCallback(async () => {
     if (showHistogram) {
       setShowHistogram(false);
@@ -233,10 +255,7 @@ export function CameraScreen() {
   }, [showHistogram, captureHistogram]);
 
   const handleHistogramPressIn = useCallback(async () => {
-    if (histogramTimerRef.current) {
-      clearTimeout(histogramTimerRef.current);
-      histogramTimerRef.current = null;
-    }
+    if (histogramTimerRef.current) clearTimeout(histogramTimerRef.current);
     await captureHistogram(cameraRef);
     setShowHistogram(true);
   }, [captureHistogram]);
@@ -287,6 +306,15 @@ export function CameraScreen() {
     showToast('已收藏！');
   }, [lastCapturedUri, saveFavorite, gridVariant, suggestions]);
 
+  const handleBurstSuggestionAccept = useCallback(() => {
+    setShowBurstSuggestion(false);
+    startBurst();
+  }, [startBurst]);
+
+  const handleBurstSuggestionDismiss = useCallback(() => {
+    setShowBurstSuggestion(false);
+  }, []);
+
   const bubbleItems: BubbleItem[] = suggestions
     .map((text, i) => textToBubbleItem(text, i));
 
@@ -331,6 +359,14 @@ export function CameraScreen() {
         <LevelIndicator />
         <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
         <SunPositionOverlay visible={showSunOverlay} />
+
+        {/* Burst Suggestion Overlay */}
+        <BurstSuggestionOverlay
+          visible={showBurstSuggestion && !burstActive}
+          suggestion={burstSuggestionText.current}
+          onAccept={handleBurstSuggestionAccept}
+          onDismiss={handleBurstSuggestionDismiss}
+        />
 
         {/* Grid Type Selector */}
         <TouchableOpacity
@@ -402,6 +438,14 @@ export function CameraScreen() {
           >
             <Text style={styles.compareBtnText}>🖼️ 对比</Text>
           </TouchableOpacity>
+        )}
+
+        {/* Burst Mode Indicator */}
+        {burstActive && (
+          <View style={styles.burstIndicator}>
+            <Ionicons name="flash" size={14} color="#FFD700" />
+            <Text style={styles.burstText}>连拍中 {burstCount}/5</Text>
+          </View>
         )}
 
         {/* Toast */}
@@ -599,5 +643,23 @@ const styles = StyleSheet.create({
   },
   voiceSelectorTextActive: {
     color: Colors.accent,
+  },
+  burstIndicator: {
+    position: 'absolute',
+    top: 60,
+    right: 70,
+    backgroundColor: 'rgba(255,215,0,0.85)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    zIndex: 15,
+  },
+  burstText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });
