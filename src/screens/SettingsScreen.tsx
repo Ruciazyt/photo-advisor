@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   loadApiConfig,
   saveApiConfig,
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export function SettingsScreen({ onSaved }: Props) {
+  const { theme, colors, toggleTheme } = useTheme();
   const [apiType, setApiType] = useState<'openai' | 'minimax'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
@@ -183,7 +185,7 @@ export function SettingsScreen({ onSaved }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.primary }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -192,38 +194,46 @@ export function SettingsScreen({ onSaved }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>API 配置</Text>
-          <Text style={styles.subtitle}>配置你的 AI 模型接口</Text>
+          <Text style={[styles.title, { color: Colors.accent }]}>API 配置</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>配置你的 AI 模型接口</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>API 类型</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>API 类型</Text>
           <View style={styles.apiTypeRow}>
             <TouchableOpacity
-              style={[styles.apiTypeBtn, apiType === 'openai' && styles.apiTypeBtnActive]}
+              style={[
+                styles.apiTypeBtn,
+                { backgroundColor: colors.cardBg, borderColor: apiType === 'openai' ? Colors.accent : colors.border },
+                apiType === 'openai' && styles.apiTypeBtnActive,
+              ]}
               onPress={() => handleApiTypeChange('openai')}
               activeOpacity={0.7}
             >
               <Ionicons
                 name={apiType === 'openai' ? 'radio-button-on' : 'radio-button-off'}
                 size={16}
-                color={apiType === 'openai' ? Colors.accent : Colors.textSecondary}
+                color={apiType === 'openai' ? Colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.apiTypeText, apiType === 'openai' && styles.apiTypeTextActive]}>
+              <Text style={[styles.apiTypeText, apiType === 'openai' && { color: Colors.accent }]}>
                 OpenAI 兼容
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.apiTypeBtn, apiType === 'minimax' && styles.apiTypeBtnActive]}
+              style={[
+                styles.apiTypeBtn,
+                { backgroundColor: colors.cardBg, borderColor: apiType === 'minimax' ? Colors.accent : colors.border },
+                apiType === 'minimax' && styles.apiTypeBtnActive,
+              ]}
               onPress={() => handleApiTypeChange('minimax')}
               activeOpacity={0.7}
             >
               <Ionicons
                 name={apiType === 'minimax' ? 'radio-button-on' : 'radio-button-off'}
                 size={16}
-                color={apiType === 'minimax' ? Colors.accent : Colors.textSecondary}
+                color={apiType === 'minimax' ? Colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.apiTypeText, apiType === 'minimax' && styles.apiTypeTextActive]}>
+              <Text style={[styles.apiTypeText, apiType === 'minimax' && { color: Colors.accent }]}>
                 MiniMax
               </Text>
             </TouchableOpacity>
@@ -231,13 +241,13 @@ export function SettingsScreen({ onSaved }: Props) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>API Key</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>API Key</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.cardBg, borderColor: colors.border, color: colors.text }]}
             value={apiKey}
             onChangeText={setApiKey}
             placeholder="sk-xxxxxxxx"
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
@@ -247,13 +257,13 @@ export function SettingsScreen({ onSaved }: Props) {
         {apiType === 'openai' && (
           <>
             <View style={styles.section}>
-              <Text style={styles.label}>Base URL</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Base URL</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.cardBg, borderColor: colors.border, color: colors.text }]}
                 value={baseUrl}
                 onChangeText={setBaseUrl}
                 placeholder="https://api.example.com/v1"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
@@ -279,19 +289,20 @@ export function SettingsScreen({ onSaved }: Props) {
             {loadingModels && (
               <View style={styles.modelsLoading}>
                 <ActivityIndicator color={Colors.accent} />
-                <Text style={styles.modelsLoadingText}>正在获取模型...</Text>
+                <Text style={[styles.modelsLoadingText, { color: colors.textSecondary }]}>正在获取模型...</Text>
               </View>
             )}
 
             {models.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.label}>选择模型</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>选择模型</Text>
                 <View style={styles.modelList}>
                   {models.map((m) => (
                     <TouchableOpacity
                       key={m.id}
                       style={[
                         styles.modelItem,
+                        { backgroundColor: colors.cardBg, borderColor: selectedModel === m.id ? Colors.accent : colors.border },
                         selectedModel === m.id && styles.modelItemSelected,
                       ]}
                       onPress={() => setSelectedModel(m.id)}
@@ -300,6 +311,7 @@ export function SettingsScreen({ onSaved }: Props) {
                       <Text
                         style={[
                           styles.modelItemText,
+                          { color: selectedModel === m.id ? Colors.accent : colors.text },
                           selectedModel === m.id && styles.modelItemTextSelected,
                         ]}
                         numberOfLines={1}
@@ -319,13 +331,14 @@ export function SettingsScreen({ onSaved }: Props) {
 
         {apiType === 'minimax' && (
           <View style={styles.section}>
-            <Text style={styles.label}>选择模型</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>选择模型</Text>
             <View style={styles.modelList}>
               {MINIMAX_MODELS.map((m) => (
                 <TouchableOpacity
                   key={m.id}
                   style={[
                     styles.modelItem,
+                    { backgroundColor: colors.cardBg, borderColor: selectedModel === m.id ? Colors.accent : colors.border },
                     selectedModel === m.id && styles.modelItemSelected,
                   ]}
                   onPress={() => setSelectedModel(m.id)}
@@ -334,6 +347,7 @@ export function SettingsScreen({ onSaved }: Props) {
                   <Text
                     style={[
                       styles.modelItemText,
+                      { color: selectedModel === m.id ? Colors.accent : colors.text },
                       selectedModel === m.id && styles.modelItemTextSelected,
                     ]}
                     numberOfLines={1}
@@ -356,9 +370,9 @@ export function SettingsScreen({ onSaved }: Props) {
           activeOpacity={0.8}
         >
           {saving ? (
-            <ActivityIndicator color={Colors.primary} />
+            <ActivityIndicator color={colors.primary} />
           ) : (
-            <Text style={styles.saveBtnText}>保存配置</Text>
+            <Text style={[styles.saveBtnText, { color: colors.primary }]}>保存配置</Text>
           )}
         </TouchableOpacity>
 
@@ -375,11 +389,11 @@ export function SettingsScreen({ onSaved }: Props) {
           )}
         </TouchableOpacity>
 
-        <View style={styles.voiceSection}>
+        <View style={[styles.voiceSection, { borderTopColor: colors.border }]}>
           <View style={styles.voiceSectionRow}>
             <View style={styles.voiceSectionInfo}>
-              <Text style={styles.voiceSectionTitle}>语音反馈</Text>
-              <Text style={styles.voiceSectionDesc}>构图建议达标时播放语音提示</Text>
+              <Text style={[styles.voiceSectionTitle, { color: colors.text }]}>语音反馈</Text>
+              <Text style={[styles.voiceSectionDesc, { color: colors.textSecondary }]}>构图建议达标时播放语音提示</Text>
             </View>
             <TouchableOpacity
               style={[styles.voiceToggle, voiceEnabled && styles.voiceToggleActive]}
@@ -396,19 +410,42 @@ export function SettingsScreen({ onSaved }: Props) {
               <Ionicons
                 name={voiceEnabled ? 'volume-high' : 'volume-mute'}
                 size={18}
-                color={voiceEnabled ? Colors.accent : Colors.textSecondary}
+                color={voiceEnabled ? Colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.voiceToggleText, voiceEnabled && styles.voiceToggleTextActive]}>
+              <Text style={[styles.voiceToggleText, voiceEnabled && styles.voiceToggleTextActive, { color: voiceEnabled ? Colors.accent : colors.textSecondary }]}>
                 {voiceEnabled ? '开' : '关'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.versionSection}>
+        <View style={[styles.themeSection, { borderTopColor: colors.border }]}>
+          <View style={styles.themeSectionRow}>
+            <View style={styles.themeSectionInfo}>
+              <Text style={[styles.themeSectionTitle, { color: colors.text }]}>深色/浅色主题</Text>
+              <Text style={[styles.themeSectionDesc, { color: colors.textSecondary }]}>切换应用外观主题</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.themeToggle, theme === 'light' && styles.themeToggleLight]}
+              onPress={toggleTheme}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={theme === 'dark' ? 'moon' : 'sunny'}
+                size={18}
+                color={theme === 'dark' ? colors.accent : '#FFB800'}
+              />
+              <Text style={[styles.themeToggleText, theme === 'light' && styles.themeToggleTextLight, { color: theme === 'light' ? Colors.accent : colors.textSecondary }]}>
+                {theme === 'dark' ? '深色' : '浅色'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={[styles.versionSection, { borderTopColor: colors.border }]}>
           <View style={styles.versionRow}>
-            <Text style={styles.versionLabel}>当前版本</Text>
-            <Text style={styles.versionValue}>{getAppVersion()}</Text>
+            <Text style={[styles.versionLabel, { color: colors.textSecondary }]}>当前版本</Text>
+            <Text style={[styles.versionValue, { color: colors.text }]}>{getAppVersion()}</Text>
           </View>
           <TouchableOpacity
             style={[styles.updateBtn, checkingUpdate && styles.updateBtnDisabled]}
@@ -434,7 +471,6 @@ export function SettingsScreen({ onSaved }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
   },
   scroll: {
     flex: 1,
@@ -448,13 +484,11 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   title: {
-    color: Colors.accent,
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: 2,
   },
   subtitle: {
-    color: Colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -462,7 +496,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    color: Colors.textSecondary,
     fontSize: 13,
     marginBottom: 8,
     fontWeight: '500',
@@ -479,14 +512,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     paddingVertical: 14,
   },
   apiTypeBtnActive: {
-    borderColor: Colors.accent,
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   apiTypeText: {
@@ -494,15 +524,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  apiTypeTextActive: {
-    color: Colors.accent,
-  },
   input: {
-    backgroundColor: Colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
     fontSize: 15,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -535,7 +559,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   modelsLoadingText: {
-    color: Colors.textSecondary,
     fontSize: 14,
   },
   modelList: {
@@ -545,24 +568,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.cardBg,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   modelItemSelected: {
-    borderColor: Colors.accent,
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   modelItemText: {
-    color: Colors.text,
     fontSize: 14,
     flex: 1,
   },
   modelItemTextSelected: {
-    color: Colors.accent,
     fontWeight: '600',
   },
   saveBtn: {
@@ -576,7 +594,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveBtnText: {
-    color: Colors.primary,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -602,7 +619,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   voiceSectionRow: {
     flexDirection: 'row',
@@ -613,12 +629,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   voiceSectionTitle: {
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   voiceSectionDesc: {
-    color: Colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -638,18 +652,59 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   voiceToggleText: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
   voiceToggleTextActive: {
     color: Colors.accent,
   },
+  themeSection: {
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+  },
+  themeSectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  themeSectionInfo: {
+    flex: 1,
+  },
+  themeSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  themeSectionDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  themeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.cardBg,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  themeToggleLight: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(196,163,90,0.1)',
+  },
+  themeToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  themeToggleTextLight: {
+    color: Colors.accent,
+  },
   versionSection: {
     marginTop: 32,
     paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     gap: 12,
   },
   versionRow: {
@@ -658,14 +713,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   versionLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   versionValue: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: '600',
   },

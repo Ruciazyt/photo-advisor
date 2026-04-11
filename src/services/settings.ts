@@ -4,10 +4,12 @@ const STORAGE_KEY = '@photo_advisor_settings';
 
 export interface AppSettings {
   voiceEnabled: boolean;
+  theme: 'dark' | 'light';
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   voiceEnabled: false,
+  theme: 'dark',
 };
 
 export async function loadAppSettings(): Promise<AppSettings> {

@@ -17,7 +17,7 @@ describe('settings service', () => {
   describe('loadAppSettings', () => {
     it('returns default settings when storage is empty', async () => {
       const settings = await loadAppSettings();
-      expect(settings).toEqual({ voiceEnabled: false });
+      expect(settings).toEqual({ voiceEnabled: false, theme: 'dark' });
     });
 
     it('returns stored voiceEnabled when present', async () => {
@@ -29,13 +29,13 @@ describe('settings service', () => {
     it('merges partial storage with defaults', async () => {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({}));
       const settings = await loadAppSettings();
-      expect(settings).toEqual({ voiceEnabled: false });
+      expect(settings).toEqual({ voiceEnabled: false, theme: 'dark' });
     });
 
     it('returns defaults on invalid JSON', async () => {
       await AsyncStorage.setItem(STORAGE_KEY, 'not json');
       const settings = await loadAppSettings();
-      expect(settings).toEqual({ voiceEnabled: false });
+      expect(settings).toEqual({ voiceEnabled: false, theme: 'dark' });
     });
   });
 
@@ -60,6 +60,31 @@ describe('settings service', () => {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       const parsed = JSON.parse(raw ?? '{}');
       expect(parsed.voiceEnabled).toBe(false);
+    });
+  });
+
+  describe('settings - theme', () => {
+    beforeEach(async () => {
+      await AsyncStorage.clear();
+    });
+
+    it('should default to dark theme', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('dark');
+    });
+
+    it('should save and load theme setting', async () => {
+      await saveAppSettings({ theme: 'light' });
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('light');
+    });
+
+    it('should persist theme across multiple saves', async () => {
+      await saveAppSettings({ theme: 'light' });
+      await saveAppSettings({ voiceEnabled: true });
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('light');
+      expect(settings.voiceEnabled).toBe(true);
     });
   });
 });

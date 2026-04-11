@@ -1,3 +1,4 @@
+// Default dark theme colors
 export const Colors = {
   primary: '#000000',
   accent: '#E8D5B7',
