@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { CameraView } from 'expo-camera';
@@ -17,6 +17,31 @@ export function parseSuggestions(buffer: string, newChunk: string): { done: stri
   const remaining = parts.pop() ?? '';
   const done = parts.map(p => p.trim()).filter(p => p.length > 3);
   return { done, remaining };
+}
+
+/** Check if the device supports RAW capture via the native Camera2 module. */
+export async function supportsRawCapture(): Promise<boolean> {
+  if (Platform.OS !== 'android') return false;
+  try {
+    const NativeModules = require('react-native').NativeModules;
+    const module = NativeModules.Camera2RawModule;
+    if (!module) return false;
+    return await module.supportsRAW();
+  } catch {
+    return false;
+  }
+}
+
+/** Attempt RAW capture via the native Camera2 module; falls back to null on failure. */
+async function captureRawNative(): Promise<{ uri: string; path: string; width: number; height: number } | null> {
+  try {
+    const NativeModules = require('react-native').NativeModules;
+    const module = NativeModules.Camera2RawModule;
+    if (!module) return null;
+    return await module.captureRAW();
+  } catch {
+    return null;
+  }
 }
 
 interface UseCameraCaptureOptions {
@@ -38,9 +63,26 @@ export function useCameraCapture({
 }: UseCameraCaptureOptions) {
   const textBufferRef = useRef('');
 
-  const takePicture = useCallback(async (): Promise<{ base64: string; uri: string } | null> => {
+  const takePicture = useCallback(async (raw = false): Promise<{ base64: string; uri: string } | null> => {
     if (!cameraRef.current || !cameraReady) return null;
     try {
+      // If RAW is requested, try native capture first (Android only)
+      if (raw && Platform.OS === 'android') {
+        const rawResult = await captureRawNative();
+        if (rawResult?.uri) {
+          // RAW capture succeeded — return base64 for analysis, uri for display
+          let base64 = '';
+          try {
+            base64 = await FileSystem.readAsStringAsync(rawResult.uri, { encoding: 'base64' });
+          } catch {
+            // base64 read failed, but we still have the raw file saved
+          }
+          return { base64, uri: rawResult.uri };
+        }
+        // RAW failed — fall through to JPEG silently
+      }
+
+      // Standard JPEG capture via expo-camera
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
@@ -189,5 +231,5 @@ export function useCameraCapture({
     }
   }, []);
 
-  return { takePicture, runAnalysis, savePhotoToGallery };
+  return { takePicture, runAnalysis, savePhotoToGallery, supportsRawCapture };
 }

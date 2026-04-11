@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -9,7 +10,7 @@ import { Colors } from '../constants/colors';
 import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
 import { KeypointOverlay, Keypoint } from '../components/KeypointOverlay';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
-import { useCameraCapture } from '../hooks/useCameraCapture';
+import { useCameraCapture, supportsRawCapture } from '../hooks/useCameraCapture';
 import { ModeSelector } from '../components/ModeSelector';
 import { CameraToolbar } from '../components/CameraToolbar';
 import { GridOverlay, GridVariant } from '../components/GridOverlay';
@@ -88,6 +89,8 @@ export function CameraScreen() {
   const [toastOpacity] = useState(new Animated.Value(0));
   const [toastMessage, setToastMessage] = useState('已收藏！');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [rawMode, setRawMode] = useState(false);
+  const [rawSupported, setRawSupported] = useState(false);
 
   // ---- Burst mode state ----
   const [burstActive, setBurstActive] = useState(false);
@@ -105,6 +108,11 @@ export function CameraScreen() {
       setVoiceEnabled(settings.voiceEnabled);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Detect RAW support on mount
+  useEffect(() => {
+    supportsRawCapture().then(setRawSupported);
   }, []);
   const { saveFavorite } = useFavorites();
 
@@ -138,7 +146,7 @@ export function CameraScreen() {
     const captureId = lastCaptureIdRef.current;
     setShowScoreOverlay(false);
 
-    const result = await takePicture();
+    const result = await takePicture(rawMode);
     if (!result) {
       setSuggestions(['错误: 无法获取相机画面']);
       setLoading(false);
@@ -322,6 +330,14 @@ export function CameraScreen() {
     }, 2000);
   }, []);
 
+  const handleRawToggle = useCallback(() => {
+    if (!rawSupported && !rawMode) {
+      showToast('RAW仅支持Android设备');
+      return;
+    }
+    setRawMode(v => !v);
+  }, [rawSupported, rawMode]);
+
   const showToast = (message: string) => {
     setToastMessage(message);
     Animated.sequence([
@@ -480,6 +496,15 @@ export function CameraScreen() {
             color={voiceEnabled ? Colors.accent : 'rgba(255,255,255,0.6)'}
           />
           <Text style={[styles.voiceSelectorText, voiceEnabled && styles.voiceSelectorTextActive]}>语音</Text>
+        </TouchableOpacity>
+
+        {/* RAW Toggle */}
+        <TouchableOpacity
+          style={[styles.rawSelector, rawMode && styles.rawSelectorActive]}
+          onPress={handleRawToggle}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.rawSelectorText, rawMode && styles.rawSelectorTextActive]}>📷 RAW</Text>
         </TouchableOpacity>
 
         {/* Challenge Mode Toggle */}
@@ -796,6 +821,33 @@ const styles = StyleSheet.create({
   },
   challengeSelectorTextActive: {
     color: '#FFD700',
+  },
+  rawSelector: {
+    position: 'absolute',
+    top: 110,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  rawSelectorActive: {
+    backgroundColor: 'rgba(0,200,100,0.2)',
+    borderColor: 'rgba(0,200,100,0.6)',
+  },
+  rawSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  rawSelectorTextActive: {
+    color: '#00C864',
   },
   focusGuideSelector: {
     position: 'absolute',
