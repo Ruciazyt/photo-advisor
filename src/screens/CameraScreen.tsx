@@ -30,7 +30,8 @@ import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { BurstSuggestionOverlay, detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { CompositionScoreOverlay } from '../components/CompositionScoreOverlay';
 import { useCompositionScore } from '../hooks/useCompositionScore';
-import { recognizeScene, loadApiConfig } from '../services/api';
+import { useSceneRecognition } from '../hooks/useSceneRecognition';
+import { SceneTagOverlay } from '../components/SceneTagOverlay';
 import { loadAppSettings } from '../services/settings';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
@@ -116,6 +117,10 @@ export function CameraScreen() {
   }, []);
   const { saveFavorite } = useFavorites();
 
+  // ---- Scene recognition ----
+  const [sceneTagVisible, setSceneTagVisible] = useState(false);
+  const { sceneTag, recognize: recognizeSceneTag } = useSceneRecognition();
+
   // ---- Composition scoring ----
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
@@ -156,6 +161,13 @@ export function CameraScreen() {
     await savePhotoToGallery(originalUri);
     setLastCapturedUri(originalUri);
     lastCapturedBase64Ref.current = base64;
+
+    // Trigger scene recognition and show tag for ~4 seconds
+    recognizeSceneTag(base64).then(() => {
+      setSceneTagVisible(true);
+      setTimeout(() => setSceneTagVisible(false), 4000);
+    });
+
     const gridPromptMap: Record<GridVariant, string> = {
       thirds: '三分法网格',
       golden: '黄金分割网格',
@@ -175,7 +187,7 @@ export function CameraScreen() {
         setShowBurstSuggestion(true);
       }
     }, 100);
-  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions]);
+  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions, recognizeSceneTag]);
 
   // Burst mode: rapid sequential capture
   const startBurst = useCallback(() => {
@@ -581,6 +593,9 @@ export function CameraScreen() {
             onDismiss={() => setShowScoreOverlay(false)}
           />
         )}
+
+        {/* Scene Tag Overlay */}
+        <SceneTagOverlay tag={sceneTag || null} visible={sceneTagVisible} />
 
         {/* Countdown Overlay */}
         {countdownActive && (
