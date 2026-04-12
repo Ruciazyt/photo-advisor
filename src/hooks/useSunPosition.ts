@@ -183,6 +183,10 @@ export function useSunPosition(updateIntervalMs = 60000) {
   const locationRef = useRef<LocationCoords | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Keep a ref to the latest updateSunData to avoid stale closures in setInterval
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateSunDataRef = useRef<((coords: LocationCoords) => Promise<void>) | null>(null);
+
   const updateSunData = useCallback(async (coords: LocationCoords) => {
     const now = new Date();
     try {
@@ -260,12 +264,14 @@ export function useSunPosition(updateIntervalMs = 60000) {
     }
   }, [updateSunData]);
 
+  // Keep ref current for use in setInterval (avoids stale closure)
+  updateSunDataRef.current = updateSunData;
+
   useEffect(() => {
     requestLocation();
 
     intervalRef.current = setInterval(async () => {
       if (locationRef.current) {
-        // Refresh location occasionally, but reuse last known for updates
         try {
           const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
           locationRef.current = {
@@ -273,10 +279,10 @@ export function useSunPosition(updateIntervalMs = 60000) {
             longitude: location.coords.longitude,
           };
         } catch {
-          // keep using last known
+          // keep using last known location
         }
         if (locationRef.current) {
-          await updateSunData(locationRef.current);
+          await updateSunDataRef.current?.(locationRef.current);
         }
       }
     }, updateIntervalMs);
@@ -284,7 +290,7 @@ export function useSunPosition(updateIntervalMs = 60000) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [requestLocation, updateSunData, updateIntervalMs]);
+  }, [requestLocation, updateIntervalMs]);
 
   return { sunData, requestLocation };
 }
