@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -17,6 +17,37 @@ const modeLabels: Record<CameraMode, string> = {
 };
 
 export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) {
+  const { colors } = useTheme();
+
+  const styles = StyleSheet.create({
+    modeSelector: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      gap: 4,
+    },
+    modeBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 20,
+      marginHorizontal: 4,
+    },
+    modeBtnActive: {
+      backgroundColor: colors.accent,
+    },
+    modeBtnText: {
+      color: 'rgba(255,255,255,0.7)',
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    modeBtnTextActive: {
+      color: colors.primary,
+    },
+  });
+
   return (
     <View style={styles.modeSelector}>
       {(['photo', 'scan', 'video', 'portrait'] as CameraMode[]).map((mode) => (
@@ -39,32 +70,3 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  modeSelector: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    gap: 4,
-  },
-  modeBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginHorizontal: 4,
-  },
-  modeBtnActive: {
-    backgroundColor: Colors.accent,
-  },
-  modeBtnText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  modeBtnTextActive: {
-    color: Colors.primary,
-  },
-});

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface HistogramOverlayProps {
   histogramData?: number[];
@@ -15,6 +15,67 @@ const WARN_DARK_RATIO = 0.55; // fraction of dark bins to trigger 欠曝 warning
 const WARN_BRIGHT_RATIO = 0.55; // fraction of bright bins to trigger 过曝 warning
 
 export function HistogramOverlay({ histogramData, visible }: HistogramOverlayProps) {
+  const { colors } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      position: 'absolute',
+      top: 110,
+      left: 16,
+      zIndex: 20,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      borderRadius: 8,
+      padding: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: 10,
+      fontWeight: '600',
+    },
+    warningRow: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    warnUnder: {
+      color: colors.error,
+      fontSize: 9,
+      fontWeight: '700',
+    },
+    warnOver: {
+      color: colors.error,
+      fontSize: 9,
+      fontWeight: '700',
+    },
+    barContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      height: HIST_HEIGHT,
+      gap: BAR_GAP,
+    },
+    bar: {
+      width: BAR_WIDTH,
+      borderRadius: 1,
+      minHeight: 2,
+    },
+    scaleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 3,
+    },
+    scaleText: {
+      color: colors.textSecondary,
+      fontSize: 8,
+    },
+  });
+
   const bars = useMemo(() => {
     if (!histogramData || histogramData.length !== 256) {
       return new Array(BAR_COUNT).fill(0.05);
@@ -68,7 +129,7 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
               {
                 height: Math.max(2, height * HIST_HEIGHT),
                 backgroundColor:
-                  i < 3 ? Colors.error : i > 12 ? Colors.error : Colors.accent,
+                  i < 3 ? colors.error : i > 12 ? colors.error : colors.accent,
                 opacity: 0.45 + height * 0.55,
               },
             ]}
@@ -84,61 +145,4 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 110,
-    left: 16,
-    zIndex: 20,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    borderRadius: 8,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  label: {
-    color: Colors.textSecondary,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  warningRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  warnUnder: {
-    color: Colors.error,
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  warnOver: {
-    color: Colors.error,
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  barContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: HIST_HEIGHT,
-    gap: BAR_GAP,
-  },
-  bar: {
-    width: BAR_WIDTH,
-    borderRadius: 1,
-    minHeight: 2,
-  },
-  scaleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 3,
-  },
-  scaleText: {
-    color: Colors.textSecondary,
-    fontSize: 8,
-  },
-});
+

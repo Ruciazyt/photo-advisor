@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDeviceOrientation, DeviceOrientation } from '../hooks/useDeviceOrientation';
+import { useHaptics } from '../hooks/useHaptics';
 
 const MAX_TILT = 20; // degrees beyond which we consider "严重倾斜"
 const MID_TILT = 8;  // degrees for "轻微倾斜"
@@ -61,6 +62,8 @@ function BubbleDot({ pitch, roll, color }: BubbleDotProps) {
 export function LevelIndicator() {
   const { colors } = useTheme();
   const { orientation, available } = useDeviceOrientation(80);
+  const { triggerLevelHaptic, warningNotification } = useHaptics();
+  const prevStateRef = useRef<'level' | 'slight' | 'tilted'>('level');
 
   if (!available) {
     return null;
@@ -74,6 +77,18 @@ export function LevelIndicator() {
     ? 'slight'
     : 'level';
   const color = getColor(worstState, colors);
+
+  // Trigger haptic feedback on state transitions
+  useEffect(() => {
+    if (worstState !== prevStateRef.current) {
+      prevStateRef.current = worstState;
+      if (worstState === 'level') {
+        triggerLevelHaptic();
+      } else if (worstState === 'tilted') {
+        warningNotification();
+      }
+    }
+  }, [worstState, triggerLevelHaptic, warningNotification]);
 
   const statusText =
     worstState === 'level'

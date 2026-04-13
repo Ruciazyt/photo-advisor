@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 export type BubblePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
 
@@ -36,7 +36,39 @@ const POSITION_STYLES: Record<BubbleItem['position'], object> = {
 };
 
 function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => void }) {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
+
+  const styles = StyleSheet.create({
+    bubble: {
+      position: 'absolute',
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      borderRadius: 12,
+      padding: 12,
+      paddingRight: 28,
+      maxWidth: 260,
+    },
+    bubbleText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '500',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      width: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    closeText: {
+      color: colors.accent,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+  });
 
   useEffect(() => {
     Animated.timing(opacity, {
@@ -59,10 +91,49 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
 }
 
 export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbleAppear }: BubbleOverlayProps) {
+  const { colors } = useTheme();
   const [visibleItems, setVisibleItems] = useState<BubbleItem[]>([]);
   const [nextId, setNextId] = useState(0);
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
+
+  const styles = StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 20,
+    },
+    loadingTag: {
+      position: 'absolute',
+      top: 80,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      zIndex: 21,
+    },
+    loadingText: {
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      color: colors.accent,
+      fontSize: 13,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 20,
+      overflow: 'hidden',
+    },
+    dismissAllBtn: {
+      position: 'absolute',
+      bottom: 120,
+      alignSelf: 'center',
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    dismissAllText: {
+      color: colors.accent,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+  });
 
   // When new items come in, show them one by one
   useEffect(() => {
@@ -148,65 +219,3 @@ export function parseBubbleItems(rawTexts: string[]): BubbleItem[] {
       return { id: i, text, position: defaults[i % defaults.length] };
     });
 }
-
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 20,
-  },
-  loadingTag: {
-    position: 'absolute',
-    top: 80,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 21,
-  },
-  loadingText: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    color: Colors.accent,
-    fontSize: 13,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  bubble: {
-    position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    borderRadius: 12,
-    padding: 12,
-    paddingRight: 28,
-    maxWidth: 200,
-    minWidth: 80,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  bubbleText: {
-    color: '#fff',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 4,
-    right: 6,
-  },
-  closeText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 13,
-  },
-  dismissAllBtn: {
-    position: 'absolute',
-    bottom: 190,
-    right: 12,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 14,
-  },
-  dismissAllText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 12,
-  },
-});

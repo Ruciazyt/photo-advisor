@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Positive AI keywords that suggest a great composition moment
 const BURST_TRIGGER_KEYWORDS = [
@@ -31,8 +31,77 @@ export function BurstSuggestionOverlay({
   onAccept,
   onDismiss,
 }: BurstSuggestionOverlayProps) {
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  const styles = StyleSheet.create({
+    container: {
+      position: 'absolute',
+      top: 130,
+      left: 16,
+      right: 16,
+      zIndex: 50,
+      alignItems: 'center',
+    },
+    panel: {
+      backgroundColor: 'rgba(20,16,8,0.92)',
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderWidth: 1,
+      borderColor: 'rgba(255,215,0,0.35)',
+      width: '100%',
+      maxWidth: 320,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 6,
+    },
+    title: {
+      color: '#FFD700',
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    message: {
+      color: colors.text,
+      fontSize: 12,
+      lineHeight: 17,
+      marginBottom: 10,
+    },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 10,
+    },
+    dismissBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: 'rgba(255,255,255,0.08)',
+    },
+    dismissText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    acceptBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 16,
+      paddingVertical: 7,
+      borderRadius: 8,
+      backgroundColor: '#FFD700',
+    },
+    acceptText: {
+      color: '#000',
+      fontSize: 13,
+      fontWeight: '800',
+    },
+  });
 
   useEffect(() => {
     if (visible) {
@@ -99,71 +168,3 @@ export function BurstSuggestionOverlay({
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 130,
-    left: 16,
-    right: 16,
-    zIndex: 50,
-    alignItems: 'center',
-  },
-  panel: {
-    backgroundColor: 'rgba(20,16,8,0.92)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.35)',
-    width: '100%',
-    maxWidth: 320,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
-  },
-  title: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  message: {
-    color: Colors.text,
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 10,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  dismissBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  dismissText: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  acceptBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 8,
-    backgroundColor: '#FFD700',
-  },
-  acceptText: {
-    color: '#000',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-});

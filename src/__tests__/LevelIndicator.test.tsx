@@ -8,6 +8,27 @@ jest.mock('../hooks/useDeviceOrientation', () => ({
   useDeviceOrientation: jest.fn(),
 }));
 
+// Mock useHaptics
+jest.mock('../hooks/useHaptics', () => ({
+  useHaptics: jest.fn(() => ({
+    triggerLevelHaptic: jest.fn(),
+    warningNotification: jest.fn(),
+    lightImpact: jest.fn(),
+    mediumImpact: jest.fn(),
+    heavyImpact: jest.fn(),
+    successNotification: jest.fn(),
+    errorNotification: jest.fn(),
+  })),
+}));
+
+// Mock expo-haptics for the LevelIndicator haptics integration
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  notificationAsync: jest.fn(),
+  ImpactFeedbackStyle: { Light: 'Light', Medium: 'Medium', Heavy: 'Heavy' },
+  NotificationFeedbackType: { Success: 'Success', Warning: 'Warning', Error: 'Error' },
+}));
+
 // Mock ThemeContext
 jest.mock('../contexts/ThemeContext', () => ({
   useTheme: jest.fn(() => ({

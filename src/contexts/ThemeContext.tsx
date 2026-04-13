@@ -9,7 +9,15 @@ interface ThemeContextValue {
   toggleTheme: () => Promise<void>;
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+// Default context value — used when no ThemeProvider is present (e.g. in tests)
+const defaultValue: ThemeContextValue = {
+  theme: 'dark',
+  colors: DarkColors,
+  setTheme: async () => {},
+  toggleTheme: async () => {},
+};
+
+const ThemeContext = createContext<ThemeContextValue>(defaultValue);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<'dark' | 'light'>('dark');
@@ -40,7 +48,5 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
+  return useContext(ThemeContext);
 }

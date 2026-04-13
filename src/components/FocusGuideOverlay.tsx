@@ -9,8 +9,6 @@ import {
   Platform,
   ToastAndroid,
 } from 'react-native';
-import { Colors } from '../constants/colors';
-
 // Focus zone depth approximations (0 = near, 1 = far/infinity)
 // These are heuristics since expo-camera focusDepth support varies by device
 const FOCUS_ZONES = [

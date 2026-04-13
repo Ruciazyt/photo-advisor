@@ -3,10 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSunPosition } from '../hooks/useSunPosition';
-import { Colors } from '../constants/colors';
 
 function CompassArrow({ azimuth }: { azimuth: number }) {
   const { colors } = useTheme();
+
+  const localStyles = StyleSheet.create({
+    arrowWrapper: {
+      position: 'absolute',
+    },
+    arrow: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.sunColor,
+    },
+  });
 
   return (
     <View style={styles.compassContainer}>
@@ -15,11 +25,9 @@ function CompassArrow({ azimuth }: { azimuth: number }) {
         <Text style={styles.compassE}>E</Text>
         <Text style={styles.compassS}>S</Text>
         <Text style={styles.compassW}>W</Text>
-        {/* Arrow pointing to sun direction */}
-        <View style={[styles.arrowWrapper, { transform: [{ rotate: `${azimuth}deg` }] }]}>
-          <Text style={[styles.arrow, { color: colors.sunColor }]}>↑</Text>
+        <View style={[localStyles.arrowWrapper, { transform: [{ rotate: `${azimuth}deg` }] }]}>
+          <Text style={localStyles.arrow}>↑</Text>
         </View>
-        {/* Center dot */}
         <View style={styles.compassCenter} />
       </View>
     </View>
@@ -36,7 +44,7 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
     return (
       <View style={styles.container} pointerEvents="none">
         <View style={styles.panel}>
-          <Ionicons name="sunny-outline" size={14} color={Colors.textSecondary} />
+          <Ionicons name="sunny-outline" size={14} color={colors.textSecondary} />
           <Text style={[styles.unavailableText, { color: colors.textSecondary }]}>{sunData.advice}</Text>
         </View>
       </View>
@@ -153,13 +161,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: 'rgba(255,255,255,0.3)',
     position: 'absolute',
-  },
-  arrowWrapper: {
-    position: 'absolute',
-  },
-  arrow: {
-    fontSize: 16,
-    fontWeight: '700',
   },
   infoBlock: {
     flex: 1,

@@ -11,7 +11,7 @@ import {
 import { KeypointOverlay } from './KeypointOverlay';
 import { BubbleOverlay, BubbleItem } from './BubbleOverlay';
 import { Keypoint } from './KeypointOverlay';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -34,8 +34,106 @@ export function ComparisonOverlay({
   score,
   scoreReason,
 }: ComparisonOverlayProps) {
+  const { colors } = useTheme();
   const [showAnnotated, setShowAnnotated] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const styles = StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: '#000',
+      zIndex: 100,
+    },
+    imageContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    image: {
+      width: SCREEN_W,
+      height: SCREEN_H * 0.75,
+    },
+    controls: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'space-between',
+      pointerEvents: 'box-none',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 60,
+      right: 20,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    closeBtnText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    toggleContainer: {
+      position: 'absolute',
+      bottom: 50,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 16,
+    },
+    toggleBtn: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    toggleBtnActive: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    toggleText: {
+      color: 'rgba(255,255,255,0.7)',
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    toggleTextActive: {
+      color: '#000',
+    },
+    scoreContainer: {
+      position: 'absolute',
+      top: 60,
+      left: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      borderRadius: 20,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.15)',
+    },
+    starsText: {
+      fontSize: 16,
+      color: colors.accent,
+    },
+    scoreBadge: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    scoreReasonSmall: {
+      color: 'rgba(255,255,255,0.6)',
+      fontSize: 11,
+      maxWidth: 120,
+    },
+  });
 
   const toggleView = (show: boolean) => {
     Animated.sequence([
@@ -114,99 +212,4 @@ export function ComparisonOverlay({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
-    zIndex: 100,
-  },
-  imageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  image: {
-    width: SCREEN_W,
-    height: SCREEN_H * 0.75,
-  },
-  controls: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'space-between',
-    pointerEvents: 'box-none',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  closeBtnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  toggleContainer: {
-    position: 'absolute',
-    bottom: 50,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  toggleBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  toggleBtnActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  toggleText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  toggleTextActive: {
-    color: '#000',
-  },
-  scoreContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  starsText: {
-    fontSize: 16,
-    color: Colors.accent,
-  },
-  scoreBadge: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  scoreReasonSmall: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 11,
-    maxWidth: 120,
-  },
-});
+

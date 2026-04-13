@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { useFavorites } from '../hooks/useFavorites';
 import { computeStats, getScoreEmoji, getTrendLabel } from '../services/stats';
 
@@ -16,21 +16,173 @@ interface StatsScreenProps {
 }
 
 export function StatsScreen({ onBack }: StatsScreenProps) {
+  const { colors } = useTheme();
   const { favorites } = useFavorites();
   const stats = computeStats(favorites);
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.primary,
+    },
+    header: {
+      paddingTop: 60,
+      paddingBottom: 20,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    title: {
+      color: colors.accent,
+      fontSize: 20,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    placeholder: {
+      width: 40,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 12,
+      paddingHorizontal: 40,
+    },
+    emptyTitle: {
+      color: colors.accent,
+      fontSize: 18,
+      fontWeight: '600',
+      marginTop: 8,
+    },
+    emptyHint: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 40,
+      gap: 24,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    summaryCard: {
+      flex: 1,
+      backgroundColor: colors.cardBg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    summaryValue: {
+      color: colors.accent,
+      fontSize: 22,
+      fontWeight: '700',
+    },
+    summaryLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginTop: 4,
+    },
+    section: {
+      gap: 12,
+    },
+    sectionTitle: {
+      color: colors.accent,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    trendBadge: {
+      backgroundColor: colors.cardBg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    trendText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    barRow: {
+      gap: 8,
+    },
+    barLabel: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '500',
+    },
+    barContainer: {
+      height: 12,
+      backgroundColor: colors.cardBg,
+      borderRadius: 6,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      backgroundColor: colors.accent,
+      borderRadius: 6,
+    },
+    barValue: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: 'right',
+    },
+    scoreChips: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingVertical: 4,
+    },
+    scoreChip: {
+      backgroundColor: colors.cardBg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      alignItems: 'center',
+      minWidth: 56,
+    },
+    scoreChipDate: {
+      color: colors.textSecondary,
+      fontSize: 11,
+    },
+    scoreChipScore: {
+      color: colors.accent,
+      fontSize: 16,
+      fontWeight: '700',
+      marginTop: 2,
+    },
+  });
 
   if (favorites.length === 0) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={Colors.accent} />
+            <Ionicons name="chevron-back" size={24} color={colors.accent} />
           </TouchableOpacity>
           <Text style={styles.title}>拍摄统计</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.emptyContainer}>
-          <Ionicons name="bar-chart-outline" size={64} color={Colors.accent} />
+          <Ionicons name="bar-chart-outline" size={64} color={colors.accent} />
           <Text style={styles.emptyTitle}>暂无数据</Text>
           <Text style={styles.emptyHint}>开始拍摄并收藏照片{'\n'}你的统计数据将显示在这里</Text>
         </View>
@@ -42,7 +194,7 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={Colors.accent} />
+          <Ionicons name="chevron-back" size={24} color={colors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>拍摄统计</Text>
         <View style={styles.placeholder} />
@@ -147,154 +299,3 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    color: Colors.accent,
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  placeholder: {
-    width: 40,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    color: Colors.accent,
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptyHint: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    gap: 24,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  summaryValue: {
-    color: Colors.accent,
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  summaryLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  section: {
-    gap: 12,
-  },
-  sectionTitle: {
-    color: Colors.accent,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  trendBadge: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  trendText: {
-    color: Colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  barRow: {
-    gap: 8,
-  },
-  barLabel: {
-    color: Colors.text,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  barContainer: {
-    height: 12,
-    backgroundColor: Colors.cardBg,
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: 6,
-  },
-  barValue: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    textAlign: 'right',
-  },
-  scoreChips: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  scoreChip: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: 'center',
-    minWidth: 56,
-  },
-  scoreChipDate: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-  },
-  scoreChipScore: {
-    color: Colors.accent,
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-});

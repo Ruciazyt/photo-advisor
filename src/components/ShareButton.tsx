@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { sharePhoto, ShareOptions } from '../services/share';
 
 interface ShareButtonProps {
@@ -18,6 +18,24 @@ interface ShareButtonProps {
   /** Callback when share completes */
   onShareEnd?: () => void;
 }
+
+const toastStyles = StyleSheet.create({
+  toast: {
+    position: 'absolute',
+    top: 150,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    zIndex: 30,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+});
 
 /** Animated toast for share result */
 function ShareToast({ message, visible }: { message: string; visible: boolean }) {
@@ -36,8 +54,8 @@ function ShareToast({ message, visible }: { message: string; visible: boolean })
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.toast, { opacity }]} pointerEvents="none">
-      <Text style={styles.toastText}>{message}</Text>
+    <Animated.View style={[toastStyles.toast, { opacity }]} pointerEvents="none">
+      <Text style={toastStyles.toastText}>{message}</Text>
     </Animated.View>
   );
 }
@@ -50,9 +68,39 @@ export function ShareButton({
   gridVariant,
   onShareEnd,
 }: ShareButtonProps) {
+  const { colors } = useTheme();
   const [sharing, setSharing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+
+  const styles = StyleSheet.create({
+    button: {
+      position: 'absolute',
+      top: 110,
+      left: 16,
+      zIndex: 10,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.15)',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.accent,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    buttonTextDisabled: {
+      color: 'rgba(255,255,255,0.3)',
+    },
+  });
 
   const canShare = !!photoUri;
 
@@ -95,12 +143,12 @@ export function ShareButton({
         activeOpacity={0.7}
       >
         {sharing ? (
-          <ActivityIndicator size="small" color={Colors.accent} />
+          <ActivityIndicator size="small" color={colors.accent} />
         ) : (
           <Ionicons
             name="share-outline"
             size={18}
-            color={canShare ? Colors.accent : 'rgba(255,255,255,0.3)'}
+            color={canShare ? colors.accent : 'rgba(255,255,255,0.3)'}
           />
         )}
         <Text style={[styles.buttonText, !canShare && styles.buttonTextDisabled]}>
@@ -112,47 +160,3 @@ export function ShareButton({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    position: 'absolute',
-    top: 110,
-    left: 16,
-    zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: Colors.accent,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  buttonTextDisabled: {
-    color: 'rgba(255,255,255,0.3)',
-  },
-  toast: {
-    position: 'absolute',
-    top: 150,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    zIndex: 30,
-  },
-  toastText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});
