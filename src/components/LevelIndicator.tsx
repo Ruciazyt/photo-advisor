@@ -31,6 +31,9 @@ function BubbleDot({ pitch, roll, color }: BubbleDotProps) {
   const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, pitch));
   const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, roll));
 
+  const offsetX = (clampedRoll / MAX_TILT) * BUBBLE_RADIUS;
+  const offsetY = (clampedPitch / MAX_TILT) * BUBBLE_RADIUS;
+
   return (
     <View style={styles.bubbleContainer} pointerEvents="none">
       {/* Outer ring */}
@@ -70,7 +73,7 @@ export function LevelIndicator() {
     : pitchState === 'slight' || rollState === 'slight'
     ? 'slight'
     : 'level';
-  const color = getColor(worstState);
+  const color = getColor(worstState, colors);
 
   const statusText =
     worstState === 'level'
