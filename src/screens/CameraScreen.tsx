@@ -416,7 +416,7 @@ export function CameraScreen() {
     let sceneTag = '';
     if (config && lastCapturedBase64Ref.current) {
       showToast('正在识别场景...');
-      sceneTag = await recognizeScene(lastCapturedBase64Ref.current, config);
+      sceneTag = await recognizeSceneTag(lastCapturedBase64Ref.current);
     }
     const { score, reason } = computeScoreFromSuggestions(suggestions);
     setLastCapturedScore(score);
