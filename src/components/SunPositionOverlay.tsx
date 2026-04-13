@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSunPosition } from '../hooks/useSunPosition';
+import { Colors } from '../constants/colors';
 
 function CompassArrow({ azimuth }: { azimuth: number }) {
-  // Draw a simple compass with an arrow pointing to sun azimuth
+  const { colors } = useTheme();
+
   return (
     <View style={styles.compassContainer}>
       <View style={styles.compassRing}>
@@ -15,7 +17,7 @@ function CompassArrow({ azimuth }: { azimuth: number }) {
         <Text style={styles.compassW}>W</Text>
         {/* Arrow pointing to sun direction */}
         <View style={[styles.arrowWrapper, { transform: [{ rotate: `${azimuth}deg` }] }]}>
-          <Text style={styles.arrow}>↑</Text>
+          <Text style={[styles.arrow, { color: colors.sunColor }]}>↑</Text>
         </View>
         {/* Center dot */}
         <View style={styles.compassCenter} />
@@ -35,7 +37,7 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
       <View style={styles.container} pointerEvents="none">
         <View style={styles.panel}>
           <Ionicons name="sunny-outline" size={14} color={Colors.textSecondary} />
-          <Text style={styles.unavailableText}>{sunData.advice}</Text>
+          <Text style={[styles.unavailableText, { color: colors.textSecondary }]}>{sunData.advice}</Text>
         </View>
       </View>
     );
@@ -46,19 +48,19 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
       <View style={styles.panel}>
         <View style={styles.header}>
           <Ionicons name="sunny" size={16} color={colors.sunColor} />
-          <Text style={styles.label}>太阳</Text>
+          <Text style={[styles.label, { color: colors.sunColor }]}>太阳</Text>
         </View>
 
         <View style={styles.row}>
           <CompassArrow azimuth={sunData.sunAzimuth} />
           <View style={styles.infoBlock}>
-            <Text style={styles.altitudeText}>
+            <Text style={[styles.altitudeText, { color: colors.text }]}>
               仰角 {sunData.sunAltitude.toFixed(1)}°
             </Text>
-            <Text style={styles.azimuthText}>
+            <Text style={[styles.azimuthText, { color: colors.textSecondary }]}>
               方向 {sunData.direction} ({sunData.sunAzimuth.toFixed(0)}°)
             </Text>
-            <Text style={styles.adviceText} numberOfLines={2}>
+            <Text style={[styles.adviceText, { color: colors.accent }]} numberOfLines={2}>
               {sunData.advice}
             </Text>
           </View>
@@ -67,7 +69,7 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
         {sunData.goldenHourStart && sunData.goldenHourEnd && (
           <View style={styles.goldenRow}>
             <Ionicons name="time-outline" size={11} color="#FFB800" />
-            <Text style={styles.goldenText}>
+            <Text style={[styles.goldenText, { color: colors.sunColor }]}>
               黄金时刻 {sunData.goldenHourStart}-{sunData.goldenHourEnd}
             </Text>
           </View>
@@ -78,6 +80,8 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
 }
 
 export function SunToggleButton({ visible, onPress }: { visible: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
+
   return (
     <TouchableOpacity
       style={[styles.toggleBtn, visible && styles.toggleBtnActive]}
@@ -89,7 +93,7 @@ export function SunToggleButton({ visible, onPress }: { visible: boolean; onPres
         size={14}
         color={visible ? colors.sunColor : 'rgba(255,255,255,0.6)'}
       />
-      <Text style={[styles.toggleText, visible && styles.toggleTextActive]}>太阳</Text>
+      <Text style={[styles.toggleText, visible && { color: colors.sunColor }]}>太阳</Text>
     </TouchableOpacity>
   );
 }
@@ -116,7 +120,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   label: {
-    color: colors.sunColor,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -156,7 +159,6 @@ const styles = StyleSheet.create({
   },
   arrow: {
     fontSize: 16,
-    color: colors.sunColor,
     fontWeight: '700',
   },
   infoBlock: {
@@ -164,16 +166,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   altitudeText: {
-    color: colors.text,
     fontSize: 11,
     fontWeight: '600',
   },
   azimuthText: {
-    color: colors.textSecondary,
     fontSize: 10,
   },
   adviceText: {
-    color: colors.accent,
     fontSize: 10,
     fontWeight: '500',
     marginTop: 2,
@@ -188,12 +187,10 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.1)',
   },
   goldenText: {
-    color: colors.sunColor,
     fontSize: 10,
     fontWeight: '600',
   },
   unavailableText: {
-    color: colors.textSecondary,
     fontSize: 11,
     marginLeft: 4,
   },
@@ -218,6 +215,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   toggleTextActive: {
-    color: colors.sunColor,
   },
 });
