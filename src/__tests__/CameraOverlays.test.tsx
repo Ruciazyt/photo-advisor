@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { CameraOverlays, CameraOverlaysProps } from '../components/CameraOverlays';
-import { CompositionScoreResult } from '../hooks/useCompositionScore';
+import { CompositionScoreResult, ChallengeSession } from '../hooks/useCompositionScore';
 
 // Mock all child overlay components
 jest.mock('../components/ConfigWarning', () => ({
@@ -204,8 +204,9 @@ describe('CameraOverlays', () => {
       reason: '构图不错',
       tips: [],
     };
+    const mockSession: ChallengeSession = { scores: [], bestScore: 0, cumulative: 0, count: 0 };
     const { getByTestId } = render(
-      <CameraOverlays {...defaultProps} showScoreOverlay={true} scoreOverlayResult={mockResult} />
+      <CameraOverlays {...defaultProps} showScoreOverlay={true} scoreOverlayResult={mockResult} challengeSession={mockSession} />
     );
     expect(getByTestId('score-overlay')).toBeTruthy();
   });

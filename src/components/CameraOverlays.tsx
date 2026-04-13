@@ -143,7 +143,7 @@ export function CameraOverlays({
 
       <KeypointOverlay keypoints={keypoints} visible={showKeypoints} />
 
-      {showScoreOverlay && scoreOverlayResult && (
+      {showScoreOverlay && scoreOverlayResult && challengeSession && (
         <CompositionScoreOverlay
           result={scoreOverlayResult}
           challengeMode={challengeMode}
