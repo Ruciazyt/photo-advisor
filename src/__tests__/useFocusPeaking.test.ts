@@ -184,6 +184,114 @@ describe('extractPeaks', () => {
 });
 
 // ---------------------------------------------------------------------------
+// sobelMagnitudes edge cases
+// ---------------------------------------------------------------------------
+
+describe('sobelMagnitudes edge cases', () => {
+  it('handles 1x1 image without crashing', () => {
+    const single: number[][] = [[128]];
+    const mag = sobelMagnitudes(single, 1, 1);
+    expect(mag).toHaveLength(1);
+    expect(mag[0]).toHaveLength(1);
+  });
+
+  it('handles 2x2 image without crashing', () => {
+    const tiny: number[][] = [[10, 20], [30, 40]];
+    const mag = sobelMagnitudes(tiny, 2, 2);
+    expect(mag).toHaveLength(2);
+    expect(mag[0]).toHaveLength(2);
+  });
+
+  it('produces non-zero magnitudes for diagonal edge', () => {
+    const image: number[][] = [];
+    for (let y = 0; y < 5; y++) {
+      image[y] = [];
+      for (let x = 0; x < 5; x++) {
+        image[y][x] = x >= y ? 255 : 0;
+      }
+    }
+    const mag = sobelMagnitudes(image, 5, 5);
+    const flat = mag.flat();
+    const max = Math.max(...flat);
+    expect(max).toBeGreaterThan(0);
+  });
+
+  it('boundary clamping keeps edges from crashing (no out-of-bounds)', () => {
+    // Even with boundary clamping, edges should return a value (no NaN/Infinity)
+    const image: number[][] = [
+      [100, 100, 100, 100, 100],
+      [100,   0,   0,   0, 100],
+      [100,   0, 255,   0, 100],
+      [100,   0,   0,   0, 100],
+      [100, 100, 100, 100, 100],
+    ];
+    const mag = sobelMagnitudes(image, 5, 5);
+    // Every cell must be a finite number (no NaN, no Infinity)
+    mag.forEach(row => row.forEach(v => {
+      expect(Number.isFinite(v)).toBe(true);
+    }));
+    // Corners (most clamped) should still be finite
+    expect(Number.isFinite(mag[0][0])).toBe(true);
+    expect(Number.isFinite(mag[4][4])).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractPeaks edge cases
+// ---------------------------------------------------------------------------
+
+describe('extractPeaks edge cases', () => {
+  it('handles 1x1 magnitude without crashing', () => {
+    const mag: number[][] = [[100]];
+    const peaks = extractPeaks(mag, 1, 1);
+    // With 1x1, no neighbours exist so non-max suppression can't fire; result depends on threshold
+    expect(Array.isArray(peaks)).toBe(true);
+  });
+
+  it('returns peaks only from interior pixels (not edge rows/cols)', () => {
+    // Put a single high value on the edge — should be excluded
+    const mag: number[][] = [
+      [255, 255, 255, 255, 255],
+      [255,   0,   0,   0, 255],
+      [255,   0,   0,   0, 255],
+      [255,   0,   0,   0, 255],
+      [255, 255, 255, 255, 255],
+    ];
+    const peaks = extractPeaks(mag, 5, 5);
+    peaks.forEach(p => {
+      // x=0, x=1, y=0, y=1 would be edge or near-edge — interior starts at x>=1 and y>=1
+      // With non-max suppression, edges can't be peaks because they lack full 8-neighbour sets
+      // But our implementation clamps boundaries, so check we're getting interior-ish coords
+      expect(p.x).toBeGreaterThan(0.05);
+      expect(p.x).toBeLessThan(0.95);
+      expect(p.y).toBeGreaterThan(0.05);
+      expect(p.y).toBeLessThan(0.95);
+    });
+  });
+
+  it('correctly identifies two equal-strength non-adjacent peaks', () => {
+    // Two identical isolated peaks that don't suppress each other
+    const mag: number[][] = [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 200, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 200, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ];
+    const peaks = extractPeaks(mag, 7, 7);
+    // Both peaks should appear (different locations, no suppression between them)
+    const topPeak = peaks.find(p => p.y < 0.5);
+    const bottomPeak = peaks.find(p => p.y > 0.5);
+    expect(topPeak).toBeDefined();
+    expect(bottomPeak).toBeDefined();
+    // Both should have the same strength (normalised by the same max=200)
+    expect(topPeak!.strength).toBeCloseTo(bottomPeak!.strength, 2);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // PeakPoint shape
 // ---------------------------------------------------------------------------
 

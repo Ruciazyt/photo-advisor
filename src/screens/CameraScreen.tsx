@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -24,6 +24,8 @@ import { HistogramOverlay } from '../components/HistogramOverlay';
 import { useHistogram } from '../hooks/useHistogram';
 import { SunPositionOverlay, SunToggleButton } from '../components/SunPositionOverlay';
 import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
+import { FocusPeakingOverlay } from '../components/FocusPeakingOverlay';
+import { useFocusPeaking, PeakPoint } from '../hooks/useFocusPeaking';
 import { ShareButton } from '../components/ShareButton';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
@@ -80,6 +82,7 @@ export function CameraScreen() {
   const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
+  const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
@@ -144,6 +147,8 @@ export function CameraScreen() {
   });
 
   const { histogramData, capture: captureHistogram } = useHistogram();
+  const { capturePeaks } = useFocusPeaking();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const doCapture = useCallback(async () => {
     // Increment capture ID so score effect only fires for this capture
@@ -342,7 +347,38 @@ export function CameraScreen() {
     }, 2000);
   }, []);
 
-  const handleRawToggle = useCallback(() => {
+  // ---- Focus Peaking: periodic capture when guide is visible ----
+  const peakingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!showFocusGuide) {
+      if (peakingTimerRef.current) {
+        clearInterval(peakingTimerRef.current);
+        peakingTimerRef.current = null;
+      }
+      setPeakPoints([]);
+      return;
+    }
+
+    const doCapture = async () => {
+      const points = await capturePeaks(cameraRef, screenWidth, screenHeight);
+      if (points.length > 0) setPeakPoints(points);
+    };
+
+    doCapture();
+    peakingTimerRef.current = setInterval(doCapture, 500);
+    return () => {
+      if (peakingTimerRef.current) clearInterval(peakingTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFocusGuide, capturePeaks]);
+
+  useEffect(() => {
+    return () => {
+      if (peakingTimerRef.current) clearInterval(peakingTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
     if (!rawSupported && !rawMode) {
       showToast('RAW仅支持Android设备');
       return;
@@ -442,6 +478,12 @@ export function CameraScreen() {
         {showLevel && <LevelIndicator />}
         <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
         <FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} />
+        <FocusPeakingOverlay
+          visible={showFocusGuide}
+          peaks={peakPoints}
+          screenWidth={screenWidth}
+          screenHeight={screenHeight}
+        />
         <SunPositionOverlay visible={showSunOverlay} />
 
         {/* Burst Suggestion Overlay */}
