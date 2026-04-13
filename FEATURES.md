@@ -52,7 +52,7 @@
 - [ ] 无障碍支持（VoiceOver/TalkBack）
 
 ### 代码结构
-- [ ] 将 CameraScreen 拆分为多个 sub-components（控制在 400 行以内）
+- [x] 将 CameraScreen 拆分为多个 sub-components（控制在 400 行以内）
 - [ ] 提取通用 hooks（useCamera, useKeypoints, useBubbleChat）
 - [ ] 建立统一的错误处理层
 - [ ] 补充 TypeScript 类型定义
