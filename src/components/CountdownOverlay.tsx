@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface CountdownOverlayProps {
   count: number; // current count value (3, 2, 1)
@@ -10,6 +10,7 @@ interface CountdownOverlayProps {
 /** Pulsing countdown number overlay.
  *  Animates a large digit that scales down and fades out each second. */
 export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1.4)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
@@ -41,10 +42,11 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
           {
             transform: [{ scale: scaleAnim }],
             opacity: opacityAnim,
+            backgroundColor: colors.countdownBg,
           },
         ]}
       >
-        <Text style={styles.number}>{count}</Text>
+        <Text style={[styles.number, { color: colors.countdownText }]}>{count}</Text>
       </Animated.View>
     </View>
   );
@@ -62,14 +64,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(232,213,183,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
     borderColor: 'rgba(255,255,255,0.4)',
   },
   number: {
-    color: '#000000',
     fontSize: 64,
     fontWeight: '800',
     lineHeight: 72,

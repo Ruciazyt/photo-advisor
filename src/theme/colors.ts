@@ -8,6 +8,10 @@ export const DarkColors = {
   success: '#4CAF50',
   error: '#FF5252',
   background: '#000000',
+  sunColor: '#FFB800',
+  gridAccent: 'rgba(232,213,183,0.35)',
+  countdownBg: 'rgba(232,213,183,0.9)',
+  countdownText: '#000000',
 };
 
 export const LightColors = {
@@ -20,6 +24,10 @@ export const LightColors = {
   success: '#4CAF50',
   error: '#FF5252',
   background: '#FAFAFA',
+  sunColor: '#E69500',
+  gridAccent: 'rgba(180,140,80,0.4)',
+  countdownBg: 'rgba(200,160,100,0.9)',
+  countdownText: '#000000',
 };
 
 export type ColorPalette = typeof DarkColors;

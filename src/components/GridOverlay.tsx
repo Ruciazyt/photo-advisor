@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 export type GridVariant = 'thirds' | 'golden' | 'diagonal' | 'spiral' | 'none';
 
@@ -62,6 +63,7 @@ function SpiralGrid() {
 }
 
 export function GridOverlay({ variant = 'thirds' }: GridOverlayProps) {
+  const { colors } = useTheme();
   if (variant === 'none') return null;
 
   if (variant === 'thirds') {
@@ -134,14 +136,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(232,213,183,0.35)',
+    backgroundColor: colors.gridAccent,
   },
   vLine: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: 'rgba(232,213,183,0.35)',
+    backgroundColor: colors.gridAccent,
   },
   // Guide dots
   guidePoint: {

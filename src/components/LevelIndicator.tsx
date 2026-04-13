@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { useDeviceOrientation, DeviceOrientation } from '../hooks/useDeviceOrientation';
 
 const MAX_TILT = 20; // degrees beyond which we consider "严重倾斜"
@@ -15,33 +15,21 @@ function getLevelState(tilt: number): 'level' | 'slight' | 'tilted' {
   return 'tilted';
 }
 
-function getColor(state: 'level' | 'slight' | 'tilted'): string {
-  if (state === 'level') return Colors.success;
+function getColor(state: 'level' | 'slight' | 'tilted', colors: { success: string; error: string }): string {
+  if (state === 'level') return colors.success;
   if (state === 'slight') return '#FFD700'; // gold
-  return Colors.error;
+  return colors.error;
 }
 
 interface BubbleDotProps {
   pitch: number;
   roll: number;
+  color: string;
 }
 
-function BubbleDot({ pitch, roll }: BubbleDotProps) {
+function BubbleDot({ pitch, roll, color }: BubbleDotProps) {
   const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, pitch));
   const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, roll));
-
-  // Map tilt angle to pixel offset: at MAX_TILT the bubble is at the edge
-  const offsetX = (clampedRoll / MAX_TILT) * BUBBLE_RADIUS;
-  const offsetY = (clampedPitch / MAX_TILT) * BUBBLE_RADIUS;
-
-  const pitchState = getLevelState(pitch);
-  const rollState = getLevelState(roll);
-  const worstState = pitchState === 'tilted' || rollState === 'tilted'
-    ? 'tilted'
-    : pitchState === 'slight' || rollState === 'slight'
-    ? 'slight'
-    : 'level';
-  const color = getColor(worstState);
 
   return (
     <View style={styles.bubbleContainer} pointerEvents="none">
@@ -68,6 +56,7 @@ function BubbleDot({ pitch, roll }: BubbleDotProps) {
 }
 
 export function LevelIndicator() {
+  const { colors } = useTheme();
   const { orientation, available } = useDeviceOrientation(80);
 
   if (!available) {
@@ -100,7 +89,7 @@ export function LevelIndicator() {
   return (
     <View style={styles.container} pointerEvents="none">
       <View style={styles.indicatorRow}>
-        <BubbleDot pitch={orientation.pitch} roll={orientation.roll} />
+        <BubbleDot pitch={orientation.pitch} roll={orientation.roll} color={color} />
         <View style={styles.infoPanel}>
           <Ionicons name={statusIcon} size={18} color={color} />
           <Text style={[styles.statusText, { color }]}>{statusText}</Text>
