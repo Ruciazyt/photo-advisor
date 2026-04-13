@@ -114,11 +114,16 @@ export function SettingsScreen({ onSaved }: Props) {
     setModels([]);
     try {
       const result = await fetchAvailableModels(apiKey.trim(), baseUrl.trim());
-      setModels(result);
-      if (result.length === 0) {
+      if (!result.ok) {
+        Alert.alert('获取模型列表失败', result.error.message);
+        return;
+      }
+      const fetchedModels = result.models;
+      setModels(fetchedModels);
+      if (fetchedModels.length === 0) {
         Alert.alert('未找到可用模型', '请检查 API 配置是否正确');
-      } else if (result.length === 1) {
-        setSelectedModel(result[0].id);
+      } else if (fetchedModels.length === 1) {
+        setSelectedModel(fetchedModels[0].id);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
