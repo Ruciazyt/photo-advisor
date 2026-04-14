@@ -1,87 +1,96 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 import type { GridVariant, GridOverlayProps } from '../types';
 export type { GridVariant };
 export type { GridOverlayProps };
 
-function GoldenSpiral() {
+function GoldenSpiral({ gridAccent }: { gridAccent: string }) {
   // Approximate golden spiral using arcs in rectangles
   // Phi = 1.618...
   return (
     <View style={styles.overlay} pointerEvents="none">
       {/* Golden ratio vertical lines: 1/phi and phi-1/phi */}
-      <View style={[styles.vLine, { left: '38.2%' }]} />
-      <View style={[styles.vLine, { left: '61.8%' }]} />
+      <View style={[styles.vLine, { left: '38.2%', backgroundColor: gridAccent }]} />
+      <View style={[styles.vLine, { left: '61.8%', backgroundColor: gridAccent }]} />
       {/* Golden ratio horizontal lines */}
-      <View style={[styles.hLine, { top: '38.2%' }]} />
-      <View style={[styles.hLine, { top: '61.8%' }]} />
+      <View style={[styles.hLine, { top: '38.2%', backgroundColor: gridAccent }]} />
+      <View style={[styles.hLine, { top: '61.8%', backgroundColor: gridAccent }]} />
       {/* Spiral guide points - approximate golden spiral intersections */}
-      <View style={[styles.guidePoint, { top: '38.2%', left: '38.2%' }]} />
-      <View style={[styles.guidePoint, { top: '38.2%', left: '61.8%' }]} />
-      <View style={[styles.guidePoint, { top: '61.8%', left: '61.8%' }]} />
-      <View style={[styles.guidePoint, { top: '61.8%', left: '38.2%' }]} />
+      <View style={[styles.guidePoint, { top: '38.2%', left: '38.2%', backgroundColor: gridAccent, opacity: 0.5 }]} />
+      <View style={[styles.guidePoint, { top: '38.2%', left: '61.8%', backgroundColor: gridAccent, opacity: 0.5 }]} />
+      <View style={[styles.guidePoint, { top: '61.8%', left: '61.8%', backgroundColor: gridAccent, opacity: 0.5 }]} />
+      <View style={[styles.guidePoint, { top: '61.8%', left: '38.2%', backgroundColor: gridAccent, opacity: 0.5 }]} />
     </View>
   );
 }
 
-function DiagonalGrid() {
+function DiagonalGrid({ gridAccent }: { gridAccent: string }) {
   return (
     <View style={styles.overlay} pointerEvents="none">
       {/* Main diagonals */}
-      <View style={[styles.diagonal, styles.diagonalTLBR]} />
-      <View style={[styles.diagonal, styles.diagonalTRBL]} />
+      <View style={[styles.diagonal, styles.diagonalTLBR, { backgroundColor: gridAccent }]} />
+      <View style={[styles.diagonal, styles.diagonalTRBL, { backgroundColor: gridAccent }]} />
       {/* Secondary diagonals from corners to opposite sides */}
-      <View style={[styles.diagonalMinor, styles.diagonalTLMidRight]} />
-      <View style={[styles.diagonalMinor, styles.diagonalTRMidLeft]} />
-      <View style={[styles.diagonalMinor, styles.diagonalBLMidRight]} />
-      <View style={[styles.diagonalMinor, styles.diagonalBRMidLeft]} />
+      <View style={[styles.diagonalMinor, styles.diagonalTLMidRight, { backgroundColor: gridAccent, opacity: 0.48 }]} />
+      <View style={[styles.diagonalMinor, styles.diagonalTRMidLeft, { backgroundColor: gridAccent, opacity: 0.48 }]} />
+      <View style={[styles.diagonalMinor, styles.diagonalBLMidRight, { backgroundColor: gridAccent, opacity: 0.48 }]} />
+      <View style={[styles.diagonalMinor, styles.diagonalBRMidLeft, { backgroundColor: gridAccent, opacity: 0.48 }]} />
     </View>
   );
 }
 
-function SpiralGrid() {
+function SpiralGrid({ gridAccent }: { gridAccent: string }) {
   // Fibonacci spiral approximation using arcs
   return (
     <View style={styles.overlay} pointerEvents="none">
       {/* Golden ratio grid as base */}
-      <View style={[styles.vLine, { left: '38.2%' }]} />
-      <View style={[styles.vLine, { left: '61.8%' }]} />
-      <View style={[styles.hLine, { top: '38.2%' }]} />
-      <View style={[styles.hLine, { top: '61.8%' }]} />
+      <View style={[styles.vLine, { left: '38.2%', backgroundColor: gridAccent }]} />
+      <View style={[styles.vLine, { left: '61.8%', backgroundColor: gridAccent }]} />
+      <View style={[styles.hLine, { top: '38.2%', backgroundColor: gridAccent }]} />
+      <View style={[styles.hLine, { top: '61.8%', backgroundColor: gridAccent }]} />
       {/* Arc guides - rendered as quarter-circle lines */}
-      <View style={[styles.arc, { width: '23.6%', height: '23.6%', top: 0, left: 0 }]} />
-      <View style={[styles.arc, { width: '38.2%', height: '38.2%', bottom: 0, right: 0 }]} />
+      <View style={[styles.arc, { width: '23.6%', height: '23.6%', top: 0, left: 0, borderColor: gridAccent }]} />
+      <View style={[styles.arc, { width: '38.2%', height: '38.2%', bottom: 0, right: 0, borderColor: gridAccent }]} />
       {/* Spiral intersection dots */}
-      <View style={[styles.guidePoint, { top: '38.2%', left: '38.2%' }]} />
-      <View style={[styles.guidePoint, { top: '61.8%', left: '61.8%' }]} />
+      <View style={[styles.guidePoint, { top: '38.2%', left: '38.2%', backgroundColor: gridAccent, opacity: 0.5 }]} />
+      <View style={[styles.guidePoint, { top: '61.8%', left: '61.8%', backgroundColor: gridAccent, opacity: 0.5 }]} />
+    </View>
+  );
+}
+
+function ThirdsGrid({ gridAccent }: { gridAccent: string }) {
+  return (
+    <View style={styles.overlay} pointerEvents="none">
+      <View style={[styles.hLine, { top: '33.33%', backgroundColor: gridAccent }]} />
+      <View style={[styles.hLine, { top: '66.66%', backgroundColor: gridAccent }]} />
+      <View style={[styles.vLine, { left: '33.33%', backgroundColor: gridAccent }]} />
+      <View style={[styles.vLine, { left: '66.66%', backgroundColor: gridAccent }]} />
     </View>
   );
 }
 
 export function GridOverlay({ variant = 'thirds' }: GridOverlayProps) {
+  const { colors } = useTheme();
   if (variant === 'none') return null;
 
+  // Use gridAccent for golden lines; fall back to semi-transparent white for thirds
+  const gridAccent = colors.gridAccent;
+
   if (variant === 'thirds') {
-    return (
-      <View style={styles.overlay} pointerEvents="none">
-        <View style={styles.hLineThirds1} />
-        <View style={styles.hLineThirds2} />
-        <View style={styles.vLineThirds1} />
-        <View style={styles.vLineThirds2} />
-      </View>
-    );
+    return <ThirdsGrid gridAccent={gridAccent} />;
   }
 
   if (variant === 'golden') {
-    return <GoldenSpiral />;
+    return <GoldenSpiral gridAccent={gridAccent} />;
   }
 
   if (variant === 'diagonal') {
-    return <DiagonalGrid />;
+    return <DiagonalGrid gridAccent={gridAccent} />;
   }
 
   if (variant === 'spiral') {
-    return <SpiralGrid />;
+    return <SpiralGrid gridAccent={gridAccent} />;
   }
 
   return null;
@@ -92,53 +101,18 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
-  // Thirds grid
-  hLineThirds1: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '33.33%',
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  hLineThirds2: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '66.66%',
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  vLineThirds1: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: '33.33%',
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  vLineThirds2: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: '66.66%',
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  // Golden / general lines
+  // Thirds grid (overridden via inline style)
   hLine: {
     position: 'absolute',
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(232,213,183,0.45)',
   },
   vLine: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: 'rgba(232,213,183,0.45)',
   },
   // Guide dots
   guidePoint: {
@@ -146,14 +120,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(232,213,183,0.5)',
     marginLeft: -4,
     marginTop: -4,
   },
   // Diagonal lines
   diagonal: {
     position: 'absolute',
-    backgroundColor: 'rgba(255,255,255,0.25)',
   },
   diagonalTLBR: {
     width: '141.4%',
@@ -171,7 +143,6 @@ const styles = StyleSheet.create({
   },
   diagonalMinor: {
     position: 'absolute',
-    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   diagonalTLMidRight: {
     width: '70.7%',
@@ -206,6 +177,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(232,213,183,0.3)',
   },
 });

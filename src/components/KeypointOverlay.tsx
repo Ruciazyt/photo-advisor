@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
 export type { KeypointPosition } from '../types';
 export { Keypoint };
@@ -109,6 +109,7 @@ function KeypointMarker({ keypoint }: KeypointMarkerProps) {
 }
 
 export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {
+  const { colors } = useTheme();
   if (!visible || keypoints.length === 0) return null;
 
   return (
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
     height: MARKER_SIZE * 2,
     borderRadius: MARKER_SIZE,
     borderWidth: 2,
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     backgroundColor: 'transparent',
   },
   marker: {
@@ -174,12 +175,12 @@ const styles = StyleSheet.create({
     borderRadius: MARKER_SIZE / 2,
     backgroundColor: 'rgba(0,0,0,0.55)',
     borderWidth: 2,
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },
   markerLabel: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 10,
     fontWeight: '700',
   },

@@ -13,11 +13,12 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../services/api';
 import { StreamingDrawer } from '../components/StreamingDrawer';
 
 export function HomeScreen() {
+  const { colors } = useTheme();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -224,7 +225,7 @@ export function HomeScreen() {
           <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
         ) : (
           <View style={styles.uploadPlaceholder}>
-            <Ionicons name="camera-outline" size={64} color={Colors.accent} />
+            <Ionicons name="camera-outline" size={64} color={colors.accent} />
             <Text style={styles.uploadText}>点击选择照片</Text>
             <Text style={styles.uploadHint}>支持相机拍摄或相册选择</Text>
           </View>
@@ -233,7 +234,7 @@ export function HomeScreen() {
 
       {!apiConfigured && (
         <View style={styles.configWarning}>
-          <Ionicons name="warning-outline" size={16} color={Colors.accent} />
+          <Ionicons name="warning-outline" size={16} color={colors.accent} />
           <Text style={styles.configWarningText}>请先配置API设置</Text>
         </View>
       )}
@@ -248,10 +249,10 @@ export function HomeScreen() {
         activeOpacity={0.8}
       >
         {loading ? (
-          <ActivityIndicator color={Colors.primary} />
+          <ActivityIndicator color={colors.primary} />
         ) : (
           <>
-            <Ionicons name="sparkles" size={20} color={Colors.primary} />
+            <Ionicons name="sparkles" size={20} color={colors.primary} />
             <Text style={styles.sendBtnText}>开始分析</Text>
           </>
         )}
@@ -270,7 +271,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
   },
   header: {
@@ -279,13 +280,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: 2,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -295,9 +296,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderStyle: 'dashed',
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
   },
   preview: {
     width: '100%',
@@ -309,13 +310,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   uploadText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 18,
     fontWeight: '600',
     marginTop: 16,
   },
   uploadHint: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 8,
   },
@@ -324,17 +325,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 10,
     paddingVertical: 10,
     marginTop: 16,
   },
   configWarningText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 13,
   },
   sendBtn: {
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 16,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   sendBtnText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontSize: 17,
     fontWeight: '700',
   },

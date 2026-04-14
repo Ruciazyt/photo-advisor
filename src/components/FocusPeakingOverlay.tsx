@@ -16,7 +16,7 @@
 
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import type { PeakPoint, FocusPeakingOverlayProps } from '../types';
 export type { FocusPeakingOverlayProps };
 
@@ -27,8 +27,10 @@ export function FocusPeakingOverlay({
   peaks,
   screenWidth,
   screenHeight,
-  color = Colors.error, // red for peaking
+  color,
 }: FocusPeakingOverlayProps) {
+  const { colors } = useTheme();
+  const peakingColor = color ?? colors.error; // red for peaking by default
   const dots = useMemo(() => {
     if (!visible || peaks.length === 0) return [];
 
@@ -48,7 +50,7 @@ export function FocusPeakingOverlay({
               width: size,
               height: size,
               borderRadius: size / 2,
-              backgroundColor: color,
+              backgroundColor: peakingColor,
               opacity: Math.max(0.3, peak.strength * 0.85),
             },
           ]}
@@ -56,7 +58,7 @@ export function FocusPeakingOverlay({
         />
       );
     });
-  }, [visible, peaks, screenWidth, screenHeight, color]);
+  }, [visible, peaks, screenWidth, screenHeight, peakingColor]);
 
   if (!visible || dots.length === 0) return null;
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps, SparkleItem } from '../types';
 export type { CompositionScoreOverlayProps };
 
@@ -28,6 +28,7 @@ export function CompositionScoreOverlay({
   session,
   onDismiss,
 }: CompositionScoreOverlayProps) {
+  const { colors } = useTheme();
   const { score, breakdown, grade } = result;
 
   const [displayScore, setDisplayScore] = useState(0);
@@ -339,11 +340,11 @@ const styles = StyleSheet.create({
   },
   barFill: {
     height: '100%',
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
   breakdownValue: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 12,
     fontWeight: '700',
     width: 28,
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   sessionValue: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 14,
     fontWeight: '700',
   },

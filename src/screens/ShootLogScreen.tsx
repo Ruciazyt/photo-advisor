@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { useShootLog } from '../hooks/useShootLog';
 import type { ShootLogEntry } from '../types';
 
@@ -31,16 +31,18 @@ function formatTime(iso: string): string {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function getScoreColor(score: number): string {
-  if (score >= 75) return Colors.success;
+function getScoreColor(score: number, colors: { success: string; error: string }): string {
+  if (score >= 75) return colors.success;
   if (score >= 60) return '#FFC107';
-  return Colors.error;
+  return colors.error;
 }
 
 function ScoreBadge({ score }: { score: number }) {
+  const { colors } = useTheme();
+  const scoreColor = getScoreColor(score, colors);
   return (
-    <View style={[styles.scoreBadge, { backgroundColor: getScoreColor(score) + '22' }]}>
-      <Text style={{ fontSize: 11, color: getScoreColor(score) }}>★ {score}</Text>
+    <View style={[styles.scoreBadge, { backgroundColor: scoreColor + '22' }]}>
+      <Text style={{ fontSize: 11, color: scoreColor }}>★ {score}</Text>
     </View>
   );
 }
@@ -110,6 +112,7 @@ function buildSections(log: ShootLogEntry[]): Section[] {
 }
 
 export function ShootLogScreen() {
+  const { colors } = useTheme();
   const { log, loading, clearLog, totalShoots, avgScore, favoriteCount } = useShootLog();
   const sections = buildSections(log);
 
@@ -131,7 +134,7 @@ export function ShootLogScreen() {
           <Text style={styles.title}>拍摄日志</Text>
         </View>
         <View style={styles.centerState}>
-          <ActivityIndicator color={Colors.accent} size="large" />
+          <ActivityIndicator color={colors.accent} size="large" />
         </View>
       </View>
     );
@@ -153,7 +156,7 @@ export function ShootLogScreen() {
 
       {totalShoots === 0 ? (
         <View style={styles.centerState}>
-          <Ionicons name="camera-outline" size={64} color={Colors.accent} />
+          <Ionicons name="camera-outline" size={64} color={colors.accent} />
           <Text style={styles.emptyTitle}>还没有拍摄记录</Text>
           <Text style={styles.emptyHint}>开始第一次拍摄吧！</Text>
         </View>
@@ -183,7 +186,7 @@ export function ShootLogScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   header: {
     paddingTop: 60,
@@ -192,13 +195,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: 2,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -206,15 +209,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: 64,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   clearBtnText: {
-    color: Colors.error,
+    color: colors.error,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -225,13 +228,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyTitle: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 18,
     fontWeight: '600',
     marginTop: 8,
   },
   emptyHint: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   listContent: {
@@ -241,18 +244,18 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   sectionHeaderText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '700',
   },
   card: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: 12,
     marginBottom: 8,
   },
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   timeText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   gridBadgeText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -297,30 +300,30 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   tagBadgeText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 11,
   },
   locationText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   favoriteTag: {
-    color: Colors.error,
+    color: colors.error,
     fontSize: 12,
     fontWeight: '600',
   },
   timerBadge: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   scoreReasonText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     fontStyle: 'italic',
     marginTop: 4,
   },
   suggestionText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 4,
   },

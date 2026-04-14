@@ -231,5 +231,23 @@ export function useCameraCapture({
     }
   }, []);
 
-  return { takePicture, runAnalysis, savePhotoToGallery, supportsRawCapture };
+  const capturePreviewFrame = useCallback(async (): Promise<{ base64: string; uri: string } | null> => {
+    if (!cameraRef.current || !cameraReady) return null;
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.4 });
+      if (!photo?.uri) return null;
+      const resized = await manipulateAsync(
+        photo.uri,
+        [{ resize: { width: 480 } }],
+        { compress: 0.5, format: SaveFormat.JPEG }
+      );
+      const base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
+      if (base64.length < 500) return null;
+      return { base64, uri: resized.uri };
+    } catch {
+      return null;
+    }
+  }, [cameraReady, cameraRef]);
+
+  return { takePicture, runAnalysis, savePhotoToGallery, supportsRawCapture, capturePreviewFrame };
 }

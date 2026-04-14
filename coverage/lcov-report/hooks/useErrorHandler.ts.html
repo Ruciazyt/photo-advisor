@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/CameraOverlays.tsx</title>
+    <title>Code coverage report for hooks/useErrorHandler.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">components</a> CameraOverlays.tsx</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">hooks</a> useErrorHandler.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">33.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/3</span>
+                <span class='fraction'>21/21</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">83.33% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>5/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>16/16</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>21/21</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -193,94 +193,7 @@
 <a name='L128'></a><a href='#L128'>128</a>
 <a name='L129'></a><a href='#L129'>129</a>
 <a name='L130'></a><a href='#L130'>130</a>
-<a name='L131'></a><a href='#L131'>131</a>
-<a name='L132'></a><a href='#L132'>132</a>
-<a name='L133'></a><a href='#L133'>133</a>
-<a name='L134'></a><a href='#L134'>134</a>
-<a name='L135'></a><a href='#L135'>135</a>
-<a name='L136'></a><a href='#L136'>136</a>
-<a name='L137'></a><a href='#L137'>137</a>
-<a name='L138'></a><a href='#L138'>138</a>
-<a name='L139'></a><a href='#L139'>139</a>
-<a name='L140'></a><a href='#L140'>140</a>
-<a name='L141'></a><a href='#L141'>141</a>
-<a name='L142'></a><a href='#L142'>142</a>
-<a name='L143'></a><a href='#L143'>143</a>
-<a name='L144'></a><a href='#L144'>144</a>
-<a name='L145'></a><a href='#L145'>145</a>
-<a name='L146'></a><a href='#L146'>146</a>
-<a name='L147'></a><a href='#L147'>147</a>
-<a name='L148'></a><a href='#L148'>148</a>
-<a name='L149'></a><a href='#L149'>149</a>
-<a name='L150'></a><a href='#L150'>150</a>
-<a name='L151'></a><a href='#L151'>151</a>
-<a name='L152'></a><a href='#L152'>152</a>
-<a name='L153'></a><a href='#L153'>153</a>
-<a name='L154'></a><a href='#L154'>154</a>
-<a name='L155'></a><a href='#L155'>155</a>
-<a name='L156'></a><a href='#L156'>156</a>
-<a name='L157'></a><a href='#L157'>157</a>
-<a name='L158'></a><a href='#L158'>158</a>
-<a name='L159'></a><a href='#L159'>159</a>
-<a name='L160'></a><a href='#L160'>160</a>
-<a name='L161'></a><a href='#L161'>161</a>
-<a name='L162'></a><a href='#L162'>162</a>
-<a name='L163'></a><a href='#L163'>163</a>
-<a name='L164'></a><a href='#L164'>164</a>
-<a name='L165'></a><a href='#L165'>165</a>
-<a name='L166'></a><a href='#L166'>166</a>
-<a name='L167'></a><a href='#L167'>167</a>
-<a name='L168'></a><a href='#L168'>168</a>
-<a name='L169'></a><a href='#L169'>169</a>
-<a name='L170'></a><a href='#L170'>170</a>
-<a name='L171'></a><a href='#L171'>171</a>
-<a name='L172'></a><a href='#L172'>172</a>
-<a name='L173'></a><a href='#L173'>173</a>
-<a name='L174'></a><a href='#L174'>174</a>
-<a name='L175'></a><a href='#L175'>175</a>
-<a name='L176'></a><a href='#L176'>176</a>
-<a name='L177'></a><a href='#L177'>177</a>
-<a name='L178'></a><a href='#L178'>178</a>
-<a name='L179'></a><a href='#L179'>179</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L131'></a><a href='#L131'>131</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -357,6 +270,52 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -364,238 +323,135 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from 'react';
-import { View } from 'react-native';
-import { CameraView } from 'expo-camera';
-import { ConfigWarning } from './ConfigWarning';
-import { GridOverlay } from './GridOverlay';
-import type { GridVariant } from '../types';
-import { GridSelectorModal } from './GridSelectorModal';
-import { LevelIndicator } from './LevelIndicator';
-import { HistogramOverlay } from './HistogramOverlay';
-import { FocusGuideOverlay } from './FocusGuideOverlay';
-import { FocusPeakingOverlay } from './FocusPeakingOverlay';
-import { SunPositionOverlay } from './SunPositionOverlay';
-import { BurstSuggestionOverlay } from './BurstSuggestionOverlay';
-import { KeypointOverlay } from './KeypointOverlay';
-import type { Keypoint } from '../types';
-import { CompositionScoreOverlay } from './CompositionScoreOverlay';
-import { SceneTagOverlay } from './SceneTagOverlay';
-import { CountdownOverlay } from './CountdownOverlay';
-import type { BubbleItem } from '../types';
-import { ComparisonOverlay } from './ComparisonOverlay';
-import type { PeakPoint } from '../types';
-import type { CompositionScoreResult, ChallengeSession } from '../types';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * useErrorHandler — React hook for component-level error handling.
+ *
+ * Features:
+ * - Wraps handleError with React state for UI feedback
+ * - Tracks last error for display purposes
+ * - Provides safeTry() wrapper for async operations
+ * - Supports error recovery callbacks
+ *
+ * Usage:
+ *
+ *   const { handleError, lastError, isErrorVisible, dismissError } = useErrorHandler();
+ *
+ *   const onPress = () =&gt; {
+ *     handleError(doSomethingRisky(), { context: 'onPress', showAlert: true });
+ *   };
+ *
+ *   // Or with safeTry:
+ *   const onPress = async () =&gt; {
+ *     const result = await safeTry(doSomethingRisky, ErrorCode.GEN_UNKNOWN);
+ *     if (!result.ok) handleError(result.error, { context: 'onPress' });
+ *   };
+ */
 &nbsp;
-export interface CameraOverlaysProps {
-  // Config
-  apiConfigured: boolean;
-  // Grid
-  gridVariant: GridVariant;
-  showGridModal: boolean;
-  onGridSelect: (v: GridVariant) =&gt; void;
-  onGridModalClose: () =&gt; void;
-  // Level
-  showLevel: boolean;
-  // Histogram
-  showHistogram: boolean;
-  histogramData: number[];
-  // Focus
-  showFocusGuide: boolean;
-  cameraRef: React.RefObject&lt;CameraView | null&gt;;
-  peakPoints: PeakPoint[];
-  screenWidth: number;
-  screenHeight: number;
-  // Sun
-  showSunOverlay: boolean;
-  // Burst
-  showBurstSuggestion: boolean;
-  burstSuggestionText: string;
-  onBurstSuggestionAccept: () =&gt; void;
-  onBurstSuggestionDismiss: () =&gt; void;
-  burstActive: boolean;
-  // Keypoints
-  showKeypoints: boolean;
-  keypoints: Keypoint[];
-  // Score
-  showScoreOverlay: boolean;
-  scoreOverlayResult: CompositionScoreResult | null;
-  challengeMode: boolean;
-  challengeSession: ChallengeSession | null;
-  onScoreDismiss: () =&gt; void;
-  // Scene
-  sceneTag: string | null;
-  sceneTagVisible: boolean;
-  // Countdown
-  countdownActive: boolean;
-  countdownCount: number;
-  onCountdownComplete: () =&gt; void;
-  // Comparison (rendered outside CameraView but included here for convenience)
-  lastCapturedUri: string | null;
-  bubbleItems: BubbleItem[];
-  showComparison: boolean;
-  lastCapturedScore: number | null;
-  lastCapturedScoreReason: string | null;
-  onComparisonClose: () =&gt; void;
+import { useCallback, useRef, useState } from 'react';
+import { AppError, ErrorCode, handleError as globalHandleError } from '../services/errors';
+import type { HandleErrorOptions } from '../types';
+&nbsp;
+export interface UseErrorHandlerOptions {
+  /** Default options applied to every handleError call */
+  defaultOptions?: HandleErrorOptions;
 }
 &nbsp;
-export function CameraOverlays({
-  apiConfigured,
-  gridVariant,
-  showGridModal,
-  onGridSelect,
-  onGridModalClose,
-  showLevel,
-  showHistogram,
-  histogramData,
-  showFocusGuide,
-  cameraRef,
-  peakPoints,
-  screenWidth,
-  screenHeight,
-  showSunOverlay,
-  showBurstSuggestion,
-  burstSuggestionText,
-  onBurstSuggestionAccept,
-  onBurstSuggestionDismiss,
-  burstActive,
-  showKeypoints,
-  keypoints,
-  showScoreOverlay,
-  scoreOverlayResult,
-  challengeMode,
-  challengeSession,
-  onScoreDismiss,
-  sceneTag,
-  sceneTagVisible,
-  countdownActive,
-  countdownCount,
-  onCountdownComplete,
-  lastCapturedUri,
-  bubbleItems,
-  showComparison,
-  lastCapturedScore,
-  lastCapturedScoreReason,
-  onComparisonClose,
-}: CameraOverlaysProps) {
-  return (
-    &lt;&gt;
-      &lt;ConfigWarning visible={!apiConfigured} /&gt;
+export interface UseErrorHandlerReturn {
+  /**
+   * Handle an error (AppError or unknown) with optional Alert display.
+   * Returns the normalized AppError.
+   */
+  handleError: (error: unknown, options?: HandleErrorOptions) =&gt; AppError;
 &nbsp;
-      &lt;GridOverlay variant={gridVariant} /&gt;
+  /**
+   * Last error that was handled (most recent).
+   */
+  lastError: AppError | null;
 &nbsp;
-      &lt;GridSelectorModal
-        visible={showGridModal}
-        selectedVariant={gridVariant}
-        onSelect={<span class="fstat-no" title="function not covered" >(v</span>) =&gt; { <span class="cstat-no" title="statement not covered" >onGridSelect(v); <span class="cstat-no" title="statement not covered" ></span>onGridModalClose(); </span>}}
-        onClose={onGridModalClose}
-      /&gt;
+  /**
+   * Whether an error is currently being shown in UI.
+   */
+  isErrorVisible: boolean;
 &nbsp;
-      {showLevel &amp;&amp; &lt;LevelIndicator /&gt;}
-      &lt;HistogramOverlay histogramData={histogramData} visible={showHistogram} /&gt;
-      &lt;FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} /&gt;
-      &lt;FocusPeakingOverlay
-        visible={showFocusGuide}
-        peaks={peakPoints}
-        screenWidth={screenWidth}
-        screenHeight={screenHeight}
-      /&gt;
-      &lt;SunPositionOverlay visible={showSunOverlay} /&gt;
+  /**
+   * Dismiss the current error UI.
+   */
+  dismissError: () =&gt; void;
 &nbsp;
-      &lt;BurstSuggestionOverlay
-        visible={showBurstSuggestion &amp;&amp; !burstActive}
-        suggestion={burstSuggestionText}
-        onAccept={onBurstSuggestionAccept}
-        onDismiss={onBurstSuggestionDismiss}
-      /&gt;
+  /**
+   * Wraps an async function with error handling.
+   * Returns the result or null on error.
+   * Does NOT show Alert automatically.
+   *
+   * Usage:
+   *   const result = await safeTry(
+   *     () =&gt; fetchData(id),
+   *     ErrorCode.API_NETWORK_ERROR
+   *   );
+   *   if (!result.ok) handleError(result.error, { context: 'fetchData' });
+   *   else setData(result.value);
+   */
+  safeTry: &lt;T&gt;(
+    fn: () =&gt; Promise&lt;T&gt;,
+    errorCode?: ErrorCode
+  ) =&gt; Promise&lt;{ ok: true; value: T } | { ok: false; error: AppError }&gt;;
+}
 &nbsp;
-      &lt;KeypointOverlay keypoints={keypoints} visible={showKeypoints} /&gt;
+export function useErrorHandler(options: UseErrorHandlerOptions = {}): UseErrorHandlerReturn {
+  const { defaultOptions = {} } = options;
 &nbsp;
-      {showScoreOverlay &amp;&amp; scoreOverlayResult &amp;&amp; challengeSession &amp;&amp; (
-        &lt;CompositionScoreOverlay
-          result={scoreOverlayResult}
-          challengeMode={challengeMode}
-          session={challengeSession}
-          onDismiss={onScoreDismiss}
-        /&gt;
-      )}
+  const [lastError, setLastError] = useState&lt;AppError | null&gt;(null);
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const onRecoverRef = useRef&lt;(() =&gt; void) | undefined&gt;();
 &nbsp;
-      &lt;SceneTagOverlay tag={sceneTag || null} visible={sceneTagVisible} /&gt;
+  const handleError = useCallback(
+    (error: unknown, extraOptions: HandleErrorOptions = {}): AppError =&gt; {
+      const merged: HandleErrorOptions = {
+        ...defaultOptions,
+        ...extraOptions,
+        onRecover: extraOptions.onRecover ?? defaultOptions.onRecover,
+      };
 &nbsp;
-      {countdownActive &amp;&amp; (
-        &lt;CountdownOverlay
-          key={countdownCount}
-          count={countdownCount}
-          onComplete={onCountdownComplete}
-        /&gt;
-      )}
+      const appError = globalHandleError(error, merged);
 &nbsp;
-      &lt;ComparisonOverlay
-        imageUri={lastCapturedUri!}
-        keypoints={keypoints}
-        bubbles={bubbleItems}
-        visible={showComparison}
-        onClose={onComparisonClose}
-        score={lastCapturedScore ?? undefined}
-        scoreReason={lastCapturedScoreReason ?? undefined}
-      /&gt;
-    &lt;/&gt;
+      // Track last error for UI purposes
+      setLastError(appError);
+      setIsErrorVisible(true);
+      onRecoverRef.current = merged.onRecover;
+&nbsp;
+      return appError;
+    },
+    [defaultOptions]
   );
+&nbsp;
+  const dismissError = useCallback(() =&gt; {
+    setIsErrorVisible(false);
+  }, []);
+&nbsp;
+  const safeTry = useCallback(
+    async &lt;T&gt;(
+      fn: () =&gt; Promise&lt;T&gt;,
+      errorCode: ErrorCode = <span class="branch-0 cbranch-no" title="branch not covered" >ErrorCode.GEN_UNKNOWN</span>
+    ): Promise&lt;{ ok: true; value: T } | { ok: false; error: AppError }&gt; =&gt; {
+      try {
+        const value = await fn();
+        return { ok: true, value };
+      } catch (e) {
+        const { toAppError } = require('../services/errors');
+        const appError = toAppError(e, errorCode);
+        return { ok: false, error: appError };
+      }
+    },
+    []
+  );
+&nbsp;
+  return {
+    handleError,
+    lastError,
+    isErrorVisible,
+    dismissError,
+    safeTry,
+  };
 }
 &nbsp;</pre></td></tr></table></pre>
 

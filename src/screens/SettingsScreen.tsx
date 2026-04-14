@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+
 import { useTheme } from '../contexts/ThemeContext';
 import {
   loadApiConfig,
@@ -199,7 +199,7 @@ export function SettingsScreen({ onSaved }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: Colors.accent }]}>API 配置</Text>
+          <Text style={[styles.title, { color: colors.accent }]}>API 配置</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>配置你的 AI 模型接口</Text>
         </View>
 
@@ -209,7 +209,7 @@ export function SettingsScreen({ onSaved }: Props) {
             <TouchableOpacity
               style={[
                 styles.apiTypeBtn,
-                { backgroundColor: colors.cardBg, borderColor: apiType === 'openai' ? Colors.accent : colors.border },
+                { backgroundColor: colors.cardBg, borderColor: apiType === 'openai' ? colors.accent : colors.border },
                 apiType === 'openai' && styles.apiTypeBtnActive,
               ]}
               onPress={() => handleApiTypeChange('openai')}
@@ -218,16 +218,16 @@ export function SettingsScreen({ onSaved }: Props) {
               <Ionicons
                 name={apiType === 'openai' ? 'radio-button-on' : 'radio-button-off'}
                 size={16}
-                color={apiType === 'openai' ? Colors.accent : colors.textSecondary}
+                color={apiType === 'openai' ? colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.apiTypeText, apiType === 'openai' && { color: Colors.accent }]}>
+              <Text style={[styles.apiTypeText, apiType === 'openai' && { color: colors.accent }]}>
                 OpenAI 兼容
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.apiTypeBtn,
-                { backgroundColor: colors.cardBg, borderColor: apiType === 'minimax' ? Colors.accent : colors.border },
+                { backgroundColor: colors.cardBg, borderColor: apiType === 'minimax' ? colors.accent : colors.border },
                 apiType === 'minimax' && styles.apiTypeBtnActive,
               ]}
               onPress={() => handleApiTypeChange('minimax')}
@@ -236,9 +236,9 @@ export function SettingsScreen({ onSaved }: Props) {
               <Ionicons
                 name={apiType === 'minimax' ? 'radio-button-on' : 'radio-button-off'}
                 size={16}
-                color={apiType === 'minimax' ? Colors.accent : colors.textSecondary}
+                color={apiType === 'minimax' ? colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.apiTypeText, apiType === 'minimax' && { color: Colors.accent }]}>
+              <Text style={[styles.apiTypeText, apiType === 'minimax' && { color: colors.accent }]}>
                 MiniMax
               </Text>
             </TouchableOpacity>
@@ -282,10 +282,10 @@ export function SettingsScreen({ onSaved }: Props) {
               activeOpacity={0.8}
             >
               {fetching ? (
-                <ActivityIndicator color={Colors.accent} size="small" />
+                <ActivityIndicator color={colors.accent} size="small" />
               ) : (
                 <>
-                  <Ionicons name="cloud-download-outline" size={18} color={Colors.accent} />
+                  <Ionicons name="cloud-download-outline" size={18} color={colors.accent} />
                   <Text style={styles.fetchBtnText}>获取模型列表</Text>
                 </>
               )}
@@ -293,7 +293,7 @@ export function SettingsScreen({ onSaved }: Props) {
 
             {loadingModels && (
               <View style={styles.modelsLoading}>
-                <ActivityIndicator color={Colors.accent} />
+                <ActivityIndicator color={colors.accent} />
                 <Text style={[styles.modelsLoadingText, { color: colors.textSecondary }]}>正在获取模型...</Text>
               </View>
             )}
@@ -307,7 +307,7 @@ export function SettingsScreen({ onSaved }: Props) {
                       key={m.id}
                       style={[
                         styles.modelItem,
-                        { backgroundColor: colors.cardBg, borderColor: selectedModel === m.id ? Colors.accent : colors.border },
+                        { backgroundColor: colors.cardBg, borderColor: selectedModel === m.id ? colors.accent : colors.border },
                         selectedModel === m.id && styles.modelItemSelected,
                       ]}
                       onPress={() => setSelectedModel(m.id)}
@@ -316,7 +316,7 @@ export function SettingsScreen({ onSaved }: Props) {
                       <Text
                         style={[
                           styles.modelItemText,
-                          { color: selectedModel === m.id ? Colors.accent : colors.text },
+                          { color: selectedModel === m.id ? colors.accent : colors.text },
                           selectedModel === m.id && styles.modelItemTextSelected,
                         ]}
                         numberOfLines={1}
@@ -324,7 +324,7 @@ export function SettingsScreen({ onSaved }: Props) {
                         {m.name || m.id}
                       </Text>
                       {selectedModel === m.id && (
-                        <Ionicons name="checkmark" size={16} color={Colors.accent} />
+                        <Ionicons name="checkmark" size={16} color={colors.accent} />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -343,7 +343,7 @@ export function SettingsScreen({ onSaved }: Props) {
                   key={m.id}
                   style={[
                     styles.modelItem,
-                    { backgroundColor: colors.cardBg, borderColor: selectedModel === m.id ? Colors.accent : colors.border },
+                    { backgroundColor: colors.cardBg, borderColor: selectedModel === m.id ? colors.accent : colors.border },
                     selectedModel === m.id && styles.modelItemSelected,
                   ]}
                   onPress={() => setSelectedModel(m.id)}
@@ -352,7 +352,7 @@ export function SettingsScreen({ onSaved }: Props) {
                   <Text
                     style={[
                       styles.modelItemText,
-                      { color: selectedModel === m.id ? Colors.accent : colors.text },
+                      { color: selectedModel === m.id ? colors.accent : colors.text },
                       selectedModel === m.id && styles.modelItemTextSelected,
                     ]}
                     numberOfLines={1}
@@ -360,7 +360,7 @@ export function SettingsScreen({ onSaved }: Props) {
                     {m.name}
                   </Text>
                   {selectedModel === m.id && (
-                    <Ionicons name="checkmark" size={16} color={Colors.accent} />
+                    <Ionicons name="checkmark" size={16} color={colors.accent} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -388,7 +388,7 @@ export function SettingsScreen({ onSaved }: Props) {
           activeOpacity={0.8}
         >
           {testing ? (
-            <ActivityIndicator size="small" color={Colors.accent} />
+            <ActivityIndicator size="small" color={colors.accent} />
           ) : (
             <Text style={styles.testButtonText}>🔗 Test Connection</Text>
           )}
@@ -415,9 +415,9 @@ export function SettingsScreen({ onSaved }: Props) {
               <Ionicons
                 name={voiceEnabled ? 'volume-high' : 'volume-mute'}
                 size={18}
-                color={voiceEnabled ? Colors.accent : colors.textSecondary}
+                color={voiceEnabled ? colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.voiceToggleText, voiceEnabled && styles.voiceToggleTextActive, { color: voiceEnabled ? Colors.accent : colors.textSecondary }]}>
+              <Text style={[styles.voiceToggleText, voiceEnabled && styles.voiceToggleTextActive, { color: voiceEnabled ? colors.accent : colors.textSecondary }]}>
                 {voiceEnabled ? '开' : '关'}
               </Text>
             </TouchableOpacity>
@@ -440,7 +440,7 @@ export function SettingsScreen({ onSaved }: Props) {
                 size={18}
                 color={theme === 'dark' ? colors.accent : '#FFB800'}
               />
-              <Text style={[styles.themeToggleText, theme === 'light' && styles.themeToggleTextLight, { color: theme === 'light' ? Colors.accent : colors.textSecondary }]}>
+              <Text style={[styles.themeToggleText, theme === 'light' && styles.themeToggleTextLight, { color: theme === 'light' ? colors.accent : colors.textSecondary }]}>
                 {theme === 'dark' ? '深色' : '浅色'}
               </Text>
             </TouchableOpacity>
@@ -459,10 +459,10 @@ export function SettingsScreen({ onSaved }: Props) {
             activeOpacity={0.8}
           >
             {checkingUpdate ? (
-              <ActivityIndicator color={Colors.accent} size="small" />
+              <ActivityIndicator color={colors.accent} size="small" />
             ) : (
               <>
-                <Ionicons name="refresh-outline" size={16} color={Colors.accent} />
+                <Ionicons name="refresh-outline" size={16} color={colors.accent} />
                 <Text style={styles.updateBtnText}>检查更新</Text>
               </>
             )}
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   apiTypeText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -541,10 +541,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     paddingVertical: 14,
     marginBottom: 16,
   },
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   fetchBtnText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveBtn: {
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
@@ -603,12 +603,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   testButton: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
   },
   testButtonText: {
     fontSize: 14,
-    color: Colors.accent,
+    color: colors.accent,
     fontWeight: '600',
   },
   voiceSection: {
@@ -645,15 +645,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   voiceToggleActive: {
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   voiceToggleText: {
@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   voiceToggleTextActive: {
-    color: Colors.accent,
+    color: colors.accent,
   },
   themeSection: {
     marginTop: 24,
@@ -688,15 +688,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   themeToggleLight: {
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     backgroundColor: 'rgba(196,163,90,0.1)',
   },
   themeToggleText: {
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   themeToggleTextLight: {
-    color: Colors.accent,
+    color: colors.accent,
   },
   versionSection: {
     marginTop: 32,
@@ -732,17 +732,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: colors.accent,
     paddingVertical: 12,
   },
   updateBtnDisabled: {
     opacity: 0.6,
   },
   updateBtnText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 14,
     fontWeight: '600',
   },

@@ -4,7 +4,7 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
 import { KeypointOverlay, Keypoint } from '../components/KeypointOverlay';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
@@ -58,10 +58,12 @@ function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: s
 }
 
 export function CameraScreen() {
+  const { colors } = useTheme();
   const cameraRef = useRef<CameraView>(null);
   const peakingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
+  const preAnalysisStartedRef = useRef(false);
   const burstSuggestionText = useRef('');
 
   const [permission, requestPermission] = useCameraPermissions();
@@ -107,7 +109,7 @@ export function CameraScreen() {
     computeScore, session: challengeSession, challengeMode, toggleChallengeMode, addScore,
   } = useCompositionScore();
 
-  const { takePicture, runAnalysis, savePhotoToGallery } = useCameraCapture({
+  const { takePicture, runAnalysis, savePhotoToGallery, capturePreviewFrame } = useCameraCapture({
     cameraRef, cameraReady, onSuggestionsChange: setSuggestions, onLoadingChange: setLoading,
     onKeypointsChange: setKeypoints, onShowKeypointsChange: setShowKeypoints,
   });
@@ -125,7 +127,12 @@ export function CameraScreen() {
     lastCapturedBase64Ref.current = base64;
     recognizeSceneTag(base64).then(() => { setSceneTagVisible(true); setTimeout(() => setSceneTagVisible(false), 4000); });
     const gridPromptMap: Record<GridVariant, string> = { thirds: '三分法网格', golden: '黄金分割网格', diagonal: '对角线网格', spiral: '螺旋线网格', none: '无网格' };
-    await runAnalysis(base64, `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`);
+    if (!preAnalysisStartedRef.current) {
+      await runAnalysis(base64, `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`);
+    } else {
+      // 预分析已在倒计时期间启动，跳过重复调用
+      preAnalysisStartedRef.current = false;
+    }
     setTimeout(() => {
       if (!burstActive && detectBurstMoment(suggestions)) {
         burstSuggestionText.current = suggestions.find(s => ['完美', '精彩', '理想', '绝佳', '优秀', '抓拍', '瞬间', '表情'].some(k => s.includes(k))) || '检测到精彩画面，建议开启连拍捕捉更多瞬间！';
@@ -225,14 +232,34 @@ export function CameraScreen() {
 
   const handleAskAI = useCallback(async () => {
     if (countdownActive || loading || burstActive) return;
-    setLoading(true); startCountdown(timerDuration);
-  }, [countdownActive, loading, burstActive, startCountdown, timerDuration]);
+    setLoading(true);
+
+    // 在倒计时期间预先开始分析
+    const gridPromptMap: Record<GridVariant, string> = {
+      thirds: "三分法网格", golden: "黄金分割网格",
+      diagonal: "对角线网格", spiral: "螺旋线网格", none: "无网格",
+    };
+    const previewPrompt = `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`;
+
+    try {
+      const preview = await capturePreviewFrame();
+      if (preview) {
+        preAnalysisStartedRef.current = true;
+        // 不 await，让它在后台运行
+        runAnalysis(preview.base64, previewPrompt);
+      }
+    } catch {
+      // 预分析失败无所谓，正常流程会在 doCapture 里兜底
+    }
+
+    startCountdown(timerDuration);
+  }, [countdownActive, loading, burstActive, startCountdown, timerDuration, gridVariant, capturePreviewFrame, runAnalysis]);
 
   const handleSwitchCamera = useCallback(() => setFacing((f: CameraType) => f === 'back' ? 'front' : 'back'), []);
 
   const bubbleItems: BubbleItem[] = suggestions.map((text, i) => textToBubbleItem(text, i));
 
-  if (!permission) return <View style={styles.container}><ActivityIndicator color={Colors.accent} size="large" /></View>;
+  if (!permission) return <View style={styles.container}><ActivityIndicator color={colors.accent} size="large" /></View>;
   if (!permission.granted) return <PermissionGate title="需要相机权限" icon="camera-outline" message="拍摄参谋需要访问您的相机来拍摄照片" buttonText="授权相机" onRequest={requestPermission} />;
 
   return (
@@ -283,6 +310,6 @@ export function CameraScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.primary },
+  container: { flex: 1, backgroundColor: colors.primary },
   camera: { flex: 1, width: '100%' },
 });

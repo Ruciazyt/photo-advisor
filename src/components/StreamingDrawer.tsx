@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Easing,
 } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DRAWER_HEIGHT = SCREEN_HEIGHT * 0.6;
@@ -22,6 +22,7 @@ interface StreamingDrawerProps {
 }
 
 export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDrawerProps) {
+  const { colors } = useTheme();
   const [isClosed, setIsClosed] = useState(true);
   const slideAnim = useRef(new Animated.Value(DRAWER_HEIGHT)).current;
   const dot1 = useRef(new Animated.Value(0)).current;
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   },
   drawer: {
     height: DRAWER_HEIGHT,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: colors.textSecondary,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 12,
@@ -170,15 +171,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
   },
   headerTitle: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 16,
     fontWeight: '600',
   },
   closeBtn: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 20,
   },
   content: {
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   text: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 15,
     lineHeight: 24,
   },
@@ -202,10 +203,10 @@ const styles = StyleSheet.create({
   },
   dot: {
     fontSize: 20,
-    color: Colors.accent,
+    color: colors.accent,
   },
   placeholder: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     paddingTop: 40,
