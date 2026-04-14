@@ -2,7 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { ConfigWarning } from './ConfigWarning';
-import { GridOverlay, GridVariant } from './GridOverlay';
+import { GridOverlay } from './GridOverlay';
+import type { GridVariant } from '../types';
 import { GridSelectorModal } from './GridSelectorModal';
 import { LevelIndicator } from './LevelIndicator';
 import { HistogramOverlay } from './HistogramOverlay';
@@ -10,14 +11,15 @@ import { FocusGuideOverlay } from './FocusGuideOverlay';
 import { FocusPeakingOverlay } from './FocusPeakingOverlay';
 import { SunPositionOverlay } from './SunPositionOverlay';
 import { BurstSuggestionOverlay } from './BurstSuggestionOverlay';
-import { KeypointOverlay, Keypoint } from './KeypointOverlay';
+import { KeypointOverlay } from './KeypointOverlay';
+import type { Keypoint } from '../types';
 import { CompositionScoreOverlay } from './CompositionScoreOverlay';
 import { SceneTagOverlay } from './SceneTagOverlay';
 import { CountdownOverlay } from './CountdownOverlay';
-import { BubbleItem } from './BubbleOverlay';
+import type { BubbleItem } from '../types';
 import { ComparisonOverlay } from './ComparisonOverlay';
-import { PeakPoint } from '../hooks/useFocusPeaking';
-import { CompositionScoreResult, ChallengeSession } from '../hooks/useCompositionScore';
+import type { PeakPoint } from '../types';
+import type { CompositionScoreResult, ChallengeSession } from '../types';
 
 export interface CameraOverlaysProps {
   // Config

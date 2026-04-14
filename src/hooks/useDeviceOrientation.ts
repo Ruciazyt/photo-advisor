@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
 import { EventSubscription } from 'expo-modules-core';
-
-export interface DeviceOrientation {
-  pitch: number; // forward/backward tilt in degrees (-90 to 90)
-  roll: number;  // left/right tilt in degrees (-180 to 180)
-}
+import type { DeviceOrientation } from '../types';
+export type { DeviceOrientation } from '../types';
 
 const GRAVITY = 9.81;
 

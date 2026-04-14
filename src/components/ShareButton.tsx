@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
-import { sharePhoto, ShareOptions } from '../services/share';
+import { sharePhoto } from '../services/share';
+import type { ShareOptions } from '../types';
 
 interface ShareButtonProps {
   /** Local URI of the last captured photo */

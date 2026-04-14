@@ -23,7 +23,8 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { AppError, ErrorCode, HandleErrorOptions, handleError as globalHandleError } from '../services/errors';
+import { AppError, ErrorCode, handleError as globalHandleError } from '../services/errors';
+import type { HandleErrorOptions } from '../types';
 
 export interface UseErrorHandlerOptions {
   /** Default options applied to every handleError call */

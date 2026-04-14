@@ -1,24 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
 import { useCallback } from 'react';
-
-export interface SunData {
-  available: boolean;
-  goldenHourStart: string | null; // HH:MM
-  goldenHourEnd: string | null;
-  blueHourStart: string | null;
-  blueHourEnd: string | null;
-  sunAltitude: number; // degrees above horizon
-  sunAzimuth: number;  // degrees from north (0-360)
-  direction: string;    // human-readable direction
-  advice: string;       // shooting advice
-  error?: string;
-}
-
-interface LocationCoords {
-  latitude: number;
-  longitude: number;
-}
+import type { SunData, LocationCoords } from '../types';
+export type { SunData } from '../types';
 
 // Sun position using standard astronomical algorithms (no external library)
 function calculateSunPosition(lat: number, lng: number, date: Date) {

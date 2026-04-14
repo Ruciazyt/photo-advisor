@@ -1,13 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import type { CameraMode, ModeSelectorProps } from '../types';
+export type { CameraMode };
+export type { ModeSelectorProps };
 
-type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
-
-interface ModeSelectorProps {
-  selectedMode: CameraMode;
-  onModeChange: (mode: CameraMode) => void;
-}
 
 const modeLabels: Record<CameraMode, string> = {
   photo: '拍照',

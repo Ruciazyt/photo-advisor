@@ -1,11 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { AppSettings } from '../types';
 
 const STORAGE_KEY = '@photo_advisor_settings';
-
-export interface AppSettings {
-  voiceEnabled: boolean;
-  theme: 'dark' | 'light';
-}
 
 const DEFAULT_SETTINGS: AppSettings = {
   voiceEnabled: false,

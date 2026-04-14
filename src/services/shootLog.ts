@@ -1,20 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ShootLogEntry } from '../types';
+
+export type { ShootLogEntry };
 
 const STORAGE_KEY = '@photo_advisor_shoot_log';
-
-export interface ShootLogEntry {
-  id: string;
-  date: string; // ISO timestamp
-  gridType: string; // 'thirds' | 'golden' | 'diagonal' | 'spiral' | 'none'
-  score?: number; // 0-100, AI-computed score
-  scoreReason?: string; // brief AI reason
-  sceneTag?: string; // scene label
-  locationName?: string; // human-readable location
-  timerDuration?: number; // 0, 3, 5, 10 seconds
-  wasFavorite: boolean; // did user save to favorites
-  thumbnailUri?: string; // small thumbnail URI (optional)
-  suggestions: string[]; // AI suggestions received
-}
 
 export async function loadLog(): Promise<ShootLogEntry[]> {
   try {

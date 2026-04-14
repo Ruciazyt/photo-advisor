@@ -1,27 +1,8 @@
 import { useState, useCallback } from 'react';
-import { Keypoint, KeypointPosition } from '../components/KeypointOverlay';
-import { GridVariant } from '../components/GridOverlay';
+import type { Keypoint, KeypointPosition, GridVariant } from '../types';
 
-export type CompositionGrade = 'S' | 'A' | 'B' | 'C' | 'D';
-
-export interface CompositionBreakdown {
-  alignment: number;  // 0-100 how well keypoints align with grid lines
-  balance: number;    // 0-100 left/right distribution
-  centrality: number; // 0-100 proximity to ideal center
-}
-
-export interface CompositionScoreResult {
-  score: number;      // 0-100 overall score
-  breakdown: CompositionBreakdown;
-  grade: CompositionGrade;
-}
-
-export interface ChallengeSession {
-  scores: number[];
-  bestScore: number;
-  cumulative: number;
-  count: number;
-}
+// Re-export types from centralized types for backward compatibility
+export type { CompositionGrade, CompositionBreakdown, CompositionScoreResult, ChallengeSession, UseCompositionScoreResult } from '../types';
 
 // Grid reference lines for each variant
 const GRID_LINES: Record<GridVariant, { vertical: number[]; horizontal: number[] }> = {
@@ -111,21 +92,6 @@ function computeScore(keypoints: Keypoint[], gridVariant: GridVariant): Composit
     breakdown: { alignment, balance, centrality },
     grade: gradeFromScore(score),
   };
-}
-
-interface UseCompositionScoreResult {
-  /** Compute score for given keypoints and grid variant */
-  computeScore: (keypoints: Keypoint[], gridVariant: GridVariant) => CompositionScoreResult;
-  /** Current challenge session stats (reset with resetSession) */
-  session: ChallengeSession;
-  /** Whether challenge mode is active */
-  challengeMode: boolean;
-  /** Toggle challenge mode */
-  toggleChallengeMode: () => void;
-  /** Add a score to the session (challenge mode only) */
-  addScore: (score: number) => void;
-  /** Reset session stats */
-  resetSession: () => void;
 }
 
 export function useCompositionScore(): UseCompositionScoreResult {

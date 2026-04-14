@@ -1,11 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-
-export type GridVariant = 'thirds' | 'golden' | 'diagonal' | 'spiral' | 'none';
-
-interface GridOverlayProps {
-  variant?: GridVariant;
-}
+import type { GridVariant, GridOverlayProps } from '../types';
+export type { GridVariant };
+export type { GridOverlayProps };
 
 function GoldenSpiral() {
   // Approximate golden spiral using arcs in rectangles

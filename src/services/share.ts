@@ -1,19 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Sharing from 'expo-sharing';
-
-export interface ShareOptions {
-  /** Local URI of the photo to share */
-  photoUri: string;
-  /** AI composition suggestions */
-  suggestions: string[];
-  /** Grid type label (e.g. "三分法") */
-  gridType: string;
-  /** Composition score 0-100, optional */
-  score?: number;
-  /** Grid variant key for icon selection */
-  gridVariant?: string;
-}
+import type { ShareOptions } from '../types';
 
 /**
  * Resize image to a sharing-friendly dimension (max 1920px on longest edge)

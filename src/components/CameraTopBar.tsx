@@ -5,7 +5,7 @@ import { CameraType } from 'expo-camera';
 import { useTheme } from '../contexts/ThemeContext';
 import { SunToggleButton } from './SunPositionOverlay';
 import { ShareButton } from './ShareButton';
-import { GridVariant } from './GridOverlay';
+import type { GridVariant } from '../types';
 
 const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法',

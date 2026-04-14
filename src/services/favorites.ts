@@ -1,17 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { FavoriteItem } from '../types';
+export type { FavoriteItem };
 
 const STORAGE_KEY = '@photo_advisor_favorites';
-
-export interface FavoriteItem {
-  id: string;
-  uri: string;
-  score: number;
-  scoreReason?: string;
-  date: string;
-  gridType: string;
-  suggestion: string;
-  sceneTag?: string;
-}
 
 export async function loadFavorites(): Promise<FavoriteItem[]> {
   try {

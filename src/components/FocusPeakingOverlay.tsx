@@ -17,18 +17,8 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
-import { PeakPoint } from '../hooks/useFocusPeaking';
-
-interface FocusPeakingOverlayProps {
-  visible: boolean;
-  /** Peak points from useFocusPeaking.capturePeaks() — already normalised [0,1] */
-  peaks: PeakPoint[];
-  /** Full screen dimensions (or camera preview dimensions) */
-  screenWidth: number;
-  screenHeight: number;
-  /** Colour of the peaking dots (default: red) */
-  color?: string;
-}
+import type { PeakPoint, FocusPeakingOverlayProps } from '../types';
+export type { FocusPeakingOverlayProps };
 
 const DOT_SIZE = 3; // base dot diameter in px before scaling
 

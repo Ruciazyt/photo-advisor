@@ -1,22 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
-
-export type BubblePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
-
-export interface BubbleItem {
-  id: number;
-  text: string; // format: "[区域] 内容"
-  position: BubblePosition;
-}
-
-interface BubbleOverlayProps {
-  items: BubbleItem[];
-  loading: boolean;
-  onDismiss: (id: number) => void;
-  onDismissAll: () => void;
-  onBubbleAppear?: (text: string) => void;
-}
+import type { BubbleItem, BubbleOverlayProps } from '../types';
+export type { BubblePosition } from '../types';
+export { BubbleItem };
+export type { BubbleOverlayProps };
 
 function parsePosition(text: string): BubbleItem['position'] {
   if (text.includes('[左上]')) return 'top-left';

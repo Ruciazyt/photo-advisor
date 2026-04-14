@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { useShootLog } from '../hooks/useShootLog';
-import type { ShootLogEntry } from '../services/shootLog';
+import type { ShootLogEntry } from '../types';
 
 const GRID_LABELS: Record<string, string> = {
   thirds: '三分法',

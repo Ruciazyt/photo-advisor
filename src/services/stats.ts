@@ -1,36 +1,5 @@
 import type { FavoriteItem } from './favorites';
-
-export interface GridUsage {
-  gridType: string;
-  count: number;
-  avgScore: number;
-  percentage: number;
-}
-
-export interface SceneUsage {
-  sceneTag: string;
-  count: number;
-  percentage: number;
-}
-
-export interface MonthlyStats {
-  month: string; // "2026-04"
-  count: number;
-  avgScore: number;
-}
-
-export interface StatsSummary {
-  totalPhotos: number;
-  avgScore: number;
-  bestScore: number;
-  mostUsedGrid: string;
-  mostUsedScene: string;
-  gridUsages: GridUsage[];
-  sceneUsages: SceneUsage[];
-  monthlyStats: MonthlyStats[];
-  scoreHistory: { date: string; score: number }[];
-  recentTrend: 'up' | 'down' | 'stable'; // based on last 5 vs previous 5
-}
+import type { GridUsage, SceneUsage, MonthlyStats, StatsSummary } from '../types';
 
 function mean(nums: number[]): number {
   if (nums.length === 0) return 0;

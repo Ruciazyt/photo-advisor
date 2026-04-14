@@ -9,6 +9,9 @@ import {
   Platform,
   ToastAndroid,
 } from 'react-native';
+import type { FocusGuideOverlayProps } from '../types';
+export type { FocusGuideOverlayProps };
+
 // Focus zone depth approximations (0 = near, 1 = far/infinity)
 // These are heuristics since expo-camera focusDepth support varies by device
 const FOCUS_ZONES = [
@@ -62,13 +65,6 @@ function FocusRing({ x, y, onComplete }: FocusRingProps) {
       <View style={styles.focusRingInner} />
     </Animated.View>
   );
-}
-
-export interface FocusGuideOverlayProps {
-  /** Controls overlay visibility */
-  visible: boolean;
-  /** Ref to the CameraView component */
-  cameraRef: React.RefObject<any>;
 }
 
 export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps) {

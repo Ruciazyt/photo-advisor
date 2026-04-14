@@ -1,15 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { Colors } from '../constants/colors';
-
-export type KeypointPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
-
-export interface Keypoint {
-  id: number;
-  label: string;  // e.g. "左上"
-  position: KeypointPosition;
-  instruction?: string; // short text from AI suggestion
-}
+import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
+export type { KeypointPosition } from '../types';
+export { Keypoint };
+export type { KeypointOverlayProps };
+export { bubbleTextToKeypoint };
 
 // Rule-of-thirds intersection points (fraction of screen)
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
@@ -110,11 +106,6 @@ function KeypointMarker({ keypoint }: KeypointMarkerProps) {
       )}
     </View>
   );
-}
-
-interface KeypointOverlayProps {
-  keypoints: Keypoint[];
-  visible: boolean;
 }
 
 export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {

@@ -9,21 +9,12 @@ import {
   Animated,
 } from 'react-native';
 import { KeypointOverlay } from './KeypointOverlay';
-import { BubbleOverlay, BubbleItem } from './BubbleOverlay';
-import { Keypoint } from './KeypointOverlay';
+import { BubbleOverlay } from './BubbleOverlay';
 import { useTheme } from '../contexts/ThemeContext';
+import type { BubbleItem, Keypoint, ComparisonOverlayProps } from '../types';
+export type { ComparisonOverlayProps };
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-
-interface ComparisonOverlayProps {
-  imageUri: string;
-  keypoints: Keypoint[];
-  bubbles: BubbleItem[];
-  visible: boolean;
-  onClose: () => void;
-  score?: number;
-  scoreReason?: string;
-}
 
 export function ComparisonOverlay({
   imageUri,

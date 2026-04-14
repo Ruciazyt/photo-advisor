@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { Colors } from '../constants/colors';
-import { CompositionGrade, CompositionScoreResult, ChallengeSession } from '../hooks/useCompositionScore';
+import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps, SparkleItem } from '../types';
+export type { CompositionScoreOverlayProps };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -20,27 +21,6 @@ const GRADE_LABELS: Record<CompositionGrade, string> = {
   C: '★★',
   D: '★',
 };
-
-interface SparkleItem {
-  id: number;
-  x: Animated.Value;
-  y: Animated.Value;
-  opacity: Animated.Value;
-  scale: Animated.Value;
-  color: string;
-  rotation: Animated.Value;
-}
-
-interface CompositionScoreOverlayProps {
-  /** Score result to display */
-  result: CompositionScoreResult;
-  /** Whether challenge mode is active */
-  challengeMode: boolean;
-  /** Current session stats */
-  session: ChallengeSession;
-  /** Callback when overlay is dismissed */
-  onDismiss: () => void;
-}
 
 export function CompositionScoreOverlay({
   result,

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system/legacy';
 import { CameraView } from 'expo-camera';
+import type { UseHistogramOptions, UseHistogramResult } from '../types';
 
 const NUM_BINS = 16;
 
@@ -52,16 +53,6 @@ function expandTo256(hist16: number[]): number[] {
     }
   }
   return result;
-}
-
-interface UseHistogramOptions {
-  autoCaptureInterval?: number; // ms between auto captures (0 = manual only)
-}
-
-interface UseHistogramResult {
-  histogramData: number[];
-  isCapturing: boolean;
-  capture: (cameraRef: React.RefObject<CameraView | null>) => Promise<number[] | null>;
 }
 
 export function useHistogram(_options?: UseHistogramOptions): UseHistogramResult {

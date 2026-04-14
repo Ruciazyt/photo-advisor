@@ -1,17 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
-
-export type TimerDuration = 3 | 5 | 10;
+import type { TimerDuration, UseCountdownOptions } from '../types';
+export type { TimerDuration } from '../types';
 
 export const TIMER_OPTIONS: { label: string; value: TimerDuration }[] = [
   { label: '3s', value: 3 },
   { label: '5s', value: 5 },
   { label: '10s', value: 10 },
 ];
-
-interface UseCountdownOptions {
-  onComplete: () => void;
-}
-
 export function useCountdown({ onComplete }: UseCountdownOptions) {
   const [active, setActive] = useState(false);
   const [count, setCount] = useState(3);

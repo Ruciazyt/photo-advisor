@@ -18,26 +18,11 @@ export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS };
 
 // ---- Public interface ----
 
-export interface PeakPoint {
-  /** Normalised x in [0, 1] — multiply by screen width for pixel coords */
-  x: number;
-  /** Normalised y in [0, 1] — multiply by screen height for pixel coords */
-  y: number;
-  /** Edge strength 0-1 */
-  strength: number;
-}
+// Re-export from centralized types for backward compatibility
+export type { PeakPoint, UseFocusPeakingReturn } from '../types';
 
-export interface UseFocusPeakingReturn {
-  /**
-   * Capture a frame and return detected peak points.
-   * Pass the cameraRef and the preview dimensions so we can map back to screen space.
-   */
-  capturePeaks: (
-    cameraRef: React.RefObject<CameraView | null>,
-    previewWidth: number,
-    previewHeight: number
-  ) => Promise<PeakPoint[]>;
-}
+// Import PeakPoint for internal use in the hook implementation
+import type { PeakPoint } from '../types';
 
 const SAMPLE_SIZE = 48; // Capture at this resolution for edge analysis
 const EDGE_THRESHOLD = 30; // Minimum gradient magnitude to count as a peak

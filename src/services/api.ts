@@ -83,33 +83,14 @@ export const MINIMAX_MODELS = [
   { id: 'MiniMax-M2.5-Highspeed', name: 'MiniMax-M2.5-Highspeed（极速）' },
 ];
 
+import type { Model, ChatMessageContent, ChatMessage, StreamCallback, AnthropicStreamCallback, ApiConfig } from '../types';
+
 const STORAGE_KEYS = {
   API_TYPE: 'photo_advisor_api_type',
   API_KEY: 'photo_advisor_api_key',
   BASE_URL: 'photo_advisor_base_url',
   MODEL: 'photo_advisor_model',
 };
-
-export interface Model {
-  id: string;
-  name: string;
-}
-
-export interface ChatMessageContent {
-  type: 'text' | 'image' | 'image_url';
-  text?: string;
-  image_url?: { url: string };
-  source?: {
-    type: 'base64';
-    media_type: string;
-    data: string;
-  };
-}
-
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string | ChatMessageContent[];
-}
 
 export async function saveApiConfig(
   apiKey: string,
@@ -176,10 +157,6 @@ export async function fetchAvailableModels(
     return { ok: false, error: result.error };
   }
   return { ok: true, models: result.value };
-}
-
-export interface StreamCallback {
-  (text: string, done: boolean): void;
 }
 
 export async function streamChatCompletion(
@@ -282,10 +259,6 @@ export async function streamChatCompletion(
   onChunk('', true);
 }
 
-export interface AnthropicStreamCallback {
-  (text: string): void;
-}
-
 export async function analyzeImageAnthropic(
   imageBase64: string,
   apiKey: string,
@@ -383,13 +356,6 @@ export async function analyzeImageAnthropic(
   }
 
   return fullText;
-}
-
-export interface ApiConfig {
-  apiKey: string;
-  baseUrl: string;
-  model: string;
-  apiType: 'openai' | 'minimax';
 }
 
 export async function recognizeScene(

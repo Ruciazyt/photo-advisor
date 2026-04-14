@@ -1,4 +1,5 @@
 import { Linking, Alert } from 'react-native';
+import type { ReleaseInfo } from '../types';
 
 import pkg from '../../app.json';
 const APP_VERSION: string = pkg.expo.version;
@@ -27,15 +28,6 @@ export const compareVersions = (v1: string, v2: string): number => {
   }
   return 0;
 };
-
-export interface ReleaseInfo {
-  tagName: string;
-  version: string;
-  downloadUrl: string | null;
-  htmlUrl: string;
-  publishedAt: string;
-  body: string;
-}
 
 export const checkForUpdate = async (): Promise<ReleaseInfo | null> => {
   try {

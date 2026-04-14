@@ -1,11 +1,7 @@
 import { useState, useCallback } from 'react';
 import { recognizeScene, loadApiConfig } from '../services/api';
-
-export interface UseSceneRecognitionReturn {
-  sceneTag: string;
-  isRecognizing: boolean;
-  recognize: (base64: string) => Promise<string>;
-}
+import type { UseSceneRecognitionReturn } from '../types';
+export type { UseSceneRecognitionReturn } from '../types';
 
 export function useSceneRecognition(): UseSceneRecognitionReturn {
   const [sceneTag, setSceneTag] = useState('');

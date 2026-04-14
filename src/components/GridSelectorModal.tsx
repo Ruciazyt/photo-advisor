@@ -9,15 +9,9 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GridVariant } from './GridOverlay';
 import { Colors } from '../constants/colors';
-
-export interface GridSelectorModalProps {
-  visible: boolean;
-  selectedVariant: GridVariant;
-  onSelect: (variant: GridVariant) => void;
-  onClose: () => void;
-}
+import type { GridVariant, GridSelectorModalProps } from '../types';
+export type { GridSelectorModalProps };
 
 const GRID_VARIANTS: { key: GridVariant; label: string }[] = [
   { key: 'thirds', label: '三分法' },
