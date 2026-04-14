@@ -6,16 +6,17 @@ import { CameraScreen } from './src/screens/CameraScreen';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { ShootLogScreen } from './src/screens/ShootLogScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { Colors } from './src/constants/colors';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 
 type Tab = 'home' | 'camera' | 'favorites' | 'log' | 'settings';
 
-export default function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.primary }]}>
+      <StatusBar barStyle={colors.primary === '#000000' ? 'light-content' : 'dark-content'} backgroundColor={colors.primary} />
       <View style={styles.content}>
         {activeTab === 'home' && <HomeScreen />}
         {activeTab === 'camera' && <CameraScreen />}
@@ -23,7 +24,7 @@ export default function App() {
         {activeTab === 'log' && <ShootLogScreen />}
         {activeTab === 'settings' && <SettingsScreen onSaved={() => setActiveTab('home')} />}
       </View>
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: colors.cardBg, borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => setActiveTab('home')}
@@ -32,12 +33,12 @@ export default function App() {
           <Ionicons
             name={activeTab === 'home' ? 'images' : 'images-outline'}
             size={24}
-            color={activeTab === 'home' ? Colors.accent : Colors.textSecondary}
+            color={activeTab === 'home' ? colors.accent : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === 'home' && styles.tabLabelActive,
+              { color: activeTab === 'home' ? colors.accent : colors.textSecondary },
             ]}
           >
             照片
@@ -52,12 +53,12 @@ export default function App() {
           <Ionicons
             name={activeTab === 'camera' ? 'camera' : 'camera-outline'}
             size={24}
-            color={activeTab === 'camera' ? Colors.accent : Colors.textSecondary}
+            color={activeTab === 'camera' ? colors.accent : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === 'camera' && styles.tabLabelActive,
+              { color: activeTab === 'camera' ? colors.accent : colors.textSecondary },
             ]}
           >
             相机
@@ -72,12 +73,12 @@ export default function App() {
           <Ionicons
             name={activeTab === 'favorites' ? 'heart' : 'heart-outline'}
             size={24}
-            color={activeTab === 'favorites' ? Colors.accent : Colors.textSecondary}
+            color={activeTab === 'favorites' ? colors.accent : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === 'favorites' && styles.tabLabelActive,
+              { color: activeTab === 'favorites' ? colors.accent : colors.textSecondary },
             ]}
           >
             收藏
@@ -92,12 +93,12 @@ export default function App() {
           <Ionicons
             name={activeTab === 'log' ? 'newspaper' : 'newspaper-outline'}
             size={24}
-            color={activeTab === 'log' ? Colors.accent : Colors.textSecondary}
+            color={activeTab === 'log' ? colors.accent : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === 'log' && styles.tabLabelActive,
+              { color: activeTab === 'log' ? colors.accent : colors.textSecondary },
             ]}
           >
             日志
@@ -112,12 +113,12 @@ export default function App() {
           <Ionicons
             name={activeTab === 'settings' ? 'settings' : 'settings-outline'}
             size={24}
-            color={activeTab === 'settings' ? Colors.accent : Colors.textSecondary}
+            color={activeTab === 'settings' ? colors.accent : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === 'settings' && styles.tabLabelActive,
+              { color: activeTab === 'settings' ? colors.accent : colors.textSecondary },
             ]}
           >
             设置
@@ -128,19 +129,24 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
   },
   content: {
     flex: 1,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.cardBg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingBottom: 20,
     paddingTop: 8,
   },
@@ -151,11 +157,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   tabLabel: {
-    color: Colors.textSecondary,
     fontSize: 12,
-  },
-  tabLabelActive: {
-    color: Colors.accent,
-    fontWeight: '600',
   },
 });
