@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../contexts/ThemeContext';
 import type { GridVariant, GridSelectorModalProps } from '../types';
 export type { GridSelectorModalProps };
 
@@ -100,7 +100,108 @@ export function GridSelectorModal({
   onSelect,
   onClose,
 }: GridSelectorModalProps) {
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const { colors } = useTheme();
+
+  const styles = StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 100,
+      justifyContent: 'flex-end',
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    sheet: {
+      backgroundColor: 'rgba(20,20,20,0.95)',
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingHorizontal: 16,
+      paddingBottom: 40,
+      paddingTop: 12,
+      minHeight: SHEET_HEIGHT,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+      position: 'relative',
+    },
+    title: {
+      color: '#FFFFFF',
+      fontSize: 17,
+      fontWeight: '700',
+    },
+    closeBtn: {
+      position: 'absolute',
+      right: 0,
+      top: -4,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    card: {
+      width: (SCREEN_WIDTH - 32 - 16 - 12) / 2,
+      height: 120,
+      backgroundColor: 'rgba(255,255,255,0.07)',
+      borderRadius: 14,
+      marginBottom: 12,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+    },
+    cardSelected: {
+      borderColor: colors.accent,
+      backgroundColor: 'rgba(232,213,183,0.12)',
+    },
+    previewWrapper: {
+      width: 140,
+      height: 80,
+      overflow: 'hidden',
+      borderRadius: 6,
+    },
+    cardLabel: {
+      color: '#AAAAAA',
+      fontSize: 12,
+      fontWeight: '600',
+      marginTop: 4,
+    },
+    cardLabelSelected: {
+      color: colors.accent,
+    },
+    closeCard: {
+      width: '100%',
+      height: 48,
+      backgroundColor: 'rgba(255,255,255,0.07)',
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    closeCardSelected: {
+      borderColor: colors.accent,
+      backgroundColor: 'rgba(232,213,183,0.12)',
+    },
+    closeCardLabel: {
+      color: '#AAAAAA',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+  });  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const [isShown, setIsShown] = useState(false);
 
@@ -206,106 +307,6 @@ export function GridSelectorModal({
 
 const SHEET_HEIGHT = 380;
 
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  sheet: {
-    backgroundColor: 'rgba(20,20,20,0.95)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 12,
-    minHeight: SHEET_HEIGHT,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  closeBtn: {
-    position: 'absolute',
-    right: 0,
-    top: -4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  card: {
-    width: (SCREEN_WIDTH - 32 - 16 - 12) / 2,
-    height: 120,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 14,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  cardSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: 'rgba(232,213,183,0.12)',
-  },
-  previewWrapper: {
-    width: 140,
-    height: 80,
-    overflow: 'hidden',
-    borderRadius: 6,
-  },
-  cardLabel: {
-    color: '#AAAAAA',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  cardLabelSelected: {
-    color: Colors.accent,
-  },
-  closeCard: {
-    width: '100%',
-    height: 48,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeCardSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: 'rgba(232,213,183,0.12)',
-  },
-  closeCardLabel: {
-    color: '#AAAAAA',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
 
 // ---- Shared preview styles ----
 const previewStyles = StyleSheet.create({
