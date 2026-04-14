@@ -49,7 +49,7 @@ export interface CameraTopBarProps {
   // Timer
   timerDuration: number;
   countdownActive: boolean;
-  onTimerPress: () => void;
+  onTimerPress: () => void; // opens the timer selector modal
   onCancelCountdown: () => void;
   // Favorites
   lastCapturedUri: string | null;

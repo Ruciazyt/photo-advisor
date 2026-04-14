@@ -12,6 +12,7 @@ import { GridVariant } from '../components/GridOverlay';
 import { GridSelectorModal } from '../components/GridSelectorModal';
 import { PermissionGate } from '../components/PermissionGate';
 import { CountdownOverlay } from '../components/CountdownOverlay';
+import { TimerSelectorModal } from '../components/TimerSelectorModal';
 import { CompositionScoreOverlay } from '../components/CompositionScoreOverlay';
 import { SceneTagOverlay } from '../components/SceneTagOverlay';
 import { useCameraCapture } from '../hooks/useCameraCapture';
@@ -22,7 +23,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { useCompositionScore } from '../hooks/useCompositionScore';
 import { useSceneRecognition } from '../hooks/useSceneRecognition';
-import { loadAppSettings } from '../services/settings';
+import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { loadApiConfig } from '../services/api';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { CameraTopBar } from '../components/CameraTopBar';
@@ -86,6 +87,7 @@ export function CameraScreen() {
   const [lastCapturedScoreReason, setLastCapturedScoreReason] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [showGridModal, setShowGridModal] = useState(false);
+  const [showTimerModal, setShowTimerModal] = useState(false);
   const [toastOpacity] = useState(new Animated.Value(0));
   const [toastMessage, setToastMessage] = useState('已收藏！');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -149,12 +151,14 @@ export function CameraScreen() {
     const burstInterval = setInterval(() => { doCapture(); shot++; setBurstCount(shot); if (shot >= 5) { clearInterval(burstInterval); setBurstActive(false); setSuggestions(prev => [...prev, `连拍完成：共${shot}张`]); } }, 700);
   }, [burstActive, doCapture]);
 
-  const cycleTimerDuration = useCallback(() => {
+  const cycleTimerDuration = useCallback(async () => {
     const nextIdx = (TIMER_DURATIONS.indexOf(timerDuration) + 1) % TIMER_DURATIONS.length;
-    setTimerDuration(TIMER_DURATIONS[nextIdx]);
+    const next = TIMER_DURATIONS[nextIdx];
+    setTimerDuration(next);
+    await saveAppSettings({ timerDuration: next });
   }, [timerDuration]);
 
-  // Focus Peaking interval
+  // Persist timer duration changes to settings (used by cycleTimerDuration)
   useEffect(() => {
     if (!showFocusGuide) { if (peakingTimerRef.current) { clearInterval(peakingTimerRef.current); peakingTimerRef.current = null; } setPeakPoints([]); return; }
     const doCapture = async () => { const points = await capturePeaks(cameraRef, screenWidth, screenHeight); if (points.length > 0) setPeakPoints(points); };
@@ -225,7 +229,10 @@ export function CameraScreen() {
   const handleDismissAll = useCallback(() => { setSuggestions([]); setKeypoints([]); setShowKeypoints(false); }, []);
 
   useEffect(() => {
-    loadAppSettings().then((settings) => setVoiceEnabled(settings.voiceEnabled));
+    loadAppSettings().then((settings) => {
+      setVoiceEnabled(settings.voiceEnabled);
+      setTimerDuration(settings.timerDuration);
+    });
     import('../hooks/useCameraCapture').then(({ supportsRawCapture }) => supportsRawCapture().then(setRawSupported));
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
@@ -295,7 +302,7 @@ export function CameraScreen() {
           rawMode={rawMode} rawSupported={rawSupported} onRawToggle={handleRawToggle}
           challengeMode={challengeMode} onChallengeToggle={toggleChallengeMode}
           timerDuration={timerDuration} countdownActive={countdownActive}
-          onTimerPress={cycleTimerDuration} onCancelCountdown={cancelCountdown}
+          onTimerPress={() => setShowTimerModal(true)} onCancelCountdown={cancelCountdown}
           lastCapturedUri={lastCapturedUri} onSaveToFavorites={handleSaveToFavorites}
           suggestions={suggestions} lastCapturedScore={lastCapturedScore}
           showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)}
@@ -305,6 +312,17 @@ export function CameraScreen() {
         <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={handleSwitchCamera} />
       </CameraView>
       <BubbleOverlay items={bubbleItems} loading={loading} onDismiss={handleDismiss} onDismissAll={handleDismissAll} onBubbleAppear={(text) => { if (voiceEnabled) checkAndSpeak(text); }} />
+      <TimerSelectorModal
+        visible={showTimerModal}
+        selectedDuration={timerDuration}
+        onSelect={async (dur) => {
+          const d = dur as TimerDuration;
+          setTimerDuration(d);
+          await saveAppSettings({ timerDuration: d });
+          setShowTimerModal(false);
+        }}
+        onClose={() => setShowTimerModal(false)}
+      />
     </View>
   );
 }

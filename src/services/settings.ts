@@ -6,6 +6,7 @@ const STORAGE_KEY = '@photo_advisor_settings';
 const DEFAULT_SETTINGS: AppSettings = {
   voiceEnabled: false,
   theme: 'dark',
+  timerDuration: 3,
 };
 
 export async function loadAppSettings(): Promise<AppSettings> {

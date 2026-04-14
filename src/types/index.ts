@@ -331,6 +331,7 @@ export interface FavoriteItem {
 export interface AppSettings {
   voiceEnabled: boolean;
   theme: 'dark' | 'light';
+  timerDuration: TimerDuration;
 }
 
 // ============================================================
@@ -553,6 +554,13 @@ export interface ConfigWarningProps {
 export interface CountdownOverlayProps {
   count: number;
   onComplete: () => void;
+}
+
+export interface TimerSelectorModalProps {
+  visible: boolean;
+  selectedDuration: number;
+  onSelect: (duration: number) => void;
+  onClose: () => void;
 }
 
 export interface FocusRingProps {

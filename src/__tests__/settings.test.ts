@@ -9,6 +9,8 @@ import { loadAppSettings, saveAppSettings } from '../services/settings';
 
 const STORAGE_KEY = '@photo_advisor_settings';
 
+const DEFAULT_SETTINGS = { voiceEnabled: false, theme: 'dark', timerDuration: 3 };
+
 describe('settings service', () => {
   beforeEach(async () => {
     await AsyncStorage.clear();
@@ -17,7 +19,7 @@ describe('settings service', () => {
   describe('loadAppSettings', () => {
     it('returns default settings when storage is empty', async () => {
       const settings = await loadAppSettings();
-      expect(settings).toEqual({ voiceEnabled: false, theme: 'dark' });
+      expect(settings).toEqual(DEFAULT_SETTINGS);
     });
 
     it('returns stored voiceEnabled when present', async () => {
@@ -29,13 +31,18 @@ describe('settings service', () => {
     it('merges partial storage with defaults', async () => {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({}));
       const settings = await loadAppSettings();
-      expect(settings).toEqual({ voiceEnabled: false, theme: 'dark' });
+      expect(settings).toEqual(DEFAULT_SETTINGS);
     });
 
     it('returns defaults on invalid JSON', async () => {
       await AsyncStorage.setItem(STORAGE_KEY, 'not json');
       const settings = await loadAppSettings();
-      expect(settings).toEqual({ voiceEnabled: false, theme: 'dark' });
+      expect(settings).toEqual(DEFAULT_SETTINGS);
+    });
+
+    it('returns default timerDuration when not set', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.timerDuration).toBe(3);
     });
   });
 
@@ -60,6 +67,12 @@ describe('settings service', () => {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       const parsed = JSON.parse(raw ?? '{}');
       expect(parsed.voiceEnabled).toBe(false);
+    });
+
+    it('saves and loads timerDuration', async () => {
+      await saveAppSettings({ timerDuration: 10 });
+      const settings = await loadAppSettings();
+      expect(settings.timerDuration).toBe(10);
     });
   });
 
