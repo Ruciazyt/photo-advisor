@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps, SparkleItem } from '../types';
 export type { CompositionScoreOverlayProps };
 
@@ -30,6 +31,7 @@ export function CompositionScoreOverlay({
 }: CompositionScoreOverlayProps) {
   const { colors } = useTheme();
   const { score, breakdown, grade } = result;
+  const { announce } = useAccessibilityAnnouncement();
 
   const [displayScore, setDisplayScore] = useState(0);
   const [showGrade, setShowGrade] = useState(false);
@@ -37,6 +39,7 @@ export function CompositionScoreOverlay({
   const countAnim = useRef(new Animated.Value(0)).current;
   const gradePopAnim = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const announcedRef = useRef(false);
 
   // Sparkle animations for S/A rank
   const [sparkles, setSparkles] = useState<SparkleItem[]>([]);
@@ -234,6 +237,10 @@ export function CompositionScoreOverlay({
     // After count-up, show grade
     const gradeTimer = setTimeout(() => {
       setShowGrade(true);
+      if (!announcedRef.current) {
+        announce('构图评分 ' + score + '分，等级' + grade, 'assertive');
+        announcedRef.current = true;
+      }
       Animated.spring(gradePopAnim, {
         toValue: 1,
         tension: 120,

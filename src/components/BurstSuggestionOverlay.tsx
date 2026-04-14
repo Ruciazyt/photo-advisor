@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 
 // Positive AI keywords that suggest a great composition moment
 const BURST_TRIGGER_KEYWORDS = [
@@ -32,8 +33,10 @@ export function BurstSuggestionOverlay({
   onDismiss,
 }: BurstSuggestionOverlayProps) {
   const { colors } = useTheme();
+  const { announce } = useAccessibilityAnnouncement();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const announcedRef = useRef(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -105,6 +108,10 @@ export function BurstSuggestionOverlay({
 
   useEffect(() => {
     if (visible) {
+      if (!announcedRef.current) {
+        announce('建议连拍: ' + suggestion, 'polite');
+        announcedRef.current = true;
+      }
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,

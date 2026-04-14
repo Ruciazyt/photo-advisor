@@ -1,4 +1,16 @@
-import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { renderHook } from '@testing-library/react-native';
+import { useAccessibilityButton, announce, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
+
+// Mock AccessibilityInfo
+jest.mock('react-native', () => ({
+  AccessibilityInfo: {
+    announceForAccessibility: jest.fn(),
+    isReduceMotionEnabled: jest.fn(() => Promise.resolve(false)),
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  },
+}));
+
+import { AccessibilityInfo } from 'react-native';
 
 describe('useAccessibilityButton', () => {
   it('returns accessibilityLabel', () => {
@@ -66,5 +78,43 @@ describe('useAccessibilityButton', () => {
       accessibilityRole: 'menuitem',
       accessibilityState: { disabled: true },
     });
+  });
+});
+
+describe('announce', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('calls AccessibilityInfo.announceForAccessibility with the given message', () => {
+    announce('构图评分 85分，等级A');
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith('构图评分 85分，等级A');
+  });
+
+  it('announce works with assertive politeness', () => {
+    announce('3秒', 'assertive');
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith('3秒');
+  });
+
+  it('announce works with polite politeness', () => {
+    announce('建议连拍', 'polite');
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith('建议连拍');
+  });
+});
+
+describe('useAccessibilityReducedMotion', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (AccessibilityInfo.isReduceMotionEnabled as jest.Mock).mockResolvedValue(false);
+  });
+
+  it('calls isReduceMotionEnabled on mount', () => {
+    renderHook(() => useAccessibilityReducedMotion());
+    expect(AccessibilityInfo.isReduceMotionEnabled).toHaveBeenCalled();
+  });
+
+  it('listens for reduceStatusChanged events', () => {
+    renderHook(() => useAccessibilityReducedMotion());
+    expect(AccessibilityInfo.addEventListener).toHaveBeenCalledWith('reduceStatusChanged', expect.any(Function));
   });
 });

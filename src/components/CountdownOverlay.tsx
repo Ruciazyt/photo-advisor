@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 
 interface CountdownOverlayProps {
   count: number; // current count value (3, 2, 1)
@@ -11,10 +12,16 @@ interface CountdownOverlayProps {
  *  Animates a large digit that scales down and fades out each second. */
 export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
   const { colors } = useTheme();
+  const { announce } = useAccessibilityAnnouncement();
   const scaleAnim = useRef(new Animated.Value(1.4)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
+  const prevCountRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (prevCountRef.current !== count) {
+      announce(count + '秒', 'assertive');
+      prevCountRef.current = count;
+    }
     // Reset and animate: scale from large → normal, opacity 1 → 0.3
     scaleAnim.setValue(1.4);
     opacityAnim.setValue(1);

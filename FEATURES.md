@@ -49,7 +49,7 @@
 - [x] 统一颜色系统 — ThemeContext + colors.ts（消除硬编码色值）
 - [ ] 动画流畅度优化（60fps）
 - [x] 深色/浅色主题适配 — ThemeContext 全局支持 + App.tsx 集成
-- [ ] 无障碍支持（VoiceOver/TalkBack）
+- [x] 无障碍支持（VoiceOver/TalkBack）
 
 ### 代码结构
 - [x] 将 CameraScreen 拆分为多个 sub-components（控制在 400 行以内）
