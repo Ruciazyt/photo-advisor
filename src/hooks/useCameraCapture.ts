@@ -33,7 +33,7 @@ export async function supportsRawCapture(): Promise<boolean> {
 }
 
 /** Attempt RAW capture via the native Camera2 module; falls back to null on failure. */
-async function captureRawNative(): Promise<{ uri: string; path: string; width: number; height: number } | null> {
+export async function captureRawNative(): Promise<{ uri: string; path: string; width: number; height: number } | null> {
   try {
     const NativeModules = require('react-native').NativeModules;
     const module = NativeModules.Camera2RawModule;
