@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import type { CameraMode, ModeSelectorProps } from '../types';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 export type { CameraMode };
 export type { ModeSelectorProps };
 
@@ -12,6 +13,40 @@ const modeLabels: Record<CameraMode, string> = {
   video: '视频',
   portrait: '人像',
 };
+
+interface ModeButtonProps {
+  mode: CameraMode;
+  isSelected: boolean;
+  onPress: () => void;
+}
+
+function ModeButton({ mode, isSelected, onPress }: ModeButtonProps) {
+  const { colors } = useTheme();
+  const a11y = useAccessibilityButton({
+    label: `${modeLabels[mode]}模式`,
+    hint: `切换到${modeLabels[mode]}模式`,
+    role: 'tab',
+  });
+
+  return (
+    <TouchableOpacity
+      style={[styles.modeBtn, isSelected && styles.modeBtnActive]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      {...a11y}
+      accessibilityState={{ selected: isSelected }}
+    >
+      <Text
+        style={[
+          styles.modeBtnText,
+          isSelected && styles.modeBtnTextActive,
+        ]}
+      >
+        {modeLabels[mode]}
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) {
   const { colors } = useTheme();
@@ -48,21 +83,12 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
   return (
     <View style={styles.modeSelector}>
       {(['photo', 'scan', 'video', 'portrait'] as CameraMode[]).map((mode) => (
-        <TouchableOpacity
+        <ModeButton
           key={mode}
-          style={[styles.modeBtn, selectedMode === mode && styles.modeBtnActive]}
+          mode={mode}
+          isSelected={selectedMode === mode}
           onPress={() => onModeChange(mode)}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.modeBtnText,
-              selectedMode === mode && styles.modeBtnTextActive,
-            ]}
-          >
-            {modeLabels[mode]}
-          </Text>
-        </TouchableOpacity>
+        />
       ))}
     </View>
   );

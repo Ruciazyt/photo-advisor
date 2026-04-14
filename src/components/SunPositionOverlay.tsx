@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSunPosition } from '../hooks/useSunPosition';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 
 function CompassArrow({ azimuth }: { azimuth: number }) {
   const { colors } = useTheme();
@@ -89,12 +90,19 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
 
 export function SunToggleButton({ visible, onPress }: { visible: boolean; onPress: () => void }) {
   const { colors } = useTheme();
+  const a11y = useAccessibilityButton({
+    label: '太阳位置',
+    hint: visible ? '关闭太阳位置显示' : '打开太阳位置显示',
+    role: 'button',
+  });
 
   return (
     <TouchableOpacity
       style={[styles.toggleBtn, visible && styles.toggleBtnActive]}
       onPress={onPress}
       activeOpacity={0.7}
+      {...a11y}
+      accessibilityState={{ selected: visible }}
     >
       <Ionicons
         name={visible ? 'sunny' : 'sunny-outline'}

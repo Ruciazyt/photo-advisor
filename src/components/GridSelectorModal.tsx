@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { GridVariant, GridSelectorModalProps } from '../types';
 export type { GridSelectorModalProps };
 
@@ -90,6 +91,42 @@ function GridPreview({ variant }: { variant: GridVariant }) {
     case 'none': return <NonePreview />;
     default: return null;
   }
+}
+
+// ---- Grid Card ----
+
+interface GridCardProps {
+  variant: { key: GridVariant; label: string };
+  isSelected: boolean;
+  onSelect: (v: GridVariant) => void;
+}
+
+function GridCard({ variant, isSelected, onSelect }: GridCardProps) {
+  const a11y = useAccessibilityButton({
+    label: variant.label,
+    hint: `选择${variant.label}网格`,
+    role: 'menuitem',
+  });
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.card,
+        isSelected && styles.cardSelected,
+      ]}
+      onPress={() => onSelect(variant.key)}
+      activeOpacity={0.75}
+      {...a11y}
+      accessibilityState={{ selected: isSelected }}
+    >
+      <View style={styles.previewWrapper}>
+        <GridPreview variant={variant.key} />
+      </View>
+      <Text style={[styles.cardLabel, isSelected && styles.cardLabelSelected]}>
+        {variant.label}
+      </Text>
+    </TouchableOpacity>
+  );
 }
 
 // ---- Main Modal ----
@@ -255,7 +292,16 @@ export function GridSelectorModal({
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>选择网格</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={8}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            hitSlop={8}
+            {...useAccessibilityButton({
+              label: '关闭',
+              hint: '关闭网格选择器',
+              role: 'button',
+            })}
+          >
             <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -263,22 +309,12 @@ export function GridSelectorModal({
         {/* Grid cards — 2 columns, last row full width for "关闭网格" */}
         <View style={styles.grid}>
           {GRID_VARIANTS.slice(0, 4).map((v) => (
-            <TouchableOpacity
+            <GridCard
               key={v.key}
-              style={[
-                styles.card,
-                selectedVariant === v.key && styles.cardSelected,
-              ]}
-              onPress={() => onSelect(v.key)}
-              activeOpacity={0.75}
-            >
-              <View style={styles.previewWrapper}>
-                <GridPreview variant={v.key} />
-              </View>
-              <Text style={[styles.cardLabel, selectedVariant === v.key && styles.cardLabelSelected]}>
-                {v.label}
-              </Text>
-            </TouchableOpacity>
+              variant={v}
+              isSelected={selectedVariant === v.key}
+              onSelect={onSelect}
+            />
           ))}
         </View>
 
@@ -290,6 +326,12 @@ export function GridSelectorModal({
           ]}
           onPress={() => onSelect('none')}
           activeOpacity={0.75}
+          {...useAccessibilityButton({
+            label: '关闭网格',
+            hint: '关闭网格选择',
+            role: 'menuitem',
+          })}
+          accessibilityState={{ selected: selectedVariant === 'none' }}
         >
           <Text
             style={[

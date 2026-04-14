@@ -11,12 +11,42 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { TIMER_OPTIONS, TimerDuration } from '../hooks/useCountdown';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { TimerSelectorModalProps } from '../types';
 export type { TimerSelectorModalProps };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ---- Timer card preview ----
+
+interface TimerCardProps {
+  opt: { value: TimerDuration; label: string };
+  isSelected: boolean;
+  onSelect: (v: TimerDuration) => void;
+}
+
+function TimerCard({ opt, isSelected, onSelect }: TimerCardProps) {
+  const a11y = useAccessibilityButton({
+    label: `定时${opt.value}秒`,
+    hint: `设置${opt.value}秒定时拍摄`,
+    role: 'menuitem',
+  });
+
+  return (
+    <TouchableOpacity
+      style={[styles.card, isSelected && styles.cardSelected]}
+      onPress={() => onSelect(opt.value)}
+      activeOpacity={0.75}
+      {...a11y}
+      accessibilityState={{ selected: isSelected }}
+    >
+      <TimerPreview seconds={opt.value} />
+      <Text style={[styles.cardLabel, isSelected && styles.cardLabelSelected]}>
+        {opt.label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 function TimerPreview({ seconds }: { seconds: number }) {
   const { colors } = useTheme();
@@ -201,7 +231,11 @@ export function TimerSelectorModal({
             onPress={onClose}
             style={styles.closeBtn}
             hitSlop={8}
-            accessibilityLabel="关闭定时器选择器"
+            {...useAccessibilityButton({
+              label: '关闭',
+              hint: '关闭定时器选择器',
+              role: 'button',
+            })}
           >
             <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
@@ -209,22 +243,14 @@ export function TimerSelectorModal({
 
         {/* Timer option cards */}
         <View style={styles.grid}>
-          {TIMER_OPTIONS.map((opt) => {
-            const selected = opt.value === selectedDuration;
-            return (
-              <TouchableOpacity
-                key={opt.value}
-                style={[styles.card, selected && styles.cardSelected]}
-                onPress={() => onSelect(opt.value)}
-                activeOpacity={0.75}
-              >
-                <TimerPreview seconds={opt.value} />
-                <Text style={[styles.cardLabel, selected && styles.cardLabelSelected]}>
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {TIMER_OPTIONS.map((opt) => (
+            <TimerCard
+              key={opt.value}
+              opt={opt}
+              isSelected={opt.value === selectedDuration}
+              onSelect={onSelect}
+            />
+          ))}
         </View>
 
         {/* Hint */}

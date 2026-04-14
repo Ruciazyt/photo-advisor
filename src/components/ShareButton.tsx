@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated } from 
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { sharePhoto } from '../services/share';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { ShareOptions } from '../types';
 
 interface ShareButtonProps {
@@ -105,6 +106,13 @@ export function ShareButton({
 
   const canShare = !!photoUri;
 
+  const shareA11y = useAccessibilityButton({
+    label: '分享',
+    hint: canShare ? '分享照片到其他应用' : '拍摄照片后可分享',
+    role: 'button',
+    enabled: canShare,
+  });
+
   const handleShare = async () => {
     if (sharing || !canShare) return;
 
@@ -142,6 +150,7 @@ export function ShareButton({
         onPress={handleShare}
         disabled={!canShare || sharing}
         activeOpacity={0.7}
+        {...shareA11y}
       >
         {sharing ? (
           <ActivityIndicator size="small" color={colors.accent} />

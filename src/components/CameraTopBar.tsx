@@ -5,6 +5,7 @@ import { CameraType } from 'expo-camera';
 import { useTheme } from '../contexts/ThemeContext';
 import { SunToggleButton } from './SunPositionOverlay';
 import { ShareButton } from './ShareButton';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { GridVariant } from '../types';
 
 const GRID_LABELS: Record<GridVariant, string> = {
@@ -366,6 +367,12 @@ export function CameraTopBar({
     },
   });
 
+  const compareBtnA11y = useAccessibilityButton({
+    label: '对比模式',
+    hint: '打开照片对比视图',
+    role: 'button',
+  });
+
   return (
     <>
       {/* Grid Type Selector */}
@@ -374,6 +381,11 @@ export function CameraTopBar({
         style={styles.gridSelector}
         onPress={onGridPress}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: `网格类型：${GRID_LABELS[gridVariant]}`,
+          hint: '打开网格类型选择器',
+          role: 'button',
+        })}
       >
         <Text style={styles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
       </TouchableOpacity>
@@ -385,6 +397,12 @@ export function CameraTopBar({
         onPressIn={onHistogramPressIn}
         onPressOut={onHistogramPressOut}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '直方图',
+          hint: showHistogram ? '关闭直方图' : '打开直方图',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showHistogram }}
       >
         <Text style={styles.histogramSelectorText}>📊 直方图</Text>
       </TouchableOpacity>
@@ -394,6 +412,12 @@ export function CameraTopBar({
         style={[styles.levelSelector, showLevel && styles.levelSelectorActive]}
         onPress={onLevelToggle}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '水平仪',
+          hint: showLevel ? '关闭水平仪' : '打开水平仪',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showLevel }}
       >
         <Text style={[styles.levelSelectorText, showLevel && styles.levelSelectorTextActive]}>🔮 水平仪</Text>
       </TouchableOpacity>
@@ -409,6 +433,12 @@ export function CameraTopBar({
         style={[styles.focusGuideSelector, showFocusGuide && styles.focusGuideSelectorActive]}
         onPress={onFocusGuideToggle}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '对焦辅助',
+          hint: showFocusGuide ? '关闭对焦辅助' : '打开对焦辅助',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showFocusGuide }}
       >
         <Text style={[styles.focusGuideSelectorText, showFocusGuide && styles.focusGuideSelectorTextActive]}>🎯 对焦</Text>
       </TouchableOpacity>
@@ -418,6 +448,12 @@ export function CameraTopBar({
         style={[styles.voiceSelector, voiceEnabled && styles.voiceSelectorActive]}
         onPress={onVoiceToggle}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '语音控制',
+          hint: voiceEnabled ? '关闭语音控制' : '打开语音控制',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: voiceEnabled }}
       >
         <Ionicons
           name={voiceEnabled ? 'volume-high' : 'volume-mute'}
@@ -432,6 +468,12 @@ export function CameraTopBar({
         style={[styles.rawSelector, rawMode && styles.rawSelectorActive]}
         onPress={onRawToggle}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: 'RAW模式',
+          hint: rawMode ? '关闭RAW模式' : '打开RAW模式',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: rawMode, disabled: !rawSupported }}
       >
         <Text style={[styles.rawSelectorText, rawMode && styles.rawSelectorTextActive]}>📷 RAW</Text>
       </TouchableOpacity>
@@ -441,6 +483,12 @@ export function CameraTopBar({
         style={[styles.challengeSelector, challengeMode && styles.challengeSelectorActive]}
         onPress={onChallengeToggle}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '挑战模式',
+          hint: challengeMode ? '关闭挑战模式' : '打开挑战模式',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: challengeMode }}
       >
         <Text style={[styles.challengeSelectorText, challengeMode && styles.challengeSelectorTextActive]}>🎮 挑战</Text>
       </TouchableOpacity>
@@ -450,6 +498,12 @@ export function CameraTopBar({
         style={[styles.timerSelector, countdownActive && styles.timerSelectorActive]}
         onPress={countdownActive ? onCancelCountdown : onTimerPress}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: countdownActive ? '取消定时' : `定时${timerDuration}秒`,
+          hint: countdownActive ? '取消倒计时拍摄' : '选择定时拍摄时长',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: countdownActive }}
       >
         <Text style={styles.timerSelectorText}>
           {countdownActive ? '✕ 取消' : `⏱ ${timerDuration}s`}
@@ -462,6 +516,12 @@ export function CameraTopBar({
         onPress={onSaveToFavorites}
         disabled={!lastCapturedUri}
         activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '收藏',
+          hint: '将照片保存到收藏',
+          role: 'button',
+          enabled: !!lastCapturedUri,
+        })}
       >
         <Ionicons name="heart" size={18} color={lastCapturedUri ? '#FF6B8A' : '#555'} />
       </TouchableOpacity>
@@ -481,6 +541,7 @@ export function CameraTopBar({
           style={styles.compareBtn}
           onPress={onComparePress}
           activeOpacity={0.8}
+          {...compareBtnA11y}
         >
           <Text style={styles.compareBtnText}>🖼️ 对比</Text>
         </TouchableOpacity>

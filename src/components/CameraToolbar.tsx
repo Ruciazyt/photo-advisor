@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 
 interface CameraToolbarProps {
   onGallery: () => void;
@@ -9,6 +10,24 @@ interface CameraToolbarProps {
 }
 
 export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraToolbarProps) {
+  const galleryA11y = useAccessibilityButton({
+    label: '相册',
+    hint: '打开相册查看照片',
+    role: 'button',
+  });
+
+  const askAIA11y = useAccessibilityButton({
+    label: 'AI摄影',
+    hint: '点击拍摄照片',
+    role: 'button',
+  });
+
+  const switchCameraA11y = useAccessibilityButton({
+    label: '切换摄像头',
+    hint: '切换前后摄像头',
+    role: 'button',
+  });
+
   return (
     <View style={styles.toolbar}>
       {/* Left: Gallery */}
@@ -16,6 +35,7 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraTool
         style={styles.toolBtn}
         onPress={onGallery}
         activeOpacity={0.7}
+        {...galleryA11y}
       >
         <Ionicons name="images-outline" size={28} color="#fff" />
       </TouchableOpacity>
@@ -25,6 +45,7 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraTool
         style={styles.captureBtn}
         onPress={onAskAI}
         activeOpacity={0.7}
+        {...askAIA11y}
       >
         <View style={styles.captureBtnInner} />
       </TouchableOpacity>
@@ -34,6 +55,7 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraTool
         style={styles.toolBtn}
         onPress={onSwitchCamera}
         activeOpacity={0.7}
+        {...switchCameraA11y}
       >
         <Ionicons name="camera-reverse-outline" size={28} color="#fff" />
       </TouchableOpacity>
