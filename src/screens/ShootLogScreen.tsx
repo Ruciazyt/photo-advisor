@@ -37,71 +37,7 @@ function getScoreColor(score: number, colors: { success: string; error: string }
   return colors.error;
 }
 
-function ScoreBadge({ score }: { score: number }) {
-  const { colors } = useTheme();
-  const scoreColor = getScoreColor(score, colors);
-  return (
-    <View style={[styles.scoreBadge, { backgroundColor: scoreColor + '22' }]}>
-      <Text style={{ fontSize: 11, color: scoreColor }}>★ {score}</Text>
-    </View>
-  );
-}
-
-interface EntryCardProps {
-  entry: ShootLogEntry;
-}
-
-function EntryCard({ entry }: EntryCardProps) {
-  const gridLabel = GRID_LABELS[entry.gridType] ?? entry.gridType;
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.timeText}>{formatTime(entry.date)}</Text>
-        <View style={styles.gridBadge}>
-          <Text style={styles.gridBadgeText}>📐 {gridLabel}</Text>
-        </View>
-        {entry.score !== undefined && entry.score !== null ? (
-          <ScoreBadge score={entry.score} />
-        ) : null}
-      </View>
-
-      <View style={styles.cardBody}>
-        {entry.sceneTag ? (
-          <View style={styles.tagBadge}>
-            <Text style={styles.tagBadgeText}>{entry.sceneTag}</Text>
-          </View>
-        ) : null}
-        {entry.locationName ? (
-          <Text style={styles.locationText}>📍 {entry.locationName}</Text>
-        ) : null}
-        {entry.wasFavorite ? (
-          <Text style={styles.favoriteTag}>❤️ 已收藏</Text>
-        ) : null}
-        {entry.timerDuration && entry.timerDuration > 0 ? (
-          <Text style={styles.timerBadge}>⏱ {entry.timerDuration}s</Text>
-        ) : null}
-      </View>
-
-      {entry.scoreReason ? (
-        <Text style={styles.scoreReasonText}>{entry.scoreReason}</Text>
-      ) : null}
-
-      {entry.suggestions.length > 0 ? (
-        <Text style={styles.suggestionText} numberOfLines={2}>
-          💡 {entry.suggestions[0]}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
-interface Section {
-  title: string;
-  data: ShootLogEntry[];
-}
-
-function buildSections(log: ShootLogEntry[]): Section[] {
+function buildSections(log: ShootLogEntry[]): Array<{ title: string; data: ShootLogEntry[] }> {
   const groups: Record<string, ShootLogEntry[]> = {};
   for (const entry of log) {
     const header = formatDateHeader(entry.date);
@@ -113,6 +49,86 @@ function buildSections(log: ShootLogEntry[]): Section[] {
 
 export function ShootLogScreen() {
   const { colors } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.primary },
+    header: { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 16, alignItems: 'center' },
+    title: { color: colors.accent, fontSize: 28, fontWeight: '700', letterSpacing: 2 },
+    subtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
+    clearBtn: { position: 'absolute', right: 16, top: 64, backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    clearBtnText: { color: colors.error, fontSize: 13, fontWeight: '600' },
+    centerState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+    emptyTitle: { color: colors.accent, fontSize: 18, fontWeight: '600', marginTop: 8 },
+    emptyHint: { color: colors.textSecondary, fontSize: 13 },
+    listContent: { paddingHorizontal: 16, paddingBottom: 20 },
+    sectionHeader: { paddingVertical: 8, paddingHorizontal: 16, backgroundColor: colors.primary },
+    sectionHeaderText: { color: colors.textSecondary, fontSize: 13, fontWeight: '700' },
+    card: { backgroundColor: colors.cardBg, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, marginBottom: 8 },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+    timeText: { color: colors.text, fontSize: 15, fontWeight: '600' },
+    gridBadge: { backgroundColor: 'rgba(232,213,183,0.15)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+    gridBadgeText: { color: colors.accent, fontSize: 12, fontWeight: '500' },
+    scoreBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginLeft: 'auto' },
+    cardBody: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 },
+    tagBadge: { backgroundColor: 'rgba(232,213,183,0.15)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+    tagBadgeText: { color: colors.accent, fontSize: 11 },
+    locationText: { color: colors.textSecondary, fontSize: 12 },
+    favoriteTag: { color: colors.error, fontSize: 12, fontWeight: '600' },
+    timerBadge: { color: colors.textSecondary, fontSize: 12 },
+    scoreReasonText: { color: colors.textSecondary, fontSize: 12, fontStyle: 'italic', marginTop: 4 },
+    suggestionText: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  });
+
+  const ScoreBadge = ({ score }: { score: number }) => {
+    const scoreColor = getScoreColor(score, colors);
+    return (
+      <View style={[styles.scoreBadge, { backgroundColor: scoreColor + '22' }]}>
+        <Text style={{ fontSize: 11, color: scoreColor }}>★ {score}</Text>
+      </View>
+    );
+  };
+
+  const EntryCard = ({ entry }: { entry: ShootLogEntry }) => {
+    const gridLabel = GRID_LABELS[entry.gridType] ?? entry.gridType;
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.timeText}>{formatTime(entry.date)}</Text>
+          <View style={styles.gridBadge}>
+            <Text style={styles.gridBadgeText}>📐 {gridLabel}</Text>
+          </View>
+          {entry.score !== undefined && entry.score !== null ? (
+            <ScoreBadge score={entry.score} />
+          ) : null}
+        </View>
+        <View style={styles.cardBody}>
+          {entry.sceneTag ? (
+            <View style={styles.tagBadge}>
+              <Text style={styles.tagBadgeText}>{entry.sceneTag}</Text>
+            </View>
+          ) : null}
+          {entry.locationName ? (
+            <Text style={styles.locationText}>📍 {entry.locationName}</Text>
+          ) : null}
+          {entry.wasFavorite ? (
+            <Text style={styles.favoriteTag}>❤️ 已收藏</Text>
+          ) : null}
+          {entry.timerDuration && entry.timerDuration > 0 ? (
+            <Text style={styles.timerBadge}>⏱ {entry.timerDuration}s</Text>
+          ) : null}
+        </View>
+        {entry.scoreReason ? (
+          <Text style={styles.scoreReasonText}>{entry.scoreReason}</Text>
+        ) : null}
+        {entry.suggestions.length > 0 ? (
+          <Text style={styles.suggestionText} numberOfLines={2}>
+            💡 {entry.suggestions[0]}
+          </Text>
+        ) : null}
+      </View>
+    );
+  };
+
   const { log, loading, clearLog, totalShoots, avgScore, favoriteCount } = useShootLog();
   const sections = buildSections(log);
 
@@ -182,149 +198,3 @@ export function ShootLogScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  title: {
-    color: colors.accent,
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 2,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 4,
-  },
-  clearBtn: {
-    position: 'absolute',
-    right: 16,
-    top: 64,
-    backgroundColor: colors.cardBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  clearBtnText: {
-    color: colors.error,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  centerState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  emptyTitle: {
-    color: colors.accent,
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptyHint: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  sectionHeader: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: colors.primary,
-  },
-  sectionHeaderText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  card: {
-    backgroundColor: colors.cardBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    marginBottom: 8,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  timeText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  gridBadge: {
-    backgroundColor: 'rgba(232,213,183,0.15)',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  gridBadgeText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  scoreBadge: {
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 'auto',
-  },
-  cardBody: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 4,
-  },
-  tagBadge: {
-    backgroundColor: 'rgba(232,213,183,0.15)',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  tagBadgeText: {
-    color: colors.accent,
-    fontSize: 11,
-  },
-  locationText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  favoriteTag: {
-    color: colors.error,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  timerBadge: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  scoreReasonText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  suggestionText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 4,
-  },
-});

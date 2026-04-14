@@ -35,92 +35,6 @@ function getStarConfig(score: number, colors: { success: string; error: string }
   return { stars: 1, color: colors.error };
 }
 
-function StarRating({ score, size = 12 }: { score: number; size?: number }) {
-  const { colors } = useTheme();
-  const { stars, color } = getStarConfig(score, colors);
-  return (
-    <Text style={{ fontSize: size, color }}>
-      {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
-    </Text>
-  );
-}
-
-function FavoriteCard({ item, onDelete, onPress }: {
-  item: FavoriteItem;
-  onDelete: (id: string) => void;
-  onPress: (item: FavoriteItem) => void;
-}) {
-  const handleLongPress = () => {
-    Alert.alert('删除收藏', '确定要删除这张照片的收藏吗？', [
-      { text: '取消', style: 'cancel' },
-      { text: '删除', style: 'destructive', onPress: () => onDelete(item.id) },
-    ]);
-  };
-
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => onPress(item)}
-      onLongPress={handleLongPress}
-      activeOpacity={0.8}
-    >
-      <Image source={{ uri: item.uri }} style={styles.thumbnail} />
-      <View style={styles.scoreBadge}>
-        <Text style={styles.scoreText}>{item.score}</Text>
-      </View>
-      <View style={styles.cardFooter}>
-        <Text style={styles.gridLabel}>{item.gridType}</Text>
-        <StarRating score={item.score} size={11} />
-      </View>
-      {item.sceneTag ? (
-        <View style={styles.sceneTagBadge}>
-          <Text style={styles.sceneTagText}>{item.sceneTag}</Text>
-        </View>
-      ) : null}
-    </TouchableOpacity>
-  );
-}
-
-function FullScreenModal({ item, visible, onClose }: {
-  item: FavoriteItem | null;
-  visible: boolean;
-  onClose: () => void;
-}) {
-  if (!item) return null;
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
-        <TouchableOpacity style={styles.modalCloseArea} onPress={onClose} activeOpacity={1}>
-          <Ionicons name="close-circle" size={36} color="#fff" style={styles.closeIcon} />
-        </TouchableOpacity>
-        <Image source={{ uri: item.uri }} style={styles.fullImage} resizeMode="contain" />
-        <View style={styles.modalInfo}>
-          <View style={styles.modalScoreRow}>
-            <StarRating score={item.score} size={20} />
-            <View style={styles.modalScoreBadge}>
-              <Text style={styles.modalScore}>{item.score}</Text>
-              <Text style={styles.modalScoreLabel}>分</Text>
-            </View>
-          </View>
-          {item.scoreReason ? (
-            <Text style={styles.scoreReason}>{item.scoreReason}</Text>
-          ) : null}
-          <Text style={styles.modalGrid}>{item.gridType}</Text>
-          {item.sceneTag ? (
-            <View style={styles.sceneTagBadge}>
-              <Text style={styles.sceneTagText}>{item.sceneTag}</Text>
-            </View>
-          ) : null}
-          <Text style={styles.modalDate}>{formatDate(item.date)}</Text>
-          {item.suggestion ? (
-            <Text style={styles.modalSuggestion}>{item.suggestion}</Text>
-          ) : null}
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export function FavoritesScreen() {
   const { colors } = useTheme();
   const { favorites, loading, deleteFavorite } = useFavorites();
@@ -164,6 +78,91 @@ export function FavoritesScreen() {
     sceneTagText: { color: colors.accent, fontSize: 11, fontWeight: '600' },
     scoreReason: { color: colors.textSecondary, fontSize: 13, marginTop: 6, fontStyle: 'italic' },
   }), [colors]);
+
+  const StarRating = ({ score, size = 12 }: { score: number; size?: number }) => {
+    const { stars, color } = getStarConfig(score, colors);
+    return (
+      <Text style={{ fontSize: size, color }}>
+        {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
+      </Text>
+    );
+  };
+
+  const FavoriteCard = ({ item, onDelete, onPress }: {
+    item: FavoriteItem;
+    onDelete: (id: string) => void;
+    onPress: (item: FavoriteItem) => void;
+  }) => {
+    const handleLongPress = () => {
+      Alert.alert('删除收藏', '确定要删除这张照片的收藏吗？', [
+        { text: '取消', style: 'cancel' },
+        { text: '删除', style: 'destructive', onPress: () => onDelete(item.id) },
+      ]);
+    };
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => onPress(item)}
+        onLongPress={handleLongPress}
+        activeOpacity={0.8}
+      >
+        <Image source={{ uri: item.uri }} style={styles.thumbnail} />
+        <View style={styles.scoreBadge}>
+          <Text style={styles.scoreText}>{item.score}</Text>
+        </View>
+        <View style={styles.cardFooter}>
+          <Text style={styles.gridLabel}>{item.gridType}</Text>
+          <StarRating score={item.score} size={11} />
+        </View>
+        {item.sceneTag ? (
+          <View style={styles.sceneTagBadge}>
+            <Text style={styles.sceneTagText}>{item.sceneTag}</Text>
+          </View>
+        ) : null}
+      </TouchableOpacity>
+    );
+  };
+
+  const FullScreenModal = ({ item, visible, onClose }: {
+    item: FavoriteItem | null;
+    visible: boolean;
+    onClose: () => void;
+  }) => {
+    if (!item) return null;
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <View style={styles.modalBackdrop}>
+          <TouchableOpacity style={styles.modalCloseArea} onPress={onClose} activeOpacity={1}>
+            <Ionicons name="close-circle" size={36} color="#fff" style={styles.closeIcon} />
+          </TouchableOpacity>
+          <Image source={{ uri: item.uri }} style={styles.fullImage} resizeMode="contain" />
+          <View style={styles.modalInfo}>
+            <View style={styles.modalScoreRow}>
+              <StarRating score={item.score} size={20} />
+              <View style={styles.modalScoreBadge}>
+                <Text style={styles.modalScore}>{item.score}</Text>
+                <Text style={styles.modalScoreLabel}>分</Text>
+              </View>
+            </View>
+            {item.scoreReason ? (
+              <Text style={styles.scoreReason}>{item.scoreReason}</Text>
+            ) : null}
+            <Text style={styles.modalGrid}>{item.gridType}</Text>
+            {item.sceneTag ? (
+              <View style={styles.sceneTagBadge}>
+                <Text style={styles.sceneTagText}>{item.sceneTag}</Text>
+              </View>
+            ) : null}
+            <Text style={styles.modalDate}>{formatDate(item.date)}</Text>
+            {item.suggestion ? (
+              <Text style={styles.modalSuggestion}>{item.suggestion}</Text>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   if (showStats) {
     return <StatsScreen onBack={() => setShowStats(false)} />;
@@ -233,4 +232,3 @@ export function FavoritesScreen() {
     </View>
   );
 }
-

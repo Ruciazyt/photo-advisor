@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps, SparkleItem } from '../types';
 export type { CompositionScoreOverlayProps };
@@ -48,6 +48,135 @@ export function CompositionScoreOverlay({
   // Dismiss timer
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const styles = StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 100,
+    },
+    hintContainer: {
+      position: 'absolute',
+      top: 60,
+      alignSelf: 'center',
+    },
+    hintText: {
+      color: 'rgba(255,255,255,0.4)',
+      fontSize: 12,
+    },
+    card: {
+      backgroundColor: 'rgba(28,28,28,0.95)',
+      borderRadius: 20,
+      padding: 24,
+      width: SCREEN_WIDTH * 0.8,
+      maxWidth: 340,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.1)',
+      alignItems: 'center',
+    },
+    scoreRow: {
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    scoreLabel: {
+      color: 'rgba(255,255,255,0.6)',
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    scoreValue: {
+      fontSize: 72,
+      fontWeight: '900',
+      lineHeight: 80,
+    },
+    gradeBadge: {
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      alignItems: 'center',
+      marginBottom: 16,
+      alignSelf: 'center',
+    },
+    gradeText: {
+      color: '#000',
+      fontSize: 24,
+      fontWeight: '900',
+    },
+    gradeStars: {
+      color: '#000',
+      fontSize: 12,
+      marginTop: 2,
+    },
+    breakdownContainer: {
+      width: '100%',
+      gap: 8,
+    },
+    breakdownRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    breakdownLabel: {
+      color: 'rgba(255,255,255,0.7)',
+      fontSize: 12,
+      width: 64,
+    },
+    barContainer: {
+      flex: 1,
+      height: 6,
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      backgroundColor: colors.accent,
+      borderRadius: 3,
+    },
+    breakdownValue: {
+      color: colors.accent,
+      fontSize: 12,
+      fontWeight: '700',
+      width: 28,
+      textAlign: 'right',
+    },
+    sessionContainer: {
+      marginTop: 16,
+      width: '100%',
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255,255,255,0.1)',
+      paddingTop: 12,
+    },
+    sessionTitle: {
+      color: '#FFD700',
+      fontSize: 13,
+      fontWeight: '800',
+      marginBottom: 8,
+    },
+    sessionRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    sessionLabel: {
+      color: 'rgba(255,255,255,0.6)',
+      fontSize: 12,
+    },
+    sessionValue: {
+      color: colors.accent,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    sparkle: {
+      position: 'absolute',
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+    },
+  });
+
   useEffect(() => {
     // Reset state
     setDisplayScore(0);
@@ -58,14 +187,14 @@ export function CompositionScoreOverlay({
 
     if (isHighRank) {
       // Initialize sparkles
-      const colors = ['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98'];
+      const sparkleColors = ['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98'];
       const newSparkles: SparkleItem[] = Array.from({ length: 6 }, (_, i) => ({
         id: i,
         x: new Animated.Value(SCREEN_WIDTH / 2),
         y: new Animated.Value(200),
         opacity: new Animated.Value(1),
         scale: new Animated.Value(0),
-        color: colors[i % colors.length],
+        color: sparkleColors[i % sparkleColors.length],
         rotation: new Animated.Value(0),
       }));
       setSparkles(newSparkles);
@@ -199,9 +328,9 @@ export function CompositionScoreOverlay({
 
             {/* Breakdown */}
             <View style={styles.breakdownContainer}>
-              <BreakdownRow label="构图对齐" value={breakdown.alignment} />
-              <BreakdownRow label="左右平衡" value={breakdown.balance} />
-              <BreakdownRow label="中心位置" value={breakdown.centrality} />
+              <BreakdownRow label="构图对齐" value={breakdown.alignment} styles={styles} />
+              <BreakdownRow label="左右平衡" value={breakdown.balance} styles={styles} />
+              <BreakdownRow label="中心位置" value={breakdown.centrality} styles={styles} />
             </View>
 
             {/* Challenge session stats */}
@@ -233,7 +362,7 @@ export function CompositionScoreOverlay({
   );
 }
 
-function BreakdownRow({ label, value }: { label: string; value: number }) {
+function BreakdownRow({ label, value, styles }: { label: string; value: number; styles: ReturnType<typeof StyleSheet.create> }) {
   const barWidth = (value / 100) * 100;
   return (
     <View style={styles.breakdownRow}>
@@ -253,135 +382,3 @@ function gradeFromScore(score: number): CompositionGrade {
   if (score >= 60) return 'C';
   return 'D';
 }
-
-// Need to import this for TouchableWithoutFeedback
-import { TouchableWithoutFeedback } from 'react-native';
-
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  hintContainer: {
-    position: 'absolute',
-    top: 60,
-    alignSelf: 'center',
-  },
-  hintText: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-  },
-  card: {
-    backgroundColor: 'rgba(28,28,28,0.95)',
-    borderRadius: 20,
-    padding: 24,
-    width: SCREEN_WIDTH * 0.8,
-    maxWidth: 340,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-  },
-  scoreRow: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  scoreLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  scoreValue: {
-    fontSize: 72,
-    fontWeight: '900',
-    lineHeight: 80,
-  },
-  gradeBadge: {
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-    alignSelf: 'center',
-  },
-  gradeText: {
-    color: '#000',
-    fontSize: 24,
-    fontWeight: '900',
-  },
-  gradeStars: {
-    color: '#000',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  breakdownContainer: {
-    width: '100%',
-    gap: 8,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  breakdownLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    width: 64,
-  },
-  barContainer: {
-    flex: 1,
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    backgroundColor: colors.accent,
-    borderRadius: 3,
-  },
-  breakdownValue: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    width: 28,
-    textAlign: 'right',
-  },
-  sessionContainer: {
-    marginTop: 16,
-    width: '100%',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingTop: 12,
-  },
-  sessionTitle: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  sessionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  sessionLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 12,
-  },
-  sessionValue: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  sparkle: {
-    position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-});
