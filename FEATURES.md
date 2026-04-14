@@ -1,6 +1,6 @@
 # 拍摄参谋 - 功能规划
 
-> 最后更新：2026-04-09
+> 最后更新：2026-04-15
 
 ## 一、当前能力
 
@@ -16,46 +16,46 @@
 ## 二、功能规划（待实现）
 
 ### 构图增强
-- [ ] **多种网格叠加** — 除三分法外，增加黄金分割、螺旋线、对角线等构图参考
-- [ ] **水平仪指示器** — 借助陀螺仪检测手机倾斜，提示用户保持水平
-- [ ] **太阳位置估算** — 根据时间和地理位置估算黄金时刻，提示最佳拍摄方向
+- [x] **多种网格叠加** — GridOverlay + GridSelectorModal（thirds/golden/diagonal/spiral）
+- [x] **水平仪指示器** — LevelIndicator + useDeviceOrientation + 陀螺仪气泡提示
+- [x] **太阳位置估算** — SunPositionOverlay + useSunPosition（黄金时刻/仰角/方位角）
 
 ### 拍摄辅助
-- [ ] **直方图显示** — 拍摄前显示曝光直方图，防止过曝/欠曝
+- [x] **直方图显示** — HistogramOverlay + useHistogram（实时曝光分析）
 - [x] **对焦峰值（Focus Peaking）** — 手动对焦时高亮显示合焦边缘（已集成到CameraScreen，500ms周期性边缘采样）
 - [x] **RAW 格式支持** — 更高质量的图像捕获（需要 Camera2 API）
-- [ ] **快门延迟/倒计时** — 自拍或 tripod 拍摄时使用
+- [x] **快门延迟/倒计时** — TimerSelectorModal + useCountdown（3s/5s/10s）
 
 ### AI 增强
-- [ ] **拍摄前后对比** — 保存原始图 vs AI 优化建议图对比
-- [ ] **语音反馈** — 构图达标时给出语音提示（不止视觉）
-- [x] **智能连拍建议** — AI 检测到精彩瞬间时主动建议连拍
-- [ ] **场景识别标签** — 自动给照片打场景标签（人像/风光/美食等）
+- [x] **拍摄前后对比** — ComparisonOverlay（原始图 vs AI 建议图滑动对比）
+- [x] **语音反馈** — useVoiceFeedback + expo-speech（构图达标语音提示）
+- [x] **智能连拍建议** — BurstSuggestionOverlay
+- [x] **场景识别标签** — SceneTagOverlay + useSceneRecognition
 
 ### 照片管理
-- [ ] **优秀照片收藏夹** — 一键保存 AI 评价高的照片到独立相册
-- [ ] **照片日志** — 记录每次拍摄的时间、地点、AI 建议
-- [ ] **历史分析** — 统计自己的拍摄习惯（如总是曝光不足）
+- [x] **优秀照片收藏夹** — FavoritesScreen + useFavorites
+- [x] **照片日志** — ShootLogScreen + useShootLog（时间/地点/AI建议）
+- [x] **历史分析** — StatsScreen + stats.ts（拍摄习惯统计）
 
 ### 社交/分享
-- [ ] **一键分享** — 将照片 + AI 构图建议一起分享到社交平台
-- [ ] **构图评分挑战** — 类似游戏的构图得分机制
+- [x] **一键分享** — ShareButton + share.ts
+- [x] **构图评分挑战** — CompositionScoreOverlay（S/A/B/C/D 评分 + 闪光特效）
 
 ---
 
 ## 三、优化方向（持续改进）
 
 ### UI 优化
-- [ ] 统一颜色系统，减少硬编码色值
+- [x] 统一颜色系统 — ThemeContext + colors.ts（消除硬编码色值）
 - [ ] 动画流畅度优化（60fps）
-- [ ] 深色/浅色主题适配
+- [x] 深色/浅色主题适配 — ThemeContext 全局支持 + App.tsx 集成
 - [ ] 无障碍支持（VoiceOver/TalkBack）
 
 ### 代码结构
 - [x] 将 CameraScreen 拆分为多个 sub-components（控制在 400 行以内）
 - [ ] 提取通用 hooks（useCamera, useKeypoints, useBubbleChat）
-- [ ] 建立统一的错误处理层
-- [ ] 补充 TypeScript 类型定义
+- [x] 建立统一的错误处理层 — errors.ts + useErrorHandler
+- [x] 补充 TypeScript 类型定义 — types/index.ts
 
 ---
 
