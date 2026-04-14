@@ -426,6 +426,7 @@ export type ColorPalette = {
   border: string;
   success: string;
   error: string;
+  warning: string;
   background: string;
   sunColor: string;
   gridAccent: string;

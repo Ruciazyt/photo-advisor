@@ -149,7 +149,7 @@ export function CompositionScoreOverlay({
       paddingTop: 12,
     },
     sessionTitle: {
-      color: '#FFD700',
+      color: colors.warning,
       fontSize: 13,
       fontWeight: '800',
       marginBottom: 8,

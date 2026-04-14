@@ -16,9 +16,9 @@ function getLevelState(tilt: number): 'level' | 'slight' | 'tilted' {
   return 'tilted';
 }
 
-function getColor(state: 'level' | 'slight' | 'tilted', colors: { success: string; error: string }): string {
+function getColor(state: 'level' | 'slight' | 'tilted', colors: { success: string; error: string; warning: string }): string {
   if (state === 'level') return colors.success;
-  if (state === 'slight') return '#FFD700'; // gold
+  if (state === 'slight') return colors.warning;
   return colors.error;
 }
 
