@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
@@ -78,22 +78,27 @@ export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {
     markerLabel: [staticStyles.markerLabel, { color: colors.accent }],
   }), [colors.accent]);
 
-  if (!visible || keypoints.length === 0) return null;
+  // Stable render — only show when actually needed
+  const renderKeypoints = useCallback(() => {
+    if (!visible || keypoints.length === 0) return null;
+    return (
+      <View style={staticStyles.container} pointerEvents="box-none">
+        {keypoints.map((kp) => (
+          <MemoizedKeypointMarker
+            key={kp.id}
+            keypoint={kp}
+            accentStyles={accentStyles}
+          />
+        ))}
+      </View>
+    );
+  }, [visible, keypoints, accentStyles]);
 
-  return (
-    <View style={staticStyles.container} pointerEvents="box-none">
-      {keypoints.map((kp) => (
-        <KeypointMarker
-          key={kp.id}
-          keypoint={kp}
-          accentStyles={accentStyles}
-        />
-      ))}
-    </View>
-  );
+  return renderKeypoints();
 }
 
-function KeypointMarker({
+// Memoized marker — avoids re-render when parent re-renders with same props
+const MemoizedKeypointMarker = React.memo(function KeypointMarker({
   keypoint,
   accentStyles,
 }: {
@@ -116,25 +121,41 @@ function KeypointMarker({
       useNativeDriver: true,
     }).start();
 
-    // Pulse loop
-    const pulseAnim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1.3,
-          duration: 800,
-          useNativeDriver: true,
-        }),
+    // Pulse animation — run for a finite number of cycles (3) then stop.
+    // Previously this was an infinite Animated.loop which kept the JS thread
+    // busy at ~1600ms per cycle indefinitely.  Limiting to 3 cycles gives
+    // the user enough visual feedback while freeing the thread after ~5s.
+    const MAX_PULSE_CYCLES = 3;
+    let cycleCount = 0;
+    let stopped = false;
+
+    const runPulse = () => {
+      if (stopped) return;
+      Animated.timing(pulse, {
+        toValue: 1.3,
+        duration: 800,
+        useNativeDriver: true,
+      }).start(() => {
+        if (stopped) return;
         Animated.timing(pulse, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
-        }),
-      ]),
-    );
-    pulseAnim.start();
+        }).start(() => {
+          if (stopped) return;
+          cycleCount++;
+          if (cycleCount < MAX_PULSE_CYCLES) {
+            runPulse();
+          }
+          // else: animation naturally stops after 3 cycles
+        });
+      });
+    };
+
+    runPulse();
 
     return () => {
-      pulseAnim.stop();
+      stopped = true;
     };
   }, []);
 
@@ -187,7 +208,7 @@ function KeypointMarker({
       )}
     </View>
   );
-}
+});
 
 // Convert BubbleItem text to Keypoint
 export function bubbleTextToKeypoint(text: string, id: number): Keypoint | null {
