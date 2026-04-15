@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay, Easing, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay, Easing, runOnJS, SharedValue } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -24,7 +24,7 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
   useEffect(() => {
     if (visible) {
       setIsClosed(false);
-      translateY.value = withSpring(0, { tension: 65, friction: 11 });
+      translateY.value = withSpring(0, { stiffness: 65, damping: 6 });
     } else {
       translateY.value = withTiming(DRAWER_HEIGHT, {
         duration: 250,
@@ -42,7 +42,7 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
       dot3.value = 0;
       return;
     }
-    const bounce = (dot: Animated.SharedValue<number>, delay: number) => {
+    const bounce = (dot: SharedValue<number>, delay: number) => {
       dot.value = withRepeat(
         withSequence(
           withDelay(delay, withTiming(-8, { duration: 300, easing: Easing.out(Easing.quad) })),

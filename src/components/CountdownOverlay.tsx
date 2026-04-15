@@ -31,7 +31,7 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
     // Reset for next count
     scale.value = 1.4;
     opacity.value = 1;
-    scale.value = withSpring(1, { friction: 6, tension: 100 });
+    scale.value = withSpring(1, { damping: 3, stiffness: 100 });
     opacity.value = withTiming(0.3, { duration: 900 });
   }, [count]);
 

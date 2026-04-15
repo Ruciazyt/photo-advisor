@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CameraType, useCameraPermissions, PermissionStatus } from 'expo-camera';
+import { CameraType, useCameraPermissions } from 'expo-camera';
+import type { PermissionResponse } from 'expo-modules-core';
 import { CameraMode } from '../types';
 import type { TimerDuration } from '../types';
 import { supportsRawCapture } from './useCameraCapture';
@@ -28,11 +29,11 @@ export interface UseCameraReturn {
   /** Currently selected camera mode */
   selectedMode: CameraMode;
   /** Current permission status */
-  permission: PermissionStatus | null;
+  permission: PermissionResponse | null;
   /** Whether camera permission is granted */
   permissionGranted: boolean;
   /** Request camera permission */
-  requestPermission: () => Promise<PermissionStatus>;
+  requestPermission: () => Promise<PermissionResponse>;
   /** Set camera ready state */
   setCameraReady: (v: boolean) => void;
   /** Switch between front and back camera */

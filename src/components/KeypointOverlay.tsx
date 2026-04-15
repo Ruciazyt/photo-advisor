@@ -5,7 +5,6 @@ import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types'
 export type { KeypointPosition } from '../types';
 export { Keypoint };
 export type { KeypointOverlayProps };
-export { bubbleTextToKeypoint };
 
 // Rule-of-thirds intersection points (fraction of screen)
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {

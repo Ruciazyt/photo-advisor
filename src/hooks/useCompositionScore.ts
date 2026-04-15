@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Keypoint, KeypointPosition, GridVariant } from '../types';
+import type { Keypoint, KeypointPosition, GridVariant, CompositionGrade, CompositionScoreResult, ChallengeSession, UseCompositionScoreResult } from '../types';
 
 // Re-export types from centralized types for backward compatibility
 export type { CompositionGrade, CompositionBreakdown, CompositionScoreResult, ChallengeSession, UseCompositionScoreResult } from '../types';
@@ -116,7 +116,7 @@ export function useCompositionScore(): UseCompositionScoreResult {
 
   const addScore = useCallback((score: number) => {
     if (!challengeMode) return;
-    setSession(prev => ({
+    setSession((prev: ChallengeSession) => ({
       scores: [...prev.scores, score],
       bestScore: Math.max(prev.bestScore, score),
       cumulative: prev.cumulative + score,

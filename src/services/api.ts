@@ -84,6 +84,7 @@ export const MINIMAX_MODELS = [
 ];
 
 import type { Model, ChatMessageContent, ChatMessage, StreamCallback, AnthropicStreamCallback, ApiConfig } from '../types';
+export type { Model };
 
 const STORAGE_KEYS = {
   API_TYPE: 'photo_advisor_api_type',
@@ -350,7 +351,7 @@ export async function analyzeImageAnthropic(
   const sentences = fullText.split(/(?<=[。！？；])/);
   for (const sentence of sentences) {
     if (sentence.trim()) {
-      onChunk(sentence);
+      onChunk(sentence, false);
       await new Promise(resolve => setTimeout(resolve, 15));
     }
   }

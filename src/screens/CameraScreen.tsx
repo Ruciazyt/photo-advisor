@@ -262,12 +262,12 @@ export function CameraScreen() {
 
   const bubbleItems: BubbleItem[] = suggestions.map((text, i) => textToBubbleItem(text, i));
 
-  if (!permission) return <View style={styles.container}><ActivityIndicator color={colors.accent} size="large" /></View>;
+  if (!permission) return <View style={[staticStyles.container, { backgroundColor: colors.primary }]}><ActivityIndicator color={colors.accent} size="large" /></View>;
   if (!permission.granted) return <PermissionGate title="需要相机权限" icon="camera-outline" message="拍摄参谋需要访问您的相机来拍摄照片" buttonText="授权相机" onRequest={requestPermission} />;
 
   return (
-    <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing} onCameraReady={() => setCameraReady(true)}>
+    <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
+      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} onCameraReady={() => setCameraReady(true)}>
         <CameraOverlays
           apiConfigured={apiConfigured} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
@@ -323,7 +323,7 @@ export function CameraScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.primary },
+const staticStyles = StyleSheet.create({
+  container: { flex: 1 },
   camera: { flex: 1, width: '100%' },
 });

@@ -48,6 +48,10 @@ const bubbleBaseStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  closeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+  },
 });
 
 // Module-level container styles
@@ -72,6 +76,11 @@ const containerStyles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  dismissAllText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

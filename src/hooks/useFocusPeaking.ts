@@ -13,7 +13,6 @@ import { useRef, useCallback } from 'react';
 import { CameraView } from 'expo-camera';
 
 // ---- Exported for testing ----
-export { sobelMagnitudes, extractPeaks };
 export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS };
 
 // ---- Public interface ----
@@ -22,7 +21,7 @@ export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS };
 export type { PeakPoint, UseFocusPeakingReturn } from '../types';
 
 // Import PeakPoint for internal use in the hook implementation
-import type { PeakPoint } from '../types';
+import type { PeakPoint, UseFocusPeakingReturn } from '../types';
 
 const SAMPLE_SIZE = 48; // Capture at this resolution for edge analysis
 const EDGE_THRESHOLD = 30; // Minimum gradient magnitude to count as a peak

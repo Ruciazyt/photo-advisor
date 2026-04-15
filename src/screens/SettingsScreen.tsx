@@ -220,7 +220,7 @@ export function SettingsScreen({ onSaved }: Props) {
                 size={16}
                 color={apiType === 'openai' ? colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.apiTypeText, apiType === 'openai' && { color: colors.accent }]}>
+              <Text style={[styles.apiTypeText, { color: colors.textSecondary }, apiType === 'openai' && { color: colors.accent }]}>
                 OpenAI 兼容
               </Text>
             </TouchableOpacity>
@@ -238,7 +238,7 @@ export function SettingsScreen({ onSaved }: Props) {
                 size={16}
                 color={apiType === 'minimax' ? colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.apiTypeText, apiType === 'minimax' && { color: colors.accent }]}>
+              <Text style={[styles.apiTypeText, { color: colors.textSecondary }, apiType === 'minimax' && { color: colors.accent }]}>
                 MiniMax
               </Text>
             </TouchableOpacity>
@@ -276,7 +276,7 @@ export function SettingsScreen({ onSaved }: Props) {
             </View>
 
             <TouchableOpacity
-              style={[styles.fetchBtn, fetching && styles.fetchBtnDisabled]}
+              style={[styles.fetchBtn, { backgroundColor: colors.cardBg, borderColor: colors.accent }, fetching && styles.fetchBtnDisabled]}
               onPress={handleFetchModels}
               disabled={fetching}
               activeOpacity={0.8}
@@ -286,7 +286,7 @@ export function SettingsScreen({ onSaved }: Props) {
               ) : (
                 <>
                   <Ionicons name="cloud-download-outline" size={18} color={colors.accent} />
-                  <Text style={styles.fetchBtnText}>获取模型列表</Text>
+                  <Text style={[styles.fetchBtnText, { color: colors.accent }]}>获取模型列表</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -369,7 +369,7 @@ export function SettingsScreen({ onSaved }: Props) {
         )}
 
         <TouchableOpacity
-          style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+          style={[styles.saveBtn, { backgroundColor: colors.accent }, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
           disabled={saving}
           activeOpacity={0.8}
@@ -382,7 +382,7 @@ export function SettingsScreen({ onSaved }: Props) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.testButton, testing && styles.testButtonDisabled]}
+          style={[styles.testButton, { backgroundColor: colors.cardBg, borderColor: colors.accent }, testing && styles.testButtonDisabled]}
           onPress={handleTestConnection}
           disabled={testing}
           activeOpacity={0.8}
@@ -390,7 +390,7 @@ export function SettingsScreen({ onSaved }: Props) {
           {testing ? (
             <ActivityIndicator size="small" color={colors.accent} />
           ) : (
-            <Text style={styles.testButtonText}>🔗 Test Connection</Text>
+            <Text style={[styles.testButtonText, { color: colors.accent }]}>🔗 Test Connection</Text>
           )}
         </TouchableOpacity>
 
@@ -401,7 +401,7 @@ export function SettingsScreen({ onSaved }: Props) {
               <Text style={[styles.voiceSectionDesc, { color: colors.textSecondary }]}>构图建议达标时播放语音提示</Text>
             </View>
             <TouchableOpacity
-              style={[styles.voiceToggle, voiceEnabled && styles.voiceToggleActive]}
+              style={[styles.voiceToggle, { backgroundColor: colors.cardBg, borderColor: colors.border }, voiceEnabled && styles.voiceToggleActive, voiceEnabled && { borderColor: colors.accent }]}
               onPress={async () => {
                 const next = !voiceEnabled;
                 setVoiceEnabled(next);
@@ -417,7 +417,7 @@ export function SettingsScreen({ onSaved }: Props) {
                 size={18}
                 color={voiceEnabled ? colors.accent : colors.textSecondary}
               />
-              <Text style={[styles.voiceToggleText, voiceEnabled && styles.voiceToggleTextActive, { color: voiceEnabled ? colors.accent : colors.textSecondary }]}>
+              <Text style={[styles.voiceToggleText, { color: voiceEnabled ? colors.accent : colors.textSecondary }]}>
                 {voiceEnabled ? '开' : '关'}
               </Text>
             </TouchableOpacity>
@@ -431,7 +431,7 @@ export function SettingsScreen({ onSaved }: Props) {
               <Text style={[styles.themeSectionDesc, { color: colors.textSecondary }]}>切换应用外观主题</Text>
             </View>
             <TouchableOpacity
-              style={[styles.themeToggle, theme === 'light' && styles.themeToggleLight]}
+              style={[styles.themeToggle, { backgroundColor: colors.cardBg, borderColor: colors.border }, theme === 'light' && styles.themeToggleLight, theme === 'light' && { borderColor: colors.accent }]}
               onPress={toggleTheme}
               activeOpacity={0.7}
             >
@@ -440,7 +440,7 @@ export function SettingsScreen({ onSaved }: Props) {
                 size={18}
                 color={theme === 'dark' ? colors.accent : '#FFB800'}
               />
-              <Text style={[styles.themeToggleText, theme === 'light' && styles.themeToggleTextLight, { color: theme === 'light' ? colors.accent : colors.textSecondary }]}>
+              <Text style={[styles.themeToggleText, { color: theme === 'light' ? colors.accent : colors.textSecondary }]}>
                 {theme === 'dark' ? '深色' : '浅色'}
               </Text>
             </TouchableOpacity>
@@ -453,7 +453,7 @@ export function SettingsScreen({ onSaved }: Props) {
             <Text style={[styles.versionValue, { color: colors.text }]}>{getAppVersion()}</Text>
           </View>
           <TouchableOpacity
-            style={[styles.updateBtn, checkingUpdate && styles.updateBtnDisabled]}
+            style={[styles.updateBtn, { backgroundColor: colors.cardBg, borderColor: colors.accent }, checkingUpdate && styles.updateBtnDisabled]}
             onPress={handleCheckUpdate}
             disabled={checkingUpdate}
             activeOpacity={0.8}
@@ -463,7 +463,7 @@ export function SettingsScreen({ onSaved }: Props) {
             ) : (
               <>
                 <Ionicons name="refresh-outline" size={16} color={colors.accent} />
-                <Text style={styles.updateBtnText}>检查更新</Text>
+                <Text style={[styles.updateBtnText, { color: colors.accent }]}>检查更新</Text>
               </>
             )}
           </TouchableOpacity>
@@ -525,7 +525,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   apiTypeText: {
-    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -541,10 +540,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.accent,
     paddingVertical: 14,
     marginBottom: 16,
   },
@@ -552,7 +549,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   fetchBtnText: {
-    color: colors.accent,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -589,7 +585,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveBtn: {
-    backgroundColor: colors.accent,
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
@@ -603,12 +598,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   testButton: {
-    backgroundColor: colors.cardBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.accent,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -617,7 +610,6 @@ const styles = StyleSheet.create({
   },
   testButtonText: {
     fontSize: 14,
-    color: colors.accent,
     fontWeight: '600',
   },
   voiceSection: {
@@ -645,25 +637,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.cardBg,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   voiceToggleActive: {
-    borderColor: colors.accent,
     backgroundColor: 'rgba(232,213,183,0.1)',
   },
   voiceToggleText: {
     fontSize: 13,
     fontWeight: '600',
   },
-  voiceToggleTextActive: {
-    color: colors.accent,
-  },
-  themeSection: {
+themeSection: {
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
@@ -688,25 +674,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.cardBg,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   themeToggleLight: {
-    borderColor: colors.accent,
     backgroundColor: 'rgba(196,163,90,0.1)',
   },
   themeToggleText: {
     fontSize: 13,
     fontWeight: '600',
   },
-  themeToggleTextLight: {
-    color: colors.accent,
-  },
-  versionSection: {
+versionSection: {
     marginTop: 32,
     paddingTop: 24,
     borderTopWidth: 1,
@@ -732,17 +712,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: colors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.accent,
     paddingVertical: 12,
   },
   updateBtnDisabled: {
     opacity: 0.6,
   },
   updateBtnText: {
-    color: colors.accent,
     fontSize: 14,
     fontWeight: '600',
   },

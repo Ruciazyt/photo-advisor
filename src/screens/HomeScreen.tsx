@@ -214,35 +214,36 @@ export function HomeScreen() {
   }, [imageBase64]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>拍摄参谋</Text>
-        <Text style={styles.subtitle}>智能照片分析</Text>
+    <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
+      <View style={staticStyles.header}>
+        <Text style={[staticStyles.title, { color: colors.accent }]}>拍摄参谋</Text>
+        <Text style={[staticStyles.subtitle, { color: colors.textSecondary }]}>智能照片分析</Text>
       </View>
 
-      <TouchableOpacity style={styles.uploadArea} onPress={showImageOptions} activeOpacity={0.7}>
+      <TouchableOpacity style={[staticStyles.uploadArea, { borderColor: colors.border, backgroundColor: colors.cardBg }]} onPress={showImageOptions} activeOpacity={0.7}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
+          <Image source={{ uri: imageUri }} style={staticStyles.preview} resizeMode="cover" />
         ) : (
-          <View style={styles.uploadPlaceholder}>
+          <View style={staticStyles.uploadPlaceholder}>
             <Ionicons name="camera-outline" size={64} color={colors.accent} />
-            <Text style={styles.uploadText}>点击选择照片</Text>
-            <Text style={styles.uploadHint}>支持相机拍摄或相册选择</Text>
+            <Text style={[staticStyles.uploadText, { color: colors.accent }]}>点击选择照片</Text>
+            <Text style={[staticStyles.uploadHint, { color: colors.textSecondary }]}>支持相机拍摄或相册选择</Text>
           </View>
         )}
       </TouchableOpacity>
 
       {!apiConfigured && (
-        <View style={styles.configWarning}>
+        <View style={[staticStyles.configWarning, { backgroundColor: colors.cardBg }]}>
           <Ionicons name="warning-outline" size={16} color={colors.accent} />
-          <Text style={styles.configWarningText}>请先配置API设置</Text>
+          <Text style={[staticStyles.configWarningText, { color: colors.accent }]}>请先配置API设置</Text>
         </View>
       )}
 
       <TouchableOpacity
         style={[
-          styles.sendBtn,
-          (!imageBase64 || loading) && styles.sendBtnDisabled,
+          staticStyles.sendBtn,
+          { backgroundColor: colors.accent },
+          (!imageBase64 || loading) && staticStyles.sendBtnDisabled,
         ]}
         onPress={handleSend}
         disabled={!imageBase64 || loading}
@@ -253,7 +254,7 @@ export function HomeScreen() {
         ) : (
           <>
             <Ionicons name="sparkles" size={20} color={colors.primary} />
-            <Text style={styles.sendBtnText}>开始分析</Text>
+            <Text style={[staticStyles.sendBtnText, { color: colors.primary }]}>开始分析</Text>
           </>
         )}
       </TouchableOpacity>
@@ -268,10 +269,9 @@ export function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
     paddingHorizontal: 20,
   },
   header: {
@@ -280,13 +280,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: colors.accent,
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: 2,
   },
   subtitle: {
-    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -296,9 +294,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: colors.border,
     borderStyle: 'dashed',
-    backgroundColor: colors.cardBg,
   },
   preview: {
     width: '100%',
@@ -310,13 +306,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   uploadText: {
-    color: colors.accent,
     fontSize: 18,
     fontWeight: '600',
     marginTop: 16,
   },
   uploadHint: {
-    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 8,
   },
@@ -325,17 +319,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: colors.cardBg,
     borderRadius: 10,
     paddingVertical: 10,
     marginTop: 16,
   },
   configWarningText: {
-    color: colors.accent,
     fontSize: 13,
   },
   sendBtn: {
-    backgroundColor: colors.accent,
     borderRadius: 16,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -348,7 +339,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   sendBtnText: {
-    color: colors.primary,
     fontSize: 17,
     fontWeight: '700',
   },

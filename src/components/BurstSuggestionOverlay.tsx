@@ -144,7 +144,7 @@ export function BurstSuggestionOverlay({
         ]}
       >
         <View style={burstStyles.header}>
-          <Ionicons name="flash-on" size={18} color="#FFD700" />
+          <Ionicons name="flash" size={18} color="#FFD700" />
           <Text style={burstStyles.title}>建议连拍</Text>
         </View>
 

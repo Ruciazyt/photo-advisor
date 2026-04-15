@@ -77,7 +77,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}): UseErrorH
 
   const [lastError, setLastError] = useState<AppError | null>(null);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
-  const onRecoverRef = useRef<(() => void) | undefined>();
+  const onRecoverRef = useRef<(() => void) | undefined>(undefined);
 
   const handleError = useCallback(
     (error: unknown, extraOptions: HandleErrorOptions = {}): AppError => {
