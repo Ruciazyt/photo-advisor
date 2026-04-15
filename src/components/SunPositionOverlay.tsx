@@ -5,116 +5,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSunPosition } from '../hooks/useSunPosition';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
 
-function CompassArrow({ azimuth }: { azimuth: number }) {
-  const { colors } = useTheme();
-
-  const localStyles = StyleSheet.create({
-    arrowWrapper: {
-      position: 'absolute',
-    },
-    arrow: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: colors.sunColor,
-    },
-  });
-
-  return (
-    <View style={styles.compassContainer}>
-      <View style={styles.compassRing}>
-        <Text style={styles.compassN}>N</Text>
-        <Text style={styles.compassE}>E</Text>
-        <Text style={styles.compassS}>S</Text>
-        <Text style={styles.compassW}>W</Text>
-        <View style={[localStyles.arrowWrapper, { transform: [{ rotate: `${azimuth}deg` }] }]}>
-          <Text style={localStyles.arrow}>↑</Text>
-        </View>
-        <View style={styles.compassCenter} />
-      </View>
-    </View>
-  );
-}
-
-export function SunPositionOverlay({ visible }: { visible: boolean }) {
-  const { colors } = useTheme();
-  const { sunData } = useSunPosition();
-
-  if (!visible) return null;
-
-  if (!sunData.available) {
-    return (
-      <View style={styles.container} pointerEvents="none">
-        <View style={styles.panel}>
-          <Ionicons name="sunny-outline" size={14} color={colors.textSecondary} />
-          <Text style={[styles.unavailableText, { color: colors.textSecondary }]}>{sunData.advice}</Text>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container} pointerEvents="none">
-      <View style={styles.panel}>
-        <View style={styles.header}>
-          <Ionicons name="sunny" size={16} color={colors.sunColor} />
-          <Text style={[styles.label, { color: colors.sunColor }]}>太阳</Text>
-        </View>
-
-        <View style={styles.row}>
-          <CompassArrow azimuth={sunData.sunAzimuth} />
-          <View style={styles.infoBlock}>
-            <Text style={[styles.altitudeText, { color: colors.text }]}>
-              仰角 {sunData.sunAltitude.toFixed(1)}°
-            </Text>
-            <Text style={[styles.azimuthText, { color: colors.textSecondary }]}>
-              方向 {sunData.direction} ({sunData.sunAzimuth.toFixed(0)}°)
-            </Text>
-            <Text style={[styles.adviceText, { color: colors.accent }]} numberOfLines={2}>
-              {sunData.advice}
-            </Text>
-          </View>
-        </View>
-
-        {sunData.goldenHourStart && sunData.goldenHourEnd && (
-          <View style={styles.goldenRow}>
-            <Ionicons name="time-outline" size={11} color="#FFB800" />
-            <Text style={[styles.goldenText, { color: colors.sunColor }]}>
-              黄金时刻 {sunData.goldenHourStart}-{sunData.goldenHourEnd}
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-export function SunToggleButton({ visible, onPress }: { visible: boolean; onPress: () => void }) {
-  const { colors } = useTheme();
-  const a11y = useAccessibilityButton({
-    label: '太阳位置',
-    hint: visible ? '关闭太阳位置显示' : '打开太阳位置显示',
-    role: 'button',
-  });
-
-  return (
-    <TouchableOpacity
-      style={[styles.toggleBtn, visible && styles.toggleBtnActive]}
-      onPress={onPress}
-      activeOpacity={0.7}
-      {...a11y}
-      accessibilityState={{ selected: visible }}
-    >
-      <Ionicons
-        name={visible ? 'sunny' : 'sunny-outline'}
-        size={14}
-        color={visible ? colors.sunColor : 'rgba(255,255,255,0.6)'}
-      />
-      <Text style={[styles.toggleText, visible && { color: colors.sunColor }]}>太阳</Text>
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
+// Module-level static styles
+const staticStyles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 110,
@@ -223,6 +115,101 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  toggleTextActive: {
-  },
 });
+
+function CompassArrow({ azimuth }: { azimuth: number }) {
+  const { colors } = useTheme();
+  return (
+    <View style={staticStyles.compassContainer}>
+      <View style={staticStyles.compassRing}>
+        <Text style={staticStyles.compassN}>N</Text>
+        <Text style={staticStyles.compassE}>E</Text>
+        <Text style={staticStyles.compassS}>S</Text>
+        <Text style={staticStyles.compassW}>W</Text>
+        <View style={[staticStyles.compassContainer, { transform: [{ rotate: `${azimuth}deg` }] }]}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.sunColor }}>↑</Text>
+        </View>
+        <View style={staticStyles.compassCenter} />
+      </View>
+    </View>
+  );
+}
+
+export function SunPositionOverlay({ visible }: { visible: boolean }) {
+  const { colors } = useTheme();
+  const { sunData } = useSunPosition();
+
+  if (!visible) return null;
+
+  if (!sunData.available) {
+    return (
+      <View style={staticStyles.container} pointerEvents="none">
+        <View style={staticStyles.panel}>
+          <Ionicons name="sunny-outline" size={14} color={colors.textSecondary} />
+          <Text style={[staticStyles.unavailableText, { color: colors.textSecondary }]}>{sunData.advice}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={staticStyles.container} pointerEvents="none">
+      <View style={staticStyles.panel}>
+        <View style={staticStyles.header}>
+          <Ionicons name="sunny" size={16} color={colors.sunColor} />
+          <Text style={[staticStyles.label, { color: colors.sunColor }]}>太阳</Text>
+        </View>
+
+        <View style={staticStyles.row}>
+          <CompassArrow azimuth={sunData.sunAzimuth} />
+          <View style={staticStyles.infoBlock}>
+            <Text style={[staticStyles.altitudeText, { color: colors.text }]}>
+              仰角 {sunData.sunAltitude.toFixed(1)}°
+            </Text>
+            <Text style={[staticStyles.azimuthText, { color: colors.textSecondary }]}>
+              方向 {sunData.direction} ({sunData.sunAzimuth.toFixed(0)}°)
+            </Text>
+            <Text style={[staticStyles.adviceText, { color: colors.accent }]} numberOfLines={2}>
+              {sunData.advice}
+            </Text>
+          </View>
+        </View>
+
+        {sunData.goldenHourStart && sunData.goldenHourEnd && (
+          <View style={staticStyles.goldenRow}>
+            <Ionicons name="time-outline" size={11} color="#FFB800" />
+            <Text style={[staticStyles.goldenText, { color: colors.sunColor }]}>
+              黄金时刻 {sunData.goldenHourStart}-{sunData.goldenHourEnd}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+export function SunToggleButton({ visible, onPress }: { visible: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
+  const a11y = useAccessibilityButton({
+    label: '太阳位置',
+    hint: visible ? '关闭太阳位置显示' : '打开太阳位置显示',
+    role: 'button',
+  });
+
+  return (
+    <TouchableOpacity
+      style={[staticStyles.toggleBtn, visible && staticStyles.toggleBtnActive]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      {...a11y}
+      accessibilityState={{ selected: visible }}
+    >
+      <Ionicons
+        name={visible ? 'sunny' : 'sunny-outline'}
+        size={14}
+        color={visible ? colors.sunColor : 'rgba(255,255,255,0.6)'}
+      />
+      <Text style={[staticStyles.toggleText, visible && { color: colors.sunColor }]}>太阳</Text>
+    </TouchableOpacity>
+  );
+}

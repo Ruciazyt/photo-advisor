@@ -14,74 +14,75 @@ const HIST_HEIGHT = 60;
 const WARN_DARK_RATIO = 0.55; // fraction of dark bins to trigger 欠曝 warning
 const WARN_BRIGHT_RATIO = 0.55; // fraction of bright bins to trigger 过曝 warning
 
+// Module-level static styles
+const staticStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 110,
+    left: 16,
+    zIndex: 20,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  warningRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  warnUnder: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  warnOver: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  barContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: HIST_HEIGHT,
+    gap: BAR_GAP,
+  },
+  bar: {
+    width: BAR_WIDTH,
+    borderRadius: 1,
+    minHeight: 2,
+  },
+  scaleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 3,
+  },
+  scaleText: {
+    fontSize: 8,
+  },
+});
+
 export function HistogramOverlay({ histogramData, visible }: HistogramOverlayProps) {
   const { colors } = useTheme();
 
-  const styles = StyleSheet.create({
-    container: {
-      position: 'absolute',
-      top: 110,
-      left: 16,
-      zIndex: 20,
-      backgroundColor: 'rgba(0,0,0,0.65)',
-      borderRadius: 8,
-      padding: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.12)',
-    },
-    headerRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 6,
-    },
-    label: {
-      color: colors.textSecondary,
-      fontSize: 10,
-      fontWeight: '600',
-    },
-    warningRow: {
-      flexDirection: 'row',
-      gap: 6,
-    },
-    warnUnder: {
-      color: colors.error,
-      fontSize: 9,
-      fontWeight: '700',
-    },
-    warnOver: {
-      color: colors.error,
-      fontSize: 9,
-      fontWeight: '700',
-    },
-    barContainer: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      height: HIST_HEIGHT,
-      gap: BAR_GAP,
-    },
-    bar: {
-      width: BAR_WIDTH,
-      borderRadius: 1,
-      minHeight: 2,
-    },
-    scaleRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 3,
-    },
-    scaleText: {
-      color: colors.textSecondary,
-      fontSize: 8,
-    },
-  });
+  // Theme-dependent styles — useMemo to avoid re-creation
+  const labelStyle = useMemo(() => [staticStyles.label, { color: colors.textSecondary }], [colors.textSecondary]);
+  const warnStyle = useMemo(() => [staticStyles.warnUnder, { color: colors.error }], [colors.error]);
+  const warnOverStyle = useMemo(() => [staticStyles.warnOver, { color: colors.error }], [colors.error]);
+  const scaleTextStyle = useMemo(() => [staticStyles.scaleText, { color: colors.textSecondary }], [colors.textSecondary]);
 
   const bars = useMemo(() => {
     if (!histogramData || histogramData.length !== 256) {
       return new Array(BAR_COUNT).fill(0.05);
     }
-
-    // Group 256 bins into 16 bars (each bar = 16 original bins)
     const result: number[] = [];
     for (let i = 0; i < BAR_COUNT; i++) {
       let sum = 0;
@@ -90,7 +91,6 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
       }
       result.push(sum / 16);
     }
-
     const max = Math.max(...result, 0.001);
     return result.map(v => v / max);
   }, [histogramData]);
@@ -111,21 +111,21 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
   if (!visible) return null;
 
   return (
-    <View style={styles.container} pointerEvents="none">
-      <View style={styles.headerRow}>
-        <Text style={styles.label}>直方图</Text>
-        <View style={styles.warningRow}>
-          {warnings.under && <Text style={styles.warnUnder}>欠曝</Text>}
-          {warnings.over && <Text style={styles.warnOver}>过曝</Text>}
+    <View style={staticStyles.container} pointerEvents="none">
+      <View style={staticStyles.headerRow}>
+        <Text style={labelStyle}>直方图</Text>
+        <View style={staticStyles.warningRow}>
+          {warnings.under && <Text style={warnStyle}>欠曝</Text>}
+          {warnings.over && <Text style={warnOverStyle}>过曝</Text>}
         </View>
       </View>
 
-      <View style={styles.barContainer}>
+      <View style={staticStyles.barContainer}>
         {bars.map((height, i) => (
           <View
             key={i}
             style={[
-              styles.bar,
+              staticStyles.bar,
               {
                 height: Math.max(2, height * HIST_HEIGHT),
                 backgroundColor:
@@ -137,9 +137,9 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
         ))}
       </View>
 
-      <View style={styles.scaleRow}>
-        <Text style={styles.scaleText}>暗</Text>
-        <Text style={styles.scaleText}>亮</Text>
+      <View style={staticStyles.scaleRow}>
+        <Text style={scaleTextStyle}>暗</Text>
+        <Text style={scaleTextStyle}>亮</Text>
       </View>
     </View>
   );

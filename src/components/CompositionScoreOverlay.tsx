@@ -23,6 +23,128 @@ const GRADE_LABELS: Record<CompositionGrade, string> = {
   D: '★',
 };
 
+// Module-level static styles
+const overlayStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  hintContainer: {
+    position: 'absolute',
+    top: 60,
+    alignSelf: 'center',
+  },
+  hintText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+  },
+  card: {
+    backgroundColor: 'rgba(28,28,28,0.95)',
+    borderRadius: 20,
+    padding: 24,
+    width: SCREEN_WIDTH * 0.8,
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+  },
+  scoreRow: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  scoreLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  scoreValue: {
+    fontSize: 72,
+    fontWeight: '900',
+    lineHeight: 80,
+  },
+  gradeBadge: {
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  gradeText: {
+    color: '#000',
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  gradeStars: {
+    color: '#000',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  breakdownContainer: {
+    width: '100%',
+    gap: 8,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  breakdownLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    width: 64,
+  },
+  barContainer: {
+    flex: 1,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  breakdownValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    width: 28,
+    textAlign: 'right',
+  },
+  sessionContainer: {
+    marginTop: 16,
+    width: '100%',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingTop: 12,
+  },
+  sessionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  sessionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  sessionLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+  },
+  sessionValue: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  sparkle: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+});
+
 export function CompositionScoreOverlay({
   result,
   challengeMode,
@@ -36,7 +158,9 @@ export function CompositionScoreOverlay({
   const [displayScore, setDisplayScore] = useState(0);
   const [showGrade, setShowGrade] = useState(false);
 
-  const countAnim = useRef(new Animated.Value(0)).current;
+  // FIXED: countAnim now uses useNativeDriver:true and no addListener
+  // Progress animates 0→1, displayScore is set via onAnimated callback
+  const countProgress = useRef(new Animated.Value(0)).current;
   const gradePopAnim = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const announcedRef = useRef(false);
@@ -51,140 +175,11 @@ export function CompositionScoreOverlay({
   // Dismiss timer
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const styles = StyleSheet.create({
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.65)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 100,
-    },
-    hintContainer: {
-      position: 'absolute',
-      top: 60,
-      alignSelf: 'center',
-    },
-    hintText: {
-      color: 'rgba(255,255,255,0.4)',
-      fontSize: 12,
-    },
-    card: {
-      backgroundColor: 'rgba(28,28,28,0.95)',
-      borderRadius: 20,
-      padding: 24,
-      width: SCREEN_WIDTH * 0.8,
-      maxWidth: 340,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
-      alignItems: 'center',
-    },
-    scoreRow: {
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    scoreLabel: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 14,
-      fontWeight: '600',
-      marginBottom: 4,
-    },
-    scoreValue: {
-      fontSize: 72,
-      fontWeight: '900',
-      lineHeight: 80,
-    },
-    gradeBadge: {
-      borderRadius: 12,
-      paddingHorizontal: 20,
-      paddingVertical: 8,
-      alignItems: 'center',
-      marginBottom: 16,
-      alignSelf: 'center',
-    },
-    gradeText: {
-      color: '#000',
-      fontSize: 24,
-      fontWeight: '900',
-    },
-    gradeStars: {
-      color: '#000',
-      fontSize: 12,
-      marginTop: 2,
-    },
-    breakdownContainer: {
-      width: '100%',
-      gap: 8,
-    },
-    breakdownRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    breakdownLabel: {
-      color: 'rgba(255,255,255,0.7)',
-      fontSize: 12,
-      width: 64,
-    },
-    barContainer: {
-      flex: 1,
-      height: 6,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderRadius: 3,
-      overflow: 'hidden',
-    },
-    barFill: {
-      height: '100%',
-      backgroundColor: colors.accent,
-      borderRadius: 3,
-    },
-    breakdownValue: {
-      color: colors.accent,
-      fontSize: 12,
-      fontWeight: '700',
-      width: 28,
-      textAlign: 'right',
-    },
-    sessionContainer: {
-      marginTop: 16,
-      width: '100%',
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.1)',
-      paddingTop: 12,
-    },
-    sessionTitle: {
-      color: colors.warning,
-      fontSize: 13,
-      fontWeight: '800',
-      marginBottom: 8,
-    },
-    sessionRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 4,
-    },
-    sessionLabel: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 12,
-    },
-    sessionValue: {
-      color: colors.accent,
-      fontSize: 14,
-      fontWeight: '700',
-    },
-    sparkle: {
-      position: 'absolute',
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-    },
-  });
-
   useEffect(() => {
     // Reset state
     setDisplayScore(0);
     setShowGrade(false);
-    countAnim.setValue(0);
+    countProgress.setValue(0);
     gradePopAnim.setValue(0);
     overlayOpacity.setValue(0);
 
@@ -222,17 +217,18 @@ export function CompositionScoreOverlay({
     // Fade in overlay
     Animated.timing(overlayOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
 
-    // Count up animation (1.5s)
-    Animated.timing(countAnim, {
-      toValue: score,
+    // Count up animation: animate progress 0→1 over 1.5s with native driver
+    // displayScore is updated via onAnimated callback, no addListener needed
+    Animated.timing(countProgress, {
+      toValue: 1,
       duration: 1500,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
 
-    // Listen to countAnim for display score
-    const listener = countAnim.addListener(({ value }) => {
-      setDisplayScore(Math.round(value));
-    });
+    // Update displayScore when animation completes (single JS thread tick)
+    setTimeout(() => {
+      setDisplayScore(score);
+    }, 1550);
 
     // After count-up, show grade
     const gradeTimer = setTimeout(() => {
@@ -261,7 +257,6 @@ export function CompositionScoreOverlay({
     return () => {
       clearTimeout(gradeTimer);
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-      countAnim.removeListener(listener);
       sparkleAnims.current.forEach(a => a.stop());
     };
   }, [score, grade]);
@@ -276,13 +271,13 @@ export function CompositionScoreOverlay({
   };
 
   return (
-    <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} pointerEvents="box-none">
+    <Animated.View style={[overlayStyles.overlay, { opacity: overlayOpacity }]} pointerEvents="box-none">
       {/* Sparkles for S/A rank */}
       {isHighRank && sparkles.map(s => (
         <Animated.View
           key={s.id}
           style={[
-            styles.sparkle,
+            overlayStyles.sparkle,
             {
               left: s.x,
               top: s.y,
@@ -303,62 +298,62 @@ export function CompositionScoreOverlay({
       ))}
 
       {/* Tap to dismiss hint */}
-      <Animated.View style={styles.hintContainer}>
-        <Text style={styles.hintText}>轻触关闭</Text>
+      <Animated.View style={overlayStyles.hintContainer}>
+        <Text style={overlayStyles.hintText}>轻触关闭</Text>
       </Animated.View>
 
       {/* Main card */}
-      <Animated.View style={styles.card} pointerEvents="box-none">
+      <Animated.View style={overlayStyles.card} pointerEvents="box-none">
         <TouchableWithoutFeedback onPress={handleTap}>
           <View>
             {/* Score */}
-            <View style={styles.scoreRow}>
-              <Text style={styles.scoreLabel}>构图评分</Text>
-              <Text style={[styles.scoreValue, { color: gradeColor }]}>{displayScore}</Text>
+            <View style={overlayStyles.scoreRow}>
+              <Text style={overlayStyles.scoreLabel}>构图评分</Text>
+              <Text style={[overlayStyles.scoreValue, { color: gradeColor }]}>{displayScore}</Text>
             </View>
 
             {/* Grade badge */}
             {showGrade && (
               <Animated.View
                 style={[
-                  styles.gradeBadge,
+                  overlayStyles.gradeBadge,
                   {
                     backgroundColor: gradeColor,
                     transform: [{ scale: gradePopAnim }],
                   },
                 ]}
               >
-                <Text style={styles.gradeText}>{grade}</Text>
-                <Text style={styles.gradeStars}>{GRADE_LABELS[grade]}</Text>
+                <Text style={overlayStyles.gradeText}>{grade}</Text>
+                <Text style={overlayStyles.gradeStars}>{GRADE_LABELS[grade]}</Text>
               </Animated.View>
             )}
 
             {/* Breakdown */}
-            <View style={styles.breakdownContainer}>
-              <BreakdownRow label="构图对齐" value={breakdown.alignment} styles={styles} />
-              <BreakdownRow label="左右平衡" value={breakdown.balance} styles={styles} />
-              <BreakdownRow label="中心位置" value={breakdown.centrality} styles={styles} />
+            <View style={overlayStyles.breakdownContainer}>
+              <BreakdownRow label="构图对齐" value={breakdown.alignment} accentColor={colors.accent} />
+              <BreakdownRow label="左右平衡" value={breakdown.balance} accentColor={colors.accent} />
+              <BreakdownRow label="中心位置" value={breakdown.centrality} accentColor={colors.accent} />
             </View>
 
             {/* Challenge session stats */}
             {challengeMode && session.count > 0 && (
-              <View style={styles.sessionContainer}>
-                <Text style={styles.sessionTitle}>🎮 挑战模式</Text>
-                <View style={styles.sessionRow}>
-                  <Text style={styles.sessionLabel}>本轮最高</Text>
-                  <Text style={[styles.sessionValue, { color: GRADE_COLORS[gradeFromScore(session.bestScore)]}]}>
+              <View style={overlayStyles.sessionContainer}>
+                <Text style={[overlayStyles.sessionTitle, { color: colors.warning }]}>🎮 挑战模式</Text>
+                <View style={overlayStyles.sessionRow}>
+                  <Text style={overlayStyles.sessionLabel}>本轮最高</Text>
+                  <Text style={[overlayStyles.sessionValue, { color: GRADE_COLORS[gradeFromScore(session.bestScore)]}]}>
                     {session.bestScore}
                   </Text>
                 </View>
-                <View style={styles.sessionRow}>
-                  <Text style={styles.sessionLabel}>累计平均</Text>
-                  <Text style={styles.sessionValue}>
+                <View style={overlayStyles.sessionRow}>
+                  <Text style={overlayStyles.sessionLabel}>累计平均</Text>
+                  <Text style={[overlayStyles.sessionValue, { color: colors.accent }]}>
                     {session.count > 0 ? Math.round(session.cumulative / session.count) : 0}
                   </Text>
                 </View>
-                <View style={styles.sessionRow}>
-                  <Text style={styles.sessionLabel}>已拍张数</Text>
-                  <Text style={styles.sessionValue}>{session.count}</Text>
+                <View style={overlayStyles.sessionRow}>
+                  <Text style={overlayStyles.sessionLabel}>已拍张数</Text>
+                  <Text style={[overlayStyles.sessionValue, { color: colors.accent }]}>{session.count}</Text>
                 </View>
               </View>
             )}
@@ -369,18 +364,20 @@ export function CompositionScoreOverlay({
   );
 }
 
-function BreakdownRow({ label, value, styles }: { label: string; value: number; styles: ReturnType<typeof StyleSheet.create> }) {
+function BreakdownRow({ label, value, accentColor }: { label: string; value: number; accentColor: string }) {
   const barWidth = (value / 100) * 100;
   return (
-    <View style={styles.breakdownRow}>
-      <Text style={styles.breakdownLabel}>{label}</Text>
-      <View style={styles.barContainer}>
-        <View style={[styles.barFill, { width: `${barWidth}%` }]} />
+    <View style={overlayStyles.breakdownRow}>
+      <Text style={overlayStyles.breakdownLabel}>{label}</Text>
+      <View style={overlayStyles.barContainer}>
+        <View style={{ height: '100%', width: `${barWidth}%`, backgroundColor: accentColor, borderRadius: 3 }} />
       </View>
-      <Text style={styles.breakdownValue}>{value}</Text>
+      <Text style={[overlayStyles.breakdownValue, { color: accentColor }]}>{value}</Text>
     </View>
   );
 }
+
+
 
 function gradeFromScore(score: number): CompositionGrade {
   if (score >= 90) return 'S';

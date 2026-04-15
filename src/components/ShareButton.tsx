@@ -21,7 +21,33 @@ interface ShareButtonProps {
   onShareEnd?: () => void;
 }
 
-const toastStyles = StyleSheet.create({
+// Module-level static styles
+const staticStyles = StyleSheet.create({
+  button: {
+    position: 'absolute',
+    top: 110,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  buttonTextDisabled: {
+    color: 'rgba(255,255,255,0.3)',
+  },
   toast: {
     position: 'absolute',
     top: 150,
@@ -56,8 +82,8 @@ function ShareToast({ message, visible }: { message: string; visible: boolean })
   if (!visible) return null;
 
   return (
-    <Animated.View style={[toastStyles.toast, { opacity }]} pointerEvents="none">
-      <Text style={toastStyles.toastText}>{message}</Text>
+    <Animated.View style={[staticStyles.toast, { opacity }]} pointerEvents="none">
+      <Text style={staticStyles.toastText}>{message}</Text>
     </Animated.View>
   );
 }
@@ -74,35 +100,6 @@ export function ShareButton({
   const [sharing, setSharing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
-
-  const styles = StyleSheet.create({
-    button: {
-      position: 'absolute',
-      top: 110,
-      left: 16,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-    },
-    buttonText: {
-      color: colors.accent,
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    buttonTextDisabled: {
-      color: 'rgba(255,255,255,0.3)',
-    },
-  });
 
   const canShare = !!photoUri;
 
@@ -146,7 +143,7 @@ export function ShareButton({
   return (
     <>
       <TouchableOpacity
-        style={[styles.button, !canShare && styles.buttonDisabled]}
+        style={[staticStyles.button, !canShare && staticStyles.buttonDisabled]}
         onPress={handleShare}
         disabled={!canShare || sharing}
         activeOpacity={0.7}
@@ -161,7 +158,7 @@ export function ShareButton({
             color={canShare ? colors.accent : 'rgba(255,255,255,0.3)'}
           />
         )}
-        <Text style={[styles.buttonText, !canShare && styles.buttonTextDisabled]}>
+        <Text style={[staticStyles.buttonText, !canShare && staticStyles.buttonTextDisabled, canShare && { color: colors.accent }]}>
           {sharing ? '分享中' : '分享'}
         </Text>
       </TouchableOpacity>

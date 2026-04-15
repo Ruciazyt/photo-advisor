@@ -69,8 +69,268 @@ export interface CameraTopBarProps {
   toastMessage: string;
 }
 
-export function CameraTopBar({
-  gridVariant,
+// Module-level static styles (no theme/positional dependency)
+const staticTopBarStyles = StyleSheet.create({
+  gridSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  gridSelectorText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  histogramSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 244,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  histogramSelectorActive: {
+    backgroundColor: 'rgba(232,213,183,0.35)',
+    borderColor: 'rgba(232,213,183,0.6)',
+  },
+  histogramSelectorText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  levelSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 330,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  levelSelectorActive: {
+    backgroundColor: 'rgba(232,213,183,0.35)',
+    borderColor: 'rgba(232,213,183,0.6)',
+  },
+  levelSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  levelSelectorTextActive: {
+    color: '#FFFFFF',
+  },
+  timerSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 130,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  timerSelectorActive: {
+    backgroundColor: 'rgba(255,82,82,0.6)',
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  timerSelectorText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  favoriteSelector: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  favoriteSelectorDisabled: {
+    opacity: 0.5,
+  },
+  compareBtn: {
+    position: 'absolute',
+    top: 60,
+    right: 70,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 15,
+  },
+  compareBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  toast: {
+    position: 'absolute',
+    top: 110,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,107,138,0.9)',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    zIndex: 20,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  voiceSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 195,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  voiceSelectorActive: {
+    backgroundColor: 'rgba(232,213,183,0.2)',
+  },
+  voiceSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  voiceSelectorTextActive: {
+    color: colors.accent,
+  },
+  challengeSelector: {
+    position: 'absolute',
+    top: 110,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  challengeSelectorActive: {
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderColor: 'rgba(255,215,0,0.6)',
+  },
+  challengeSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  challengeSelectorTextActive: {
+    color: '#FFD700',
+  },
+  rawSelector: {
+    position: 'absolute',
+    top: 110,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  rawSelectorActive: {
+    backgroundColor: 'rgba(0,200,100,0.2)',
+    borderColor: 'rgba(0,200,100,0.6)',
+  },
+  rawSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  rawSelectorTextActive: {
+    color: '#00C864',
+  },
+  focusGuideSelector: {
+    position: 'absolute',
+    top: 60,
+    left: 300,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  focusGuideSelectorActive: {
+    backgroundColor: 'rgba(255,220,0,0.15)',
+    borderColor: 'rgba(255,220,0,0.5)',
+  },
+  focusGuideSelectorText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  focusGuideSelectorTextActive: {
+    color: '#FFDC00',
+  },
+  burstIndicator: {
+    position: 'absolute',
+    top: 60,
+    right: 70,
+    backgroundColor: 'rgba(255,215,0,0.85)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    zIndex: 15,
+  },
+  burstText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+});
+
+export function CameraTopBar({  gridVariant,
   onGridPress,
   showHistogram,
   onHistogramToggle,
@@ -106,267 +366,6 @@ export function CameraTopBar({
 }: CameraTopBarProps) {
   const { colors } = useTheme();
 
-  const styles = StyleSheet.create({
-    gridSelector: {
-      position: 'absolute',
-      top: 60,
-      left: 16,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-    },
-    gridSelectorText: {
-      color: '#FFFFFF',
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    histogramSelector: {
-      position: 'absolute',
-      top: 60,
-      left: 244,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-    },
-    histogramSelectorActive: {
-      backgroundColor: 'rgba(232,213,183,0.35)',
-      borderColor: 'rgba(232,213,183,0.6)',
-    },
-    histogramSelectorText: {
-      color: '#FFFFFF',
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    levelSelector: {
-      position: 'absolute',
-      top: 60,
-      left: 330,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-    },
-    levelSelectorActive: {
-      backgroundColor: 'rgba(232,213,183,0.35)',
-      borderColor: 'rgba(232,213,183,0.6)',
-    },
-    levelSelectorText: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    levelSelectorTextActive: {
-      color: '#FFFFFF',
-    },
-    timerSelector: {
-      position: 'absolute',
-      top: 60,
-      left: 130,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-    },
-    timerSelectorActive: {
-      backgroundColor: 'rgba(255,82,82,0.6)',
-      borderColor: 'rgba(255,255,255,0.3)',
-    },
-    timerSelectorText: {
-      color: '#FFFFFF',
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    favoriteSelector: {
-      position: 'absolute',
-      top: 60,
-      right: 16,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      width: 36,
-      height: 36,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-    },
-    favoriteSelectorDisabled: {
-      opacity: 0.5,
-    },
-    compareBtn: {
-      position: 'absolute',
-      top: 60,
-      right: 70,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.2)',
-      zIndex: 15,
-    },
-    compareBtnText: {
-      color: '#fff',
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    toast: {
-      position: 'absolute',
-      top: 110,
-      alignSelf: 'center',
-      backgroundColor: 'rgba(255,107,138,0.9)',
-      borderRadius: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 8,
-      zIndex: 20,
-    },
-    toastText: {
-      color: '#FFFFFF',
-      fontSize: 14,
-      fontWeight: '700',
-    },
-    voiceSelector: {
-      position: 'absolute',
-      top: 60,
-      left: 195,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    voiceSelectorActive: {
-      backgroundColor: 'rgba(232,213,183,0.2)',
-      borderColor: colors.accent,
-    },
-    voiceSelectorText: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    voiceSelectorTextActive: {
-      color: colors.accent,
-    },
-    challengeSelector: {
-      position: 'absolute',
-      top: 110,
-      right: 16,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    challengeSelectorActive: {
-      backgroundColor: 'rgba(255,215,0,0.15)',
-      borderColor: 'rgba(255,215,0,0.6)',
-    },
-    challengeSelectorText: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    challengeSelectorTextActive: {
-      color: '#FFD700',
-    },
-    rawSelector: {
-      position: 'absolute',
-      top: 110,
-      left: 16,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    rawSelectorActive: {
-      backgroundColor: 'rgba(0,200,100,0.2)',
-      borderColor: 'rgba(0,200,100,0.6)',
-    },
-    rawSelectorText: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    rawSelectorTextActive: {
-      color: '#00C864',
-    },
-    focusGuideSelector: {
-      position: 'absolute',
-      top: 60,
-      left: 300,
-      zIndex: 10,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    focusGuideSelectorActive: {
-      backgroundColor: 'rgba(255,220,0,0.15)',
-      borderColor: 'rgba(255,220,0,0.5)',
-    },
-    focusGuideSelectorText: {
-      color: 'rgba(255,255,255,0.6)',
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    focusGuideSelectorTextActive: {
-      color: '#FFDC00',
-    },
-    burstIndicator: {
-      position: 'absolute',
-      top: 60,
-      right: 70,
-      backgroundColor: 'rgba(255,215,0,0.85)',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      zIndex: 15,
-    },
-    burstText: {
-      color: '#000',
-      fontSize: 12,
-      fontWeight: '800',
-    },
-  });
-
   const compareBtnA11y = useAccessibilityButton({
     label: '对比模式',
     hint: '打开照片对比视图',
@@ -376,9 +375,8 @@ export function CameraTopBar({
   return (
     <>
       {/* Grid Type Selector */}
-      {/* Grid Type Selector */}
       <TouchableOpacity
-        style={styles.gridSelector}
+        style={staticTopBarStyles.gridSelector}
         onPress={onGridPress}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -387,12 +385,12 @@ export function CameraTopBar({
           role: 'button',
         })}
       >
-        <Text style={styles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
+        <Text style={staticTopBarStyles.gridSelectorText}>📐 {GRID_LABELS[gridVariant]}</Text>
       </TouchableOpacity>
 
       {/* Histogram Toggle */}
       <TouchableOpacity
-        style={[styles.histogramSelector, showHistogram && styles.histogramSelectorActive]}
+        style={[staticTopBarStyles.histogramSelector, showHistogram && staticTopBarStyles.histogramSelectorActive]}
         onPress={onHistogramToggle}
         onPressIn={onHistogramPressIn}
         onPressOut={onHistogramPressOut}
@@ -404,12 +402,12 @@ export function CameraTopBar({
         })}
         accessibilityState={{ selected: showHistogram }}
       >
-        <Text style={styles.histogramSelectorText}>📊 直方图</Text>
+        <Text style={staticTopBarStyles.histogramSelectorText}>📊 直方图</Text>
       </TouchableOpacity>
 
       {/* Level Toggle */}
       <TouchableOpacity
-        style={[styles.levelSelector, showLevel && styles.levelSelectorActive]}
+        style={[staticTopBarStyles.levelSelector, showLevel && staticTopBarStyles.levelSelectorActive]}
         onPress={onLevelToggle}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -419,7 +417,7 @@ export function CameraTopBar({
         })}
         accessibilityState={{ selected: showLevel }}
       >
-        <Text style={[styles.levelSelectorText, showLevel && styles.levelSelectorTextActive]}>🔮 水平仪</Text>
+        <Text style={[staticTopBarStyles.levelSelectorText, showLevel && staticTopBarStyles.levelSelectorTextActive]}>🔮 水平仪</Text>
       </TouchableOpacity>
 
       {/* Sun Position Toggle */}
@@ -430,7 +428,7 @@ export function CameraTopBar({
 
       {/* Focus Guide Toggle */}
       <TouchableOpacity
-        style={[styles.focusGuideSelector, showFocusGuide && styles.focusGuideSelectorActive]}
+        style={[staticTopBarStyles.focusGuideSelector, showFocusGuide && staticTopBarStyles.focusGuideSelectorActive]}
         onPress={onFocusGuideToggle}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -440,12 +438,12 @@ export function CameraTopBar({
         })}
         accessibilityState={{ selected: showFocusGuide }}
       >
-        <Text style={[styles.focusGuideSelectorText, showFocusGuide && styles.focusGuideSelectorTextActive]}>🎯 对焦</Text>
+        <Text style={[staticTopBarStyles.focusGuideSelectorText, showFocusGuide && staticTopBarStyles.focusGuideSelectorTextActive]}>🎯 对焦</Text>
       </TouchableOpacity>
 
       {/* Voice Toggle */}
       <TouchableOpacity
-        style={[styles.voiceSelector, voiceEnabled && styles.voiceSelectorActive]}
+        style={[staticTopBarStyles.voiceSelector, voiceEnabled && staticTopBarStyles.voiceSelectorActive]}
         onPress={onVoiceToggle}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -460,12 +458,12 @@ export function CameraTopBar({
           size={16}
           color={voiceEnabled ? colors.accent : 'rgba(255,255,255,0.6)'}
         />
-        <Text style={[styles.voiceSelectorText, voiceEnabled && styles.voiceSelectorTextActive]}>语音</Text>
+        <Text style={[staticTopBarStyles.voiceSelectorText, voiceEnabled && { color: colors.accent }]}>语音</Text>
       </TouchableOpacity>
 
       {/* RAW Toggle */}
       <TouchableOpacity
-        style={[styles.rawSelector, rawMode && styles.rawSelectorActive]}
+        style={[staticTopBarStyles.rawSelector, rawMode && staticTopBarStyles.rawSelectorActive]}
         onPress={onRawToggle}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -475,12 +473,12 @@ export function CameraTopBar({
         })}
         accessibilityState={{ selected: rawMode, disabled: !rawSupported }}
       >
-        <Text style={[styles.rawSelectorText, rawMode && styles.rawSelectorTextActive]}>📷 RAW</Text>
+        <Text style={[staticTopBarStyles.rawSelectorText, rawMode && staticTopBarStyles.rawSelectorTextActive]}>📷 RAW</Text>
       </TouchableOpacity>
 
       {/* Challenge Mode Toggle */}
       <TouchableOpacity
-        style={[styles.challengeSelector, challengeMode && styles.challengeSelectorActive]}
+        style={[staticTopBarStyles.challengeSelector, challengeMode && staticTopBarStyles.challengeSelectorActive]}
         onPress={onChallengeToggle}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -490,12 +488,12 @@ export function CameraTopBar({
         })}
         accessibilityState={{ selected: challengeMode }}
       >
-        <Text style={[styles.challengeSelectorText, challengeMode && styles.challengeSelectorTextActive]}>🎮 挑战</Text>
+        <Text style={[staticTopBarStyles.challengeSelectorText, challengeMode && staticTopBarStyles.challengeSelectorTextActive]}>🎮 挑战</Text>
       </TouchableOpacity>
 
       {/* Timer Duration Selector */}
       <TouchableOpacity
-        style={[styles.timerSelector, countdownActive && styles.timerSelectorActive]}
+        style={[staticTopBarStyles.timerSelector, countdownActive && staticTopBarStyles.timerSelectorActive]}
         onPress={countdownActive ? onCancelCountdown : onTimerPress}
         activeOpacity={0.7}
         {...useAccessibilityButton({
@@ -505,14 +503,14 @@ export function CameraTopBar({
         })}
         accessibilityState={{ selected: countdownActive }}
       >
-        <Text style={styles.timerSelectorText}>
+        <Text style={staticTopBarStyles.timerSelectorText}>
           {countdownActive ? '✕ 取消' : `⏱ ${timerDuration}s`}
         </Text>
       </TouchableOpacity>
 
       {/* Save to Favorites */}
       <TouchableOpacity
-        style={[styles.favoriteSelector, !lastCapturedUri && styles.favoriteSelectorDisabled]}
+        style={[staticTopBarStyles.favoriteSelector, !lastCapturedUri && staticTopBarStyles.favoriteSelectorDisabled]}
         onPress={onSaveToFavorites}
         disabled={!lastCapturedUri}
         activeOpacity={0.7}
@@ -538,26 +536,26 @@ export function CameraTopBar({
       {/* Compare Mode */}
       {lastCapturedUri && !showKeypoints && (
         <TouchableOpacity
-          style={styles.compareBtn}
+          style={staticTopBarStyles.compareBtn}
           onPress={onComparePress}
           activeOpacity={0.8}
           {...compareBtnA11y}
         >
-          <Text style={styles.compareBtnText}>🖼️ 对比</Text>
+          <Text style={staticTopBarStyles.compareBtnText}>🖼️ 对比</Text>
         </TouchableOpacity>
       )}
 
       {/* Burst Mode Indicator */}
       {burstActive && (
-        <View style={styles.burstIndicator}>
+        <View style={staticTopBarStyles.burstIndicator}>
           <Ionicons name="flash" size={14} color="#FFD700" />
-          <Text style={styles.burstText}>连拍中 {burstCount}/5</Text>
+          <Text style={staticTopBarStyles.burstText}>连拍中 {burstCount}/5</Text>
         </View>
       )}
 
       {/* Toast */}
-      <Animated.View style={[styles.toast, { opacity: toastOpacity }]} pointerEvents="none">
-        <Text style={styles.toastText}>{toastMessage}</Text>
+      <Animated.View style={[staticTopBarStyles.toast, { opacity: toastOpacity }]} pointerEvents="none">
+        <Text style={staticTopBarStyles.toastText}>{toastMessage}</Text>
       </Animated.View>
     </>
   );

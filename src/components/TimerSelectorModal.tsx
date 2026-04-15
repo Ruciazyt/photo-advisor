@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -14,8 +13,6 @@ import { TIMER_OPTIONS, TimerDuration } from '../hooks/useCountdown';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { TimerSelectorModalProps } from '../types';
 export type { TimerSelectorModalProps };
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ---- Timer card preview ----
 
@@ -26,66 +23,153 @@ interface TimerCardProps {
 }
 
 function TimerCard({ opt, isSelected, onSelect }: TimerCardProps) {
+  const { colors } = useTheme();
   const a11y = useAccessibilityButton({
     label: `定时${opt.value}秒`,
     hint: `设置${opt.value}秒定时拍摄`,
     role: 'menuitem',
   });
 
+  const cardStyle = [
+    timerCardStaticStyles.card,
+    isSelected && { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
+  ];
+  const labelStyle = [
+    timerCardStaticStyles.cardLabel,
+    isSelected && { color: colors.accent },
+  ];
+
   return (
     <TouchableOpacity
-      style={[styles.card, isSelected && styles.cardSelected]}
+      style={cardStyle}
       onPress={() => onSelect(opt.value)}
       activeOpacity={0.75}
       {...a11y}
       accessibilityState={{ selected: isSelected }}
     >
       <TimerPreview seconds={opt.value} />
-      <Text style={[styles.cardLabel, isSelected && styles.cardLabelSelected]}>
-        {opt.label}
-      </Text>
+      <Text style={labelStyle}>{opt.label}</Text>
     </TouchableOpacity>
   );
 }
 
+// TimerPreview static styles
+const timerCardStaticStyles = StyleSheet.create({
+  card: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    minWidth: 90,
+  },
+  cardLabel: {
+    color: '#AAAAAA',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+});
+
 function TimerPreview({ seconds }: { seconds: number }) {
   const { colors } = useTheme();
 
-  const localStyles = StyleSheet.create({
-    container: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      borderWidth: 3,
-      borderColor: 'rgba(255,255,255,0.25)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    number: {
-      fontSize: 40,
-      fontWeight: '800',
-      color: colors.countdownText,
-    },
-    unit: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: 'rgba(255,255,255,0.5)',
-      marginTop: 2,
-    },
-  });
-
   return (
-    <View style={localStyles.container}>
-      <Text style={localStyles.number}>{seconds}</Text>
-      <Text style={localStyles.unit}>秒</Text>
+    <View style={timerPreviewStaticStyles.container}>
+      <Text style={[timerPreviewStaticStyles.number, { color: colors.countdownText }]}>{seconds}</Text>
+      <Text style={timerPreviewStaticStyles.unit}>秒</Text>
     </View>
   );
 }
 
+const timerPreviewStaticStyles = StyleSheet.create({
+  container: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  number: {
+    fontSize: 40,
+    fontWeight: '800',
+  },
+  unit: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 2,
+  },
+});
+
 // ---- Main Modal ----
 
 const SHEET_HEIGHT = 340;
+
+const modalStaticStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  sheet: {
+    backgroundColor: 'rgba(20,20,20,0.97)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+    paddingTop: 12,
+    minHeight: SHEET_HEIGHT,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  closeBtn: {
+    position: 'absolute',
+    right: 0,
+    top: -4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  grid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  hintRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  hintText: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 12,
+  },
+});
 
 export function TimerSelectorModal({
   visible,
@@ -93,91 +177,6 @@ export function TimerSelectorModal({
   onSelect,
   onClose,
 }: TimerSelectorModalProps) {
-  const { colors } = useTheme();
-
-  const styles = StyleSheet.create({
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: 100,
-      justifyContent: 'flex-end',
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.6)',
-    },
-    sheet: {
-      backgroundColor: 'rgba(20,20,20,0.97)',
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingHorizontal: 16,
-      paddingBottom: 40,
-      paddingTop: 12,
-      minHeight: SHEET_HEIGHT,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 20,
-      position: 'relative',
-    },
-    title: {
-      color: '#FFFFFF',
-      fontSize: 17,
-      fontWeight: '700',
-    },
-    closeBtn: {
-      position: 'absolute',
-      right: 0,
-      top: -4,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    grid: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-    },
-    card: {
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      borderRadius: 14,
-      borderWidth: 2,
-      borderColor: 'transparent',
-      backgroundColor: 'rgba(255,255,255,0.05)',
-      minWidth: 90,
-    },
-    cardSelected: {
-      borderColor: colors.accent,
-      backgroundColor: 'rgba(232,213,183,0.12)',
-    },
-    cardLabel: {
-      color: '#AAAAAA',
-      fontSize: 13,
-      fontWeight: '600',
-      marginTop: 8,
-    },
-    cardLabelSelected: {
-      color: colors.accent,
-    },
-    hintRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 16,
-      gap: 6,
-    },
-    hintText: {
-      color: 'rgba(255,255,255,0.35)',
-      fontSize: 12,
-    },
-  });
-
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const [isShown, setIsShown] = useState(false);
@@ -218,18 +217,18 @@ export function TimerSelectorModal({
   if (!isShown) return null;
 
   return (
-    <View style={styles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
+    <View style={modalStaticStyles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[styles.backdrop, { opacity }]} />
+        <Animated.View style={[modalStaticStyles.backdrop, { opacity }]} />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+      <Animated.View style={[modalStaticStyles.sheet, { transform: [{ translateY }] }]}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>定时拍摄</Text>
+        <View style={modalStaticStyles.header}>
+          <Text style={modalStaticStyles.title}>定时拍摄</Text>
           <TouchableOpacity
             onPress={onClose}
-            style={styles.closeBtn}
+            style={modalStaticStyles.closeBtn}
             hitSlop={8}
             {...useAccessibilityButton({
               label: '关闭',
@@ -242,7 +241,7 @@ export function TimerSelectorModal({
         </View>
 
         {/* Timer option cards */}
-        <View style={styles.grid}>
+        <View style={modalStaticStyles.grid}>
           {TIMER_OPTIONS.map((opt) => (
             <TimerCard
               key={opt.value}
@@ -254,9 +253,9 @@ export function TimerSelectorModal({
         </View>
 
         {/* Hint */}
-        <View style={styles.hintRow}>
+        <View style={modalStaticStyles.hintRow}>
           <Ionicons name="information-circle-outline" size={13} color="rgba(255,255,255,0.35)" />
-          <Text style={styles.hintText}>
+          <Text style={modalStaticStyles.hintText}>
             {selectedDuration > 3 ? '建议使用支架或稳定表面' : '适合手持自拍'}
           </Text>
         </View>
