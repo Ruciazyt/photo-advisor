@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
@@ -16,6 +16,7 @@ import { TimerSelectorModal } from '../components/TimerSelectorModal';
 import { CompositionScoreOverlay } from '../components/CompositionScoreOverlay';
 import { SceneTagOverlay } from '../components/SceneTagOverlay';
 import { useCameraCapture } from '../hooks/useCameraCapture';
+import { useCamera } from '../hooks/useCamera';
 import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 import { useHistogramToggle } from '../hooks/useHistogramToggle';
 import { useFocusPeaking, PeakPoint } from '../hooks/useFocusPeaking';
@@ -32,7 +33,6 @@ import { CameraOverlays } from '../components/CameraOverlays';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
-const TIMER_DURATIONS: TimerDuration[] = [3, 5, 10];
 const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法', golden: '黄金分割', diagonal: '对角线', spiral: '螺旋线', none: '关闭',
 };
@@ -67,17 +67,12 @@ export function CameraScreen() {
   const preAnalysisStartedRef = useRef(false);
   const burstSuggestionText = useRef('');
 
-  const [permission, requestPermission] = useCameraPermissions();
-  const [facing, setFacing] = useState<CameraType>('back');
-  const [cameraReady, setCameraReady] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<CameraMode>('photo');
   const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
   const [showKeypoints, setShowKeypoints] = useState(false);
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
-  const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
@@ -91,8 +86,6 @@ export function CameraScreen() {
   const [toastOpacity] = useState(new Animated.Value(0));
   const [toastMessage, setToastMessage] = useState('已收藏！');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [rawMode, setRawMode] = useState(false);
-  const [rawSupported, setRawSupported] = useState(false);
   const [burstActive, setBurstActive] = useState(false);
   const [burstCount, setBurstCount] = useState(0);
   const [showBurstSuggestion, setShowBurstSuggestion] = useState(false);
@@ -102,6 +95,23 @@ export function CameraScreen() {
 
   const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
+  const {
+    facing,
+    cameraReady,
+    rawMode,
+    rawSupported,
+    selectedMode,
+    permission,
+    permissionGranted,
+    requestPermission,
+    setCameraReady,
+    switchCamera,
+    toggleRawMode,
+    setSelectedMode,
+    cycleTimerDuration,
+    timerDuration,
+    setTimerDuration,
+  } = useCamera({ initialMode: 'photo' });
   const { sceneTag, recognize: recognizeSceneTag } = useSceneRecognition();
   const { width: screenWidth, height: screenHeight } = require('react-native').useWindowDimensions();
   const { showHistogram, histogramData, handleHistogramToggle, handleHistogramPressIn, handleHistogramPressOut } = useHistogramToggle(cameraRef);
@@ -151,14 +161,7 @@ export function CameraScreen() {
     const burstInterval = setInterval(() => { doCapture(); shot++; setBurstCount(shot); if (shot >= 5) { clearInterval(burstInterval); setBurstActive(false); setSuggestions(prev => [...prev, `连拍完成：共${shot}张`]); } }, 700);
   }, [burstActive, doCapture]);
 
-  const cycleTimerDuration = useCallback(async () => {
-    const nextIdx = (TIMER_DURATIONS.indexOf(timerDuration) + 1) % TIMER_DURATIONS.length;
-    const next = TIMER_DURATIONS[nextIdx];
-    setTimerDuration(next);
-    await saveAppSettings({ timerDuration: next });
-  }, [timerDuration]);
-
-  // Persist timer duration changes to settings (used by cycleTimerDuration)
+  // Focus peaking — capture peak points at regular intervals while guide is visible
   useEffect(() => {
     if (!showFocusGuide) { if (peakingTimerRef.current) { clearInterval(peakingTimerRef.current); peakingTimerRef.current = null; } setPeakPoints([]); return; }
     const doCapture = async () => { const points = await capturePeaks(cameraRef, screenWidth, screenHeight); if (points.length > 0) setPeakPoints(points); };
@@ -186,11 +189,6 @@ export function CameraScreen() {
     }, 200);
     return () => clearTimeout(timer);
   }, [keypoints, showKeypoints, computeScore, gridVariant, challengeMode, addScore]);
-
-  const handleRawToggle = useCallback(() => {
-    if (!rawSupported && !rawMode) { showToast('RAW仅支持Android设备'); return; }
-    setRawMode(v => !v);
-  }, [rawSupported, rawMode]);
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -233,7 +231,6 @@ export function CameraScreen() {
       setVoiceEnabled(settings.voiceEnabled);
       setTimerDuration(settings.timerDuration);
     });
-    import('../hooks/useCameraCapture').then(({ supportsRawCapture }) => supportsRawCapture().then(setRawSupported));
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
 
@@ -262,7 +259,6 @@ export function CameraScreen() {
     startCountdown(timerDuration);
   }, [countdownActive, loading, burstActive, startCountdown, timerDuration, gridVariant, capturePreviewFrame, runAnalysis]);
 
-  const handleSwitchCamera = useCallback(() => setFacing((f: CameraType) => f === 'back' ? 'front' : 'back'), []);
 
   const bubbleItems: BubbleItem[] = suggestions.map((text, i) => textToBubbleItem(text, i));
 
@@ -299,7 +295,7 @@ export function CameraScreen() {
           showSunOverlay={showSunOverlay} onSunToggle={() => setShowSunOverlay(v => !v)}
           showFocusGuide={showFocusGuide} onFocusGuideToggle={() => setShowFocusGuide(v => !v)}
           voiceEnabled={voiceEnabled} onVoiceToggle={() => setVoiceEnabled(v => !v)}
-          rawMode={rawMode} rawSupported={rawSupported} onRawToggle={handleRawToggle}
+          rawMode={rawMode} rawSupported={rawSupported} onRawToggle={toggleRawMode}
           challengeMode={challengeMode} onChallengeToggle={toggleChallengeMode}
           timerDuration={timerDuration} countdownActive={countdownActive}
           onTimerPress={() => setShowTimerModal(true)} onCancelCountdown={cancelCountdown}
@@ -309,7 +305,7 @@ export function CameraScreen() {
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
         />
-        <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={handleSwitchCamera} />
+        <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
       </CameraView>
       <BubbleOverlay items={bubbleItems} loading={loading} onDismiss={handleDismiss} onDismissAll={handleDismissAll} onBubbleAppear={(text) => { if (voiceEnabled) checkAndSpeak(text); }} />
       <TimerSelectorModal
