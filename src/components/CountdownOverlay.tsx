@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 
@@ -13,33 +14,31 @@ interface CountdownOverlayProps {
 export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
   const { colors } = useTheme();
   const { announce } = useAccessibilityAnnouncement();
-  const scaleAnim = useRef(new Animated.Value(1.4)).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-  const prevCountRef = useRef<number | null>(null);
+  const scale = useSharedValue(1.4);
+  const opacity = useSharedValue(1);
+  const prevCountRef = { current: null as number | null };
 
+  // Announce count change
   useEffect(() => {
     if (prevCountRef.current !== count) {
       announce(count + '秒', 'assertive');
       prevCountRef.current = count;
     }
-    // Reset and animate: scale from large → normal, opacity 1 → 0.3
-    scaleAnim.setValue(1.4);
-    opacityAnim.setValue(1);
+  }, [count]);
 
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 6,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0.3,
-        duration: 900,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [count, scaleAnim, opacityAnim]);
+  // Reset and animate on count change
+  useEffect(() => {
+    // Reset for next count
+    scale.value = 1.4;
+    opacity.value = 1;
+    scale.value = withSpring(1, { friction: 6, tension: 100 });
+    opacity.value = withTiming(0.3, { duration: 900 });
+  }, [count]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
 
   return (
     <View style={styles.container} pointerEvents="none">
@@ -47,10 +46,9 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
         style={[
           styles.bubble,
           {
-            transform: [{ scale: scaleAnim }],
-            opacity: opacityAnim,
             backgroundColor: colors.countdownBg,
           },
+          animatedStyle,
         ]}
       >
         <Text style={[styles.number, { color: colors.countdownText }]}>{count}</Text>

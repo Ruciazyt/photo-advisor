@@ -6,6 +6,10 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { CountdownOverlay } from '../components/CountdownOverlay';
 
+// Mock Reanimated v4 (local mock avoids native worklets initialization error)
+jest.mock('react-native-reanimated');
+jest.mock('react-native-worklets');
+
 // Mock ThemeContext
 jest.mock('../contexts/ThemeContext', () => ({
   useTheme: jest.fn(() => ({

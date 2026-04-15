@@ -1,14 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  ScrollView,
-  TouchableOpacity,
-  Easing,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay, Easing, runOnJS } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -23,85 +15,67 @@ interface StreamingDrawerProps {
 
 export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDrawerProps) {
   const { colors } = useTheme();
-  const [isClosed, setIsClosed] = useState(true);
-  const slideAnim = useRef(new Animated.Value(DRAWER_HEIGHT)).current;
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+  const [isClosed, setIsClosed] = React.useState(true);
+  const translateY = useSharedValue(DRAWER_HEIGHT);
+  const dot1 = useSharedValue(0);
+  const dot2 = useSharedValue(0);
+  const dot3 = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
       setIsClosed(false);
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
+      translateY.value = withSpring(0, { tension: 65, friction: 11 });
     } else {
-      Animated.timing(slideAnim, {
-        toValue: DRAWER_HEIGHT,
+      translateY.value = withTiming(DRAWER_HEIGHT, {
         duration: 250,
-        useNativeDriver: true,
         easing: Easing.out(Easing.ease),
-      }).start(() => setIsClosed(true));
+      }, (finished) => {
+        if (finished) runOnJS(setIsClosed)(true);
+      });
     }
   }, [visible]);
 
   useEffect(() => {
     if (!loading) {
-      dot1.stopAnimation();
-      dot2.stopAnimation();
-      dot3.stopAnimation();
+      dot1.value = 0;
+      dot2.value = 0;
+      dot3.value = 0;
       return;
     }
-
-    const bounce = (dot: Animated.Value, delay: number) => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: -8,
-            duration: 300,
-            useNativeDriver: true,
-            easing: Easing.out(Easing.quad),
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-            easing: Easing.in(Easing.quad),
-          }),
-        ]),
-      ).start();
+    const bounce = (dot: Animated.SharedValue<number>, delay: number) => {
+      dot.value = withRepeat(
+        withSequence(
+          withDelay(delay, withTiming(-8, { duration: 300, easing: Easing.out(Easing.quad) })),
+          withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) }),
+        ),
+        -1, // infinite
+        false
+      );
     };
-
     bounce(dot1, 0);
     bounce(dot2, 150);
     bounce(dot3, 300);
-
     return () => {
-      dot1.stopAnimation();
-      dot2.stopAnimation();
-      dot3.stopAnimation();
+      dot1.value = 0;
+      dot2.value = 0;
+      dot3.value = 0;
     };
   }, [loading]);
+
+  const drawerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const dot1Style = useAnimatedStyle(() => ({ transform: [{ translateY: dot1.value }] }));
+  const dot2Style = useAnimatedStyle(() => ({ transform: [{ translateY: dot2.value }] }));
+  const dot3Style = useAnimatedStyle(() => ({ transform: [{ translateY: dot3.value }] }));
 
   if (isClosed) return null;
 
   return (
     <View style={[styles.overlay, !visible && styles.overlayHidden]}>
-      <TouchableOpacity
-        style={styles.overlayTouch}
-        activeOpacity={1}
-        onPress={onClose}
-      />
-      <Animated.View
-        style={[
-          styles.drawer,
-          { transform: [{ translateY: slideAnim }] },
-        ]}
-      >
+      <TouchableOpacity style={styles.overlayTouch} activeOpacity={1} onPress={onClose} />
+      <Animated.View style={[styles.drawer, drawerStyle]}>
         <View style={styles.handle} />
         <View style={styles.header}>
           <Text style={styles.headerTitle}>AI 分析结果</Text>
@@ -109,25 +83,16 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
             <Text style={styles.closeBtn}>✕</Text>
           </TouchableOpacity>
         </View>
-
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {text ? (
-            <Text style={styles.text}>{text}</Text>
-          ) : null}
+        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+          {text ? <Text style={styles.text}>{text}</Text> : null}
           {loading && (
             <View style={styles.dotsContainer}>
-              <Animated.Text style={[styles.dot, { transform: [{ translateY: dot1 }] }]}>●</Animated.Text>
-              <Animated.Text style={[styles.dot, { transform: [{ translateY: dot2 }] }]}>●</Animated.Text>
-              <Animated.Text style={[styles.dot, { transform: [{ translateY: dot3 }] }]}>●</Animated.Text>
+              <Animated.Text style={[styles.dot, dot1Style]}>●</Animated.Text>
+              <Animated.Text style={[styles.dot, dot2Style]}>●</Animated.Text>
+              <Animated.Text style={[styles.dot, dot3Style]}>●</Animated.Text>
             </View>
           )}
-          {!text && !loading && (
-            <Text style={styles.placeholder}>点击发送按钮开始分析</Text>
-          )}
+          {!text && !loading && <Text style={styles.placeholder}>点击发送按钮开始分析</Text>}
         </ScrollView>
       </Animated.View>
     </View>
@@ -135,80 +100,25 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    zIndex: 100,
-  },
-  overlayHidden: {
-    opacity: 0,
-    pointerEvents: 'none',
-  },
-  overlayTouch: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
+  overlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end', zIndex: 100 },
+  overlayHidden: { opacity: 0, pointerEvents: 'none' },
+  overlayTouch: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
   drawer: {
     height: DRAWER_HEIGHT,
-    backgroundColor: colors.cardBg,
+    backgroundColor: '#1a1a1a',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: colors.textSecondary,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    color: colors.accent,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  closeBtn: {
-    color: colors.textSecondary,
-    fontSize: 20,
-  },
-  content: {
-    flex: 1,
-    marginTop: 12,
-  },
-  contentContainer: {
-    paddingBottom: 20,
-  },
-  text: {
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 24,
-  },
-  dotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-    gap: 6,
-  },
-  dot: {
-    fontSize: 20,
-    color: colors.accent,
-  },
-  placeholder: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    paddingTop: 40,
-  },
+  handle: { width: 40, height: 4, backgroundColor: '#666', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
+  headerTitle: { color: '#e8d5b7', fontSize: 16, fontWeight: '600' },
+  closeBtn: { color: '#999', fontSize: 20 },
+  content: { flex: 1, marginTop: 12 },
+  contentContainer: { paddingBottom: 20 },
+  text: { color: '#fff', fontSize: 15, lineHeight: 24 },
+  dotsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 6 },
+  dot: { fontSize: 20, color: '#e8d5b7' },
+  placeholder: { color: '#999', fontSize: 14, textAlign: 'center', paddingTop: 40 },
 });
