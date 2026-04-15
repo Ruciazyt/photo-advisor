@@ -113,8 +113,8 @@ describe('useAccessibilityReducedMotion', () => {
     expect(AccessibilityInfo.isReduceMotionEnabled).toHaveBeenCalled();
   });
 
-  it('listens for reduceStatusChanged events', () => {
+  it('listens for reduceMotionChanged events', () => {
     renderHook(() => useAccessibilityReducedMotion());
-    expect(AccessibilityInfo.addEventListener).toHaveBeenCalledWith('reduceStatusChanged', expect.any(Function));
+    expect(AccessibilityInfo.addEventListener).toHaveBeenCalledWith('reduceMotionChanged', expect.any(Function));
   });
 });
