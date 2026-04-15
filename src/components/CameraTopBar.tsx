@@ -227,7 +227,7 @@ const staticTopBarStyles = StyleSheet.create({
     fontWeight: '600',
   },
   voiceSelectorTextActive: {
-    color: colors.accent,
+    color: '#E8D5B7',
   },
   challengeSelector: {
     position: 'absolute',
