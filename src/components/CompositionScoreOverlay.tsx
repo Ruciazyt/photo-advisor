@@ -1,8 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  Easing,
+  runOnJS,
+} from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
-import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps, SparkleItem } from '../types';
+import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps } from '../types';
 export type { CompositionScoreOverlayProps };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -145,6 +154,56 @@ const overlayStyles = StyleSheet.create({
   },
 });
 
+function gradeFromScore(score: number): CompositionGrade {
+  if (score >= 90) return 'S';
+  if (score >= 80) return 'A';
+  if (score >= 70) return 'B';
+  if (score >= 60) return 'C';
+  return 'D';
+}
+
+// ---- Sparkle View: owns its own shared values, animates via useAnimatedStyle ----
+
+interface SparkleItem {
+  id: number;
+  originX: number;
+  originY: number;
+  targetX: number;
+  targetY: number;
+  color: string;
+}
+
+function SparkleView({ originX, originY, targetX, targetY, color }: Omit<SparkleItem, 'id'>) {
+  const x = useSharedValue(originX);
+  const y = useSharedValue(originY);
+  const opacity = useSharedValue(1);
+  const scale = useSharedValue(0);
+  const rotation = useSharedValue(0);
+
+  // Animate all properties on mount — all UI thread
+  x.value = withTiming(targetX, { duration: 800, easing: Easing.out(Easing.ease) });
+  y.value = withTiming(targetY, { duration: 800, easing: Easing.out(Easing.ease) });
+  scale.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
+  opacity.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.ease) });
+  rotation.value = withTiming(1, { duration: 800, easing: Easing.linear });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    left: x.value,
+    top: y.value,
+    opacity: opacity.value,
+    transform: [
+      { scale: scale.value },
+      { rotate: `${rotation.value * 360}deg` },
+    ],
+  }));
+
+  return (
+    <Animated.View
+      style={[overlayStyles.sparkle, { backgroundColor: color }, animatedStyle]}
+    />
+  );
+}
+
 export function CompositionScoreOverlay({
   result,
   challengeMode,
@@ -158,77 +217,48 @@ export function CompositionScoreOverlay({
   const [displayScore, setDisplayScore] = useState(0);
   const [showGrade, setShowGrade] = useState(false);
 
-  // FIXED: countAnim now uses useNativeDriver:true and no addListener
-  // Progress animates 0→1, displayScore is set via onAnimated callback
-  const countProgress = useRef(new Animated.Value(0)).current;
-  const gradePopAnim = useRef(new Animated.Value(0)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  // UI-thread animation shared values
+  const overlayOpacity = useSharedValue(0);
+  const gradePopScale = useSharedValue(0);
+
   const announcedRef = useRef(false);
 
-  // Sparkle animations for S/A rank
-  const [sparkles, setSparkles] = useState<SparkleItem[]>([]);
-  const sparkleAnims = useRef<Animated.CompositeAnimation[]>([]);
+  // Sparkle origin/target data (passed as plain props, each SparkleView creates its own SVs)
+  const [sparkleItems, setSparkleItems] = useState<SparkleItem[]>([]);
 
   const isHighRank = grade === 'S' || grade === 'A';
   const gradeColor = GRADE_COLORS[grade];
 
-  // Dismiss timer
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Reset state
+    // Reset
     setDisplayScore(0);
     setShowGrade(false);
-    countProgress.setValue(0);
-    gradePopAnim.setValue(0);
-    overlayOpacity.setValue(0);
+    overlayOpacity.value = 0;
+    gradePopScale.value = 0;
 
     if (isHighRank) {
-      // Initialize sparkles
       const sparkleColors = ['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98'];
-      const newSparkles: SparkleItem[] = Array.from({ length: 6 }, (_, i) => ({
-        id: i,
-        x: new Animated.Value(SCREEN_WIDTH / 2),
-        y: new Animated.Value(200),
-        opacity: new Animated.Value(1),
-        scale: new Animated.Value(0),
-        color: sparkleColors[i % sparkleColors.length],
-        rotation: new Animated.Value(0),
-      }));
-      setSparkles(newSparkles);
-
-      // Animate sparkles outward
       const angle = (i: number) => (i / 6) * Math.PI * 2;
-      sparkleAnims.current = newSparkles.map((s, i) => {
-        const targetX = SCREEN_WIDTH / 2 + Math.cos(angle(i)) * 120;
-        const targetY = 200 + Math.sin(angle(i)) * 80;
-        return Animated.parallel([
-          Animated.timing(s.x, { toValue: targetX, duration: 800, useNativeDriver: true }),
-          Animated.timing(s.y, { toValue: targetY, duration: 800, useNativeDriver: true }),
-          Animated.timing(s.scale, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(s.opacity, { toValue: 0, duration: 800, useNativeDriver: true }),
-          Animated.timing(s.rotation, { toValue: 1, duration: 800, useNativeDriver: true }),
-        ]);
-      });
-
-      Animated.parallel(sparkleAnims.current).start();
+      const newItems: SparkleItem[] = Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        originX: SCREEN_WIDTH / 2,
+        originY: 200,
+        targetX: SCREEN_WIDTH / 2 + Math.cos(angle(i)) * 120,
+        targetY: 200 + Math.sin(angle(i)) * 80,
+        color: sparkleColors[i % sparkleColors.length],
+      }));
+      setSparkleItems(newItems);
+    } else {
+      setSparkleItems([]);
     }
 
     // Fade in overlay
-    Animated.timing(overlayOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    overlayOpacity.value = withTiming(1, { duration: 200, easing: Easing.linear });
 
-    // Count up animation: animate progress 0→1 over 1.5s with native driver
-    // displayScore is updated via onAnimated callback, no addListener needed
-    Animated.timing(countProgress, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true,
-    }).start();
-
-    // Update displayScore when animation completes (single JS thread tick)
-    setTimeout(() => {
-      setDisplayScore(score);
-    }, 1550);
+    // Count-up displayScore via UI thread + runOnJS
+    withDelay(1550, runOnJS(setDisplayScore)(score));
 
     // After count-up, show grade
     const gradeTimer = setTimeout(() => {
@@ -237,70 +267,49 @@ export function CompositionScoreOverlay({
         announce('构图评分 ' + score + '分，等级' + grade, 'assertive');
         announcedRef.current = true;
       }
-      Animated.spring(gradePopAnim, {
-        toValue: 1,
-        tension: 120,
-        friction: 8,
-        useNativeDriver: true,
-      }).start();
+      gradePopScale.value = withSpring(1, { stiffness: 120, damping: 8 });
 
-      // Auto dismiss after 2.5s more
       dismissTimerRef.current = setTimeout(() => {
-        Animated.timing(overlayOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => onDismiss());
+        overlayOpacity.value = withTiming(0, { duration: 300, easing: Easing.linear }, (finished) => {
+          if (finished) runOnJS(onDismiss)();
+        });
       }, 2500);
     }, 1500);
 
     return () => {
       clearTimeout(gradeTimer);
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-      sparkleAnims.current.forEach(a => a.stop());
     };
   }, [score, grade]);
 
   const handleTap = () => {
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    Animated.timing(overlayOpacity, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => onDismiss());
+    overlayOpacity.value = withTiming(0, { duration: 200, easing: Easing.linear }, (finished) => {
+      if (finished) runOnJS(onDismiss)();
+    });
   };
 
+  const overlayAnimatedStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
+  const gradeAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: gradePopScale.value }] }));
+
   return (
-    <Animated.View style={[overlayStyles.overlay, { opacity: overlayOpacity }]} pointerEvents="box-none">
+    <Animated.View style={[overlayStyles.overlay, overlayAnimatedStyle]} pointerEvents="box-none">
       {/* Sparkles for S/A rank */}
-      {isHighRank && sparkles.map(s => (
-        <Animated.View
+      {isHighRank && sparkleItems.map(s => (
+        <SparkleView
           key={s.id}
-          style={[
-            overlayStyles.sparkle,
-            {
-              left: s.x,
-              top: s.y,
-              backgroundColor: s.color,
-              opacity: s.opacity,
-              transform: [
-                { scale: s.scale },
-                {
-                  rotate: s.rotation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg'],
-                  }),
-                },
-              ],
-            },
-          ]}
+          originX={s.originX}
+          originY={s.originY}
+          targetX={s.targetX}
+          targetY={s.targetY}
+          color={s.color}
         />
       ))}
 
       {/* Tap to dismiss hint */}
-      <Animated.View style={overlayStyles.hintContainer}>
+      <View style={overlayStyles.hintContainer}>
         <Text style={overlayStyles.hintText}>轻触关闭</Text>
-      </Animated.View>
+      </View>
 
       {/* Main card */}
       <Animated.View style={overlayStyles.card} pointerEvents="box-none">
@@ -317,10 +326,8 @@ export function CompositionScoreOverlay({
               <Animated.View
                 style={[
                   overlayStyles.gradeBadge,
-                  {
-                    backgroundColor: gradeColor,
-                    transform: [{ scale: gradePopAnim }],
-                  },
+                  { backgroundColor: gradeColor },
+                  gradeAnimatedStyle,
                 ]}
               >
                 <Text style={overlayStyles.gradeText}>{grade}</Text>
@@ -375,14 +382,4 @@ function BreakdownRow({ label, value, accentColor }: { label: string; value: num
       <Text style={[overlayStyles.breakdownValue, { color: accentColor }]}>{value}</Text>
     </View>
   );
-}
-
-
-
-function gradeFromScore(score: number): CompositionGrade {
-  if (score >= 90) return 'S';
-  if (score >= 80) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 60) return 'C';
-  return 'D';
 }

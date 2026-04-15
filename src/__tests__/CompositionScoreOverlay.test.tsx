@@ -1,11 +1,43 @@
 /**
- * Tests for CompositionScoreOverlay component
+ * Tests for CompositionScoreOverlay component (migrated to react-native-reanimated v4)
  */
 
 import React from 'react';
+
+// Mock Reanimated v4 (local mock avoids native worklets initialization error)
+jest.mock('react-native-reanimated');
+jest.mock('react-native-worklets');
 import { render, fireEvent } from '@testing-library/react-native';
 import { CompositionScoreOverlay } from '../components/CompositionScoreOverlay';
-import { CompositionScoreResult, ChallengeSession } from '../hooks/useCompositionScore';
+import type { CompositionScoreResult, ChallengeSession } from '../types';
+
+// Mock ThemeContext
+jest.mock('../contexts/ThemeContext', () => ({
+  useTheme: jest.fn(() => ({
+    theme: 'dark',
+    colors: {
+      primary: '#000',
+      accent: '#e8d5b7',
+      success: '#22c55e',
+      error: '#ef4444',
+      warning: '#f59e0b',
+      gridAccent: 'rgba(232,213,183,0.45)',
+      bubbleBg: 'rgba(0,0,0,0.75)',
+      bubbleText: '#fff',
+      countdownBg: 'rgba(0,0,0,0.6)',
+      countdownText: '#ffffff',
+    },
+    setTheme: jest.fn(),
+    toggleTheme: jest.fn(),
+  })),
+}));
+
+// Mock useAccessibilityAnnouncement hook
+jest.mock('../hooks/useAccessibility', () => ({
+  useAccessibilityAnnouncement: jest.fn(() => ({
+    announce: jest.fn(),
+  })),
+}));
 
 const makeResult = (overrides: Partial<CompositionScoreResult> = {}): CompositionScoreResult => ({
   score: 85,
@@ -41,7 +73,6 @@ describe('CompositionScoreOverlay', () => {
 
   it('renders without crashing', () => {
     const { getByText } = render(<CompositionScoreOverlay {...defaultProps} />);
-    // Initial score is 0 before animation
     expect(getByText('构图评分')).toBeTruthy();
   });
 
@@ -56,37 +87,19 @@ describe('CompositionScoreOverlay', () => {
       <CompositionScoreOverlay {...defaultProps} onDismiss={onDismiss} />
     );
     fireEvent.press(getByText('构图评分'));
-    // Tap triggers handleTap
-    expect(onDismiss).not.toHaveBeenCalled(); // animation not complete yet
+    expect(onDismiss).not.toHaveBeenCalled();
   });
 
-  it('displays correct grade colors for S rank', () => {
-    const { getByText } = render(
-      <CompositionScoreOverlay
-        {...defaultProps}
-        result={makeResult({ score: 95, grade: 'S', breakdown: { alignment: 95, balance: 95, centrality: 95 } })}
-      />
-    );
-    // Grade badge appears after animation delay
-    expect(getByText('构图评分')).toBeTruthy();
+  it('displays tap hint text', () => {
+    const { getByText } = render(<CompositionScoreOverlay {...defaultProps} />);
+    expect(getByText('轻触关闭')).toBeTruthy();
   });
 
-  it('displays challenge session stats when challenge mode is active', () => {
-    const session = makeSession({
-      scores: [80, 90],
-      bestScore: 90,
-      cumulative: 170,
-      count: 2,
-    });
-    const { getByText } = render(
-      <CompositionScoreOverlay
-        {...defaultProps}
-        challengeMode={true}
-        session={session}
-      />
-    );
-    // Session stats should be visible after animation
-    expect(getByText('构图评分')).toBeTruthy();
+  it('displays breakdown bars with correct labels', () => {
+    const { getByText } = render(<CompositionScoreOverlay {...defaultProps} />);
+    expect(getByText('构图对齐')).toBeTruthy();
+    expect(getByText('左右平衡')).toBeTruthy();
+    expect(getByText('中心位置')).toBeTruthy();
   });
 
   it('does not show challenge session stats when challenge mode is off', () => {
@@ -106,11 +119,34 @@ describe('CompositionScoreOverlay', () => {
     expect(queryByText('🎮 挑战模式')).toBeNull();
   });
 
-  it('displays breakdown bars with correct labels', () => {
-    const { getByText } = render(<CompositionScoreOverlay {...defaultProps} />);
-    expect(getByText('构图对齐')).toBeTruthy();
-    expect(getByText('左右平衡')).toBeTruthy();
-    expect(getByText('中心位置')).toBeTruthy();
+  it('displays correct grade colors for S rank', () => {
+    const { getByText } = render(
+      <CompositionScoreOverlay
+        {...defaultProps}
+        result={makeResult({ score: 95, grade: 'S', breakdown: { alignment: 95, balance: 95, centrality: 95 } })}
+      />
+    );
+    expect(getByText('构图评分')).toBeTruthy();
+  });
+
+  it('displays challenge session stats when challenge mode is active', () => {
+    const session = makeSession({
+      scores: [80, 90],
+      bestScore: 90,
+      cumulative: 170,
+      count: 2,
+    });
+    const { getByText } = render(
+      <CompositionScoreOverlay
+        {...defaultProps}
+        challengeMode={true}
+        session={session}
+      />
+    );
+    expect(getByText('🎮 挑战模式')).toBeTruthy();
+    expect(getByText('本轮最高')).toBeTruthy();
+    expect(getByText('累计平均')).toBeTruthy();
+    expect(getByText('已拍张数')).toBeTruthy();
   });
 
   it('displays different grades correctly', () => {
@@ -124,13 +160,11 @@ describe('CompositionScoreOverlay', () => {
 
     for (const { grade, score } of grades) {
       jest.clearAllMocks();
-      jest.useFakeTimers();
       const result = makeResult({ grade, score });
       const { getByText } = render(
         <CompositionScoreOverlay {...defaultProps} result={result} />
       );
       expect(getByText('构图评分')).toBeTruthy();
-      jest.useRealTimers();
     }
   });
 
@@ -138,10 +172,5 @@ describe('CompositionScoreOverlay', () => {
     const result = makeResult({ score: 30, grade: 'D', breakdown: { alignment: 30, balance: 30, centrality: 30 } });
     const { getByText } = render(<CompositionScoreOverlay {...defaultProps} result={result} />);
     expect(getByText('构图评分')).toBeTruthy();
-  });
-
-  it('displays tap hint text', () => {
-    const { getByText } = render(<CompositionScoreOverlay {...defaultProps} />);
-    expect(getByText('轻触关闭')).toBeTruthy();
   });
 });

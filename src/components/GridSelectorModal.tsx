@@ -5,9 +5,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Animated,
   Dimensions,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
@@ -339,55 +345,55 @@ export function GridSelectorModal({
 }: GridSelectorModalProps) {
   const { colors } = useTheme();
 
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useSharedValue(SHEET_HEIGHT);
+  const opacity = useSharedValue(0);
   const [isShown, setIsShown] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
       setIsShown(true);
-    } else {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: SHEET_HEIGHT,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsShown(false);
+      translateY.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.out(Easing.ease),
       });
+      opacity.value = withTiming(1, {
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+      });
+    } else {
+      translateY.value = withTiming(SHEET_HEIGHT, {
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+      });
+      opacity.value = withTiming(0, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      }, (finished) => {
+        if (finished) runOnJS(setIsClosed)(false);
+      });
+
+      // setIsShown(false) is called via the callback above
     }
-  }, [visible, translateY, opacity]);
+  }, [visible]);
+
+  // Helper to set isShown (called from animation callback via runOnJS)
+  const setIsClosed = (val: boolean) => setIsShown(val);
+
+  const sheetAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropAnimatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   if (!isShown) return null;
 
   return (
     <View style={modalStaticStyles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[modalStaticStyles.backdrop, { opacity }]} />
+        <Animated.View style={[modalStaticStyles.backdrop, backdropAnimatedStyle]} />
       </TouchableWithoutFeedback>
 
       <Animated.View
         style={[
           modalStaticStyles.sheet,
-          { transform: [{ translateY }] },
+          sheetAnimatedStyle,
         ]}
       >
         {/* Header */}

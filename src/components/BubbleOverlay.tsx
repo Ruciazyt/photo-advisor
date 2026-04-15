@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 import type { BubbleItem, BubbleOverlayProps } from '../types';
 export type { BubblePosition } from '../types';
@@ -86,25 +93,25 @@ const containerStyles = StyleSheet.create({
 
 function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => void }) {
   const { colors } = useTheme();
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useSharedValue(0);
 
   const closeTextStyle = useMemo(() => [
     bubbleBaseStyles.closeText,
     { color: colors.accent },
   ], [colors.accent]);
 
-  useEffect(() => {
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  // Fade in on mount — runs on UI thread
+  opacity.value = withTiming(1, {
+    duration: 300,
+    easing: Easing.out(Easing.ease),
+  });
+
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   const posStyle = POSITION_STYLES[item.position];
 
   return (
-    <Animated.View style={[bubbleBaseStyles.bubble, posStyle, { opacity }]}>
+    <Animated.View style={[bubbleBaseStyles.bubble, posStyle, animatedStyle]}>
       <Text style={bubbleBaseStyles.bubbleText}>{item.text}</Text>
       <TouchableOpacity style={bubbleBaseStyles.closeBtn} onPress={onDismiss} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <Text style={closeTextStyle}>✕</Text>
@@ -129,25 +136,24 @@ export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbl
     { color: colors.accent },
   ], [colors.accent]);
 
-  // When new items come in, show them one by one
+  // When new items come in, show them one by one using withDelay on UI thread
   useEffect(() => {
     if (items.length === 0) return;
 
     const newItems = items.slice(visibleItems.length);
     if (newItems.length === 0) return;
 
-    let delay = 0;
-    for (const item of newItems) {
-      delay += 250;
-      setTimeout(() => {
+    newItems.forEach((item, idx) => {
+      // Schedule each bubble to appear with a staggered delay — all UI thread
+      withDelay(idx * 250, () => {
         setVisibleItems(prev => {
           if (prev.find(i => i.id === item.id)) return prev;
           return [...prev, item];
         });
         onBubbleAppear?.(item.text);
         setNextId(item.id + 1);
-      }, delay);
-    }
+      });
+    });
   }, [items]);
 
   // Clear all when loading starts
