@@ -14,6 +14,10 @@ const HIST_HEIGHT = 60;
 const WARN_DARK_RATIO = 0.55; // fraction of dark bins to trigger 欠曝 warning
 const WARN_BRIGHT_RATIO = 0.55; // fraction of bright bins to trigger 过曝 warning
 
+// Module-level singleton — avoid repeated allocation for the empty / fallback bars
+const EMPTY_BARS = Array.from({ length: BAR_COUNT }, () => 0.05);
+const EMPTY_HISTOGRAM = new Array(256).fill(0);
+
 // Module-level static styles
 const staticStyles = StyleSheet.create({
   container: {
@@ -81,18 +85,42 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
 
   const bars = useMemo(() => {
     if (!histogramData || histogramData.length !== 256) {
-      return new Array(BAR_COUNT).fill(0.05);
+      return EMPTY_BARS;
     }
-    const result: number[] = [];
+    const result: number[] = new Array(BAR_COUNT);
     for (let i = 0; i < BAR_COUNT; i++) {
       let sum = 0;
-      for (let j = 0; j < 16; j++) {
-        sum += histogramData[i * 16 + j];
-      }
-      result.push(sum / 16);
+      const base = i * 16;
+      // Unrolled 16-iteration loop — faster than a nested loop with bounds checks
+      sum += histogramData[base];
+      sum += histogramData[base + 1];
+      sum += histogramData[base + 2];
+      sum += histogramData[base + 3];
+      sum += histogramData[base + 4];
+      sum += histogramData[base + 5];
+      sum += histogramData[base + 6];
+      sum += histogramData[base + 7];
+      sum += histogramData[base + 8];
+      sum += histogramData[base + 9];
+      sum += histogramData[base + 10];
+      sum += histogramData[base + 11];
+      sum += histogramData[base + 12];
+      sum += histogramData[base + 13];
+      sum += histogramData[base + 14];
+      sum += histogramData[base + 15];
+      result[i] = sum / 16;
     }
-    const max = Math.max(...result, 0.001);
-    return result.map(v => v / max);
+    // Find max without spread operator — avoids O(n) allocation per frame
+    let max = 0.001;
+    for (let i = 0; i < BAR_COUNT; i++) {
+      if (result[i] > max) max = result[i];
+    }
+    // Build normalised bars
+    const barsOut: number[] = new Array(BAR_COUNT);
+    for (let i = 0; i < BAR_COUNT; i++) {
+      barsOut[i] = result[i] / max;
+    }
+    return barsOut;
   }, [histogramData]);
 
   const warnings = useMemo(() => {
@@ -101,7 +129,10 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
     for (let i = 0; i < 32; i++) dark += histogramData[i];
     let bright = 0;
     for (let i = 208; i < 256; i++) bright += histogramData[i];
-    const total = histogramData.reduce((a, b) => a + b, 0) || 1;
+    // Accumulate total without a separate reduce pass over 256 elements
+    let total = dark + bright;
+    for (let i = 32; i < 208; i++) total += histogramData[i];
+    if (total === 0) total = 1;
     return {
       under: dark / total > WARN_DARK_RATIO,
       over: bright / total > WARN_BRIGHT_RATIO,

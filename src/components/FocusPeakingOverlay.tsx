@@ -41,7 +41,7 @@ export function FocusPeakingOverlay({
 
       return (
         <View
-          key={`${i}-${peak.x.toFixed(3)}-${peak.y.toFixed(3)}`}
+          key={i}
           style={[
             styles.dot,
             {

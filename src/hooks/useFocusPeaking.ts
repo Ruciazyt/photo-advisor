@@ -123,39 +123,56 @@ export function sobelMagnitudes(lum: number[][], width: number, height: number):
 /**
  * Cluster Sobel magnitudes into peak points.
  * Returns screen-normalised peak coordinates sorted by strength descending.
+ * Performance: O(n) max scan + O(peaks log peaks) sort — avoids spread-based Math.max
+ * on 2304 elements every frame.
  */
 export function extractPeaks(mag: number[][], width: number, height: number): PeakPoint[] {
-  // Raw magnitude max for normalised strength reporting
-  const max = Math.max(...mag.flat(), 1);
+  // Find raw max without array spread (avoids O(n) allocation + O(n) spread args)
+  let rawMax = 1;
+  for (let y = 0; y < height; y++) {
+    const row = mag[y];
+    for (let x = 0; x < width; x++) {
+      const v = row[x];
+      if (v > rawMax) rawMax = v;
+    }
+  }
 
   const peaks: PeakPoint[] = [];
 
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
-      // Work with raw magnitude values; threshold in raw units
       const v = mag[y][x];
       if (v < EDGE_THRESHOLD) continue;
 
-      // Local non-maximum suppression on raw magnitudes
-      const neighbours = [
-        mag[y - 1][x - 1], mag[y - 1][x], mag[y - 1][x + 1],
-        mag[y][x - 1],                       mag[y][x + 1],
-        mag[y + 1][x - 1], mag[y + 1][x], mag[y + 1][x + 1],
-      ];
-      const maxNeighbour = Math.max(...neighbours);
-      if (v < maxNeighbour) continue;
+      // Inline non-maximum suppression — avoid spread + Math.max on neighbours array
+      const v0 = mag[y - 1][x - 1];
+      const v1_ = mag[y - 1][x];
+      const v2 = mag[y - 1][x + 1];
+      const v3 = mag[y][x - 1];
+      const v4 = mag[y][x + 1];
+      const v5 = mag[y + 1][x - 1];
+      const v6 = mag[y + 1][x];
+      const v7 = mag[y + 1][x + 1];
+      const maxNeighbour = v0 > v1_ ? v0 : v1_;
+      const mx2 = v2 > maxNeighbour ? v2 : maxNeighbour;
+      const mx3 = v3 > mx2 ? v3 : mx2;
+      const mx4 = v4 > mx3 ? v4 : mx3;
+      const mx5 = v5 > mx4 ? v5 : mx4;
+      const mx6 = v6 > mx5 ? v6 : mx5;
+      const mx7 = v7 > mx6 ? v7 : mx6;
+      if (v < mx7) continue;
 
       peaks.push({
         x: x / width,
         y: y / height,
-        strength: v / max, // normalised 0-1
+        strength: v / rawMax,
       });
     }
   }
 
-  // Sort by strength descending and cap
+  // Sort by strength descending and cap at MAX_PEAKS
   peaks.sort((a, b) => b.strength - a.strength);
-  return peaks.slice(0, MAX_PEAKS);
+  return peaks.length > MAX_PEAKS ? peaks.slice(0, MAX_PEAKS) : peaks;
 }
 
 export function useFocusPeaking(): UseFocusPeakingReturn {
