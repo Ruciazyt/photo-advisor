@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -260,7 +260,7 @@ export function CameraScreen() {
   }, [countdownActive, loading, burstActive, startCountdown, timerDuration, gridVariant, capturePreviewFrame, runAnalysis]);
 
 
-  const bubbleItems: BubbleItem[] = suggestions.map((text, i) => textToBubbleItem(text, i));
+  const bubbleItems = useMemo(() => suggestions.map((text, i) => textToBubbleItem(text, i)), [suggestions]);
 
   if (!permission) return <View style={[staticStyles.container, { backgroundColor: colors.primary }]}><ActivityIndicator color={colors.accent} size="large" /></View>;
   if (!permission.granted) return <PermissionGate title="需要相机权限" icon="camera-outline" message="拍摄参谋需要访问您的相机来拍摄照片" buttonText="授权相机" onRequest={requestPermission} />;

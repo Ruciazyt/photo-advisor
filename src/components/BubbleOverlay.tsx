@@ -100,13 +100,15 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
     { color: colors.accent },
   ], [colors.accent]);
 
-  // Fade in on mount — runs on UI thread
-  opacity.value = withTiming(1, {
-    duration: 300,
-    easing: Easing.out(Easing.ease),
-  });
-
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  // Fade in once on mount — NOT on every render
+  useEffect(() => {
+    opacity.value = withTiming(1, {
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+    });
+  }, []);
 
   const posStyle = POSITION_STYLES[item.position];
 
