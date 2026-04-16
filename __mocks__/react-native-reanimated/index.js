@@ -27,7 +27,7 @@ function useAnimatedStyle(styleFn) {
 function withSpring(val) { return val; }
 function withTiming(val) { return val; }
 function withSequence(...vals) { return vals[vals.length - 1]; }
-function withDelay(_, val) { return val; }
+function withDelay(_, val) { try { if (typeof val === 'function') val(); } catch (_e) { /* ignore sync errors */ } return val; }
 function withRepeat(val) { return val; }
 function runOnJS(fn) { return fn; }
 
@@ -39,7 +39,8 @@ const Easing = {
 };
 
 module.exports = {
-  default: Animated,
+  default: Animated.View,
+  AnimatedView: Animated.View,
   ...Animated,
   useSharedValue,
   useAnimatedStyle,
