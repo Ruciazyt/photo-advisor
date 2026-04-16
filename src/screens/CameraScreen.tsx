@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useTheme } from '../contexts/ThemeContext';
-import { BubbleOverlay, BubbleItem } from '../components/BubbleOverlay';
+import { BubbleOverlay } from '../components/BubbleOverlay';
 import { KeypointOverlay, Keypoint } from '../components/KeypointOverlay';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
 import { GridVariant } from '../components/GridOverlay';
@@ -31,22 +31,15 @@ import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { CameraTopBar } from '../components/CameraTopBar';
 import { CameraControls } from '../components/CameraControls';
 import { CameraOverlays } from '../components/CameraOverlays';
+import { useSuggestions } from '../hooks/useSuggestions';
+import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
+import { useBurstMode } from '../hooks/useBurstMode';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
 const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法', golden: '黄金分割', diagonal: '对角线', spiral: '螺旋线', none: '关闭',
 };
-
-function textToBubbleItem(text: string, index: number): BubbleItem {
-  const posMap: Record<string, BubbleItem['position']> = {
-    '[左上]': 'top-left', '[右上]': 'top-right', '[左下]': 'bottom-left', '[右下]': 'bottom-right', '[中间]': 'center',
-  };
-  const roundRobin: BubbleItem['position'][] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-  let position: BubbleItem['position'] = roundRobin[index % roundRobin.length];
-  for (const [tag, pos] of Object.entries(posMap)) { if (text.includes(tag)) { position = pos; break; } }
-  return { id: index, text, position };
-}
 
 function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: string } {
   const positive = ['好', '优秀', '完美', '不错', '佳'];
@@ -66,10 +59,24 @@ export function CameraScreen() {
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
   const preAnalysisStartedRef = useRef(false);
-  const burstSuggestionText = useRef('');
 
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { suggestions, setSuggestions, loading, setLoading, handleDismiss, handleDismissAll, bubbleItems } = useSuggestions();
+  const {
+    showComparison, setShowComparison,
+    showGridModal, setShowGridModal,
+    showTimerModal, setShowTimerModal,
+    lastCapturedUri, setLastCapturedUri,
+    lastCapturedScore, setLastCapturedScore,
+    lastCapturedScoreReason, setLastCapturedScoreReason,
+  } = useCaptureOverlay();
+  const {
+    burstActive, setBurstActive,
+    burstCount, setBurstCount,
+    showBurstSuggestion, setShowBurstSuggestion,
+    burstSuggestionText,
+    startBurst,
+  } = useBurstMode({ setSuggestions });
+
   const [apiConfigured, setApiConfigured] = useState(false);
   const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
   const [showKeypoints, setShowKeypoints] = useState(false);
@@ -78,20 +85,12 @@ export function CameraScreen() {
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
-  const [lastCapturedUri, setLastCapturedUri] = useState<string | null>(null);
-  const [lastCapturedScore, setLastCapturedScore] = useState<number | null>(null);
-  const [lastCapturedScoreReason, setLastCapturedScoreReason] = useState<string | null>(null);
-  const [showComparison, setShowComparison] = useState(false);
-  const [showGridModal, setShowGridModal] = useState(false);
-  const [showTimerModal, setShowTimerModal] = useState(false);
-  const { opacity: toastOpacity, toastMessage, showToast } = useToast();
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [burstActive, setBurstActive] = useState(false);
-  const [burstCount, setBurstCount] = useState(0);
-  const [showBurstSuggestion, setShowBurstSuggestion] = useState(false);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
+
+  const { opacity: toastOpacity, toastMessage, showToast } = useToast();
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
@@ -142,7 +141,6 @@ export function CameraScreen() {
     if (!preAnalysisStartedRef.current) {
       await runAnalysis(base64, `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`);
     } else {
-      // 预分析已在倒计时期间启动，跳过重复调用
       preAnalysisStartedRef.current = false;
     }
     setTimeout(() => {
@@ -151,15 +149,9 @@ export function CameraScreen() {
         setShowBurstSuggestion(true);
       }
     }, 100);
-  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions, recognizeSceneTag, rawMode]);
+  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions, recognizeSceneTag, rawMode, setSuggestions, setLoading, setShowBurstSuggestion, burstSuggestionText]);
 
   const { active: countdownActive, count: countdownCount, startCountdown, cancelCountdown } = useCountdown({ onComplete: doCapture });
-
-  const startBurst = useCallback(() => {
-    if (burstActive) return;
-    setBurstActive(true); setBurstCount(0); let shot = 0;
-    const burstInterval = setInterval(() => { doCapture(); shot++; setBurstCount(shot); if (shot >= 5) { clearInterval(burstInterval); setBurstActive(false); setSuggestions(prev => [...prev, `连拍完成：共${shot}张`]); } }, 700);
-  }, [burstActive, doCapture]);
 
   // Focus peaking — capture peak points at regular intervals while guide is visible
   useEffect(() => {
@@ -212,14 +204,12 @@ export function CameraScreen() {
     catch { setSuggestions(['错误: 无法读取图片']); return; }
     if (!base64 || base64.length < 1000) { setSuggestions(['错误: 图片数据异常']); return; }
     await runAnalysis(base64);
-  }, [runAnalysis]);
+  }, [runAnalysis, setSuggestions]);
 
-  const handleDismiss = useCallback((id: number) => {
-    setSuggestions(prev => prev.filter((_, i) => i !== id));
+  const handleDismissWithKeypoints = useCallback((id: number) => {
+    handleDismiss(id);
     setKeypoints(prev => { const next = prev.filter(kp => kp.id !== id); if (next.length === 0) setShowKeypoints(false); return next; });
-  }, []);
-
-  const handleDismissAll = useCallback(() => { setSuggestions([]); setKeypoints([]); setShowKeypoints(false); }, []);
+  }, [handleDismiss]);
 
   useEffect(() => {
     loadAppSettings().then((settings) => {
@@ -233,7 +223,6 @@ export function CameraScreen() {
     if (countdownActive || loading || burstActive) return;
     setLoading(true);
 
-    // 在倒计时期间预先开始分析
     const gridPromptMap: Record<GridVariant, string> = {
       thirds: "三分法网格", golden: "黄金分割网格",
       diagonal: "对角线网格", spiral: "螺旋线网格", none: "无网格",
@@ -244,7 +233,6 @@ export function CameraScreen() {
       const preview = await capturePreviewFrame();
       if (preview) {
         preAnalysisStartedRef.current = true;
-        // 不 await，让它在后台运行
         runAnalysis(preview.base64, previewPrompt);
       }
     } catch {
@@ -253,9 +241,6 @@ export function CameraScreen() {
 
     startCountdown(timerDuration);
   }, [countdownActive, loading, burstActive, startCountdown, timerDuration, gridVariant, capturePreviewFrame, runAnalysis]);
-
-
-  const bubbleItems = useMemo(() => suggestions.map((text, i) => textToBubbleItem(text, i)), [suggestions]);
 
   if (!permission) return <View style={[staticStyles.container, { backgroundColor: colors.primary }]}><ActivityIndicator color={colors.accent} size="large" /></View>;
   if (!permission.granted) return <PermissionGate title="需要相机权限" icon="camera-outline" message="拍摄参谋需要访问您的相机来拍摄照片" buttonText="授权相机" onRequest={requestPermission} />;
@@ -270,7 +255,7 @@ export function CameraScreen() {
           showFocusGuide={showFocusGuide} cameraRef={cameraRef} peakPoints={peakPoints}
           screenWidth={screenWidth} screenHeight={screenHeight} showSunOverlay={showSunOverlay}
           showBurstSuggestion={showBurstSuggestion} burstSuggestionText={burstSuggestionText.current}
-          onBurstSuggestionAccept={() => { setShowBurstSuggestion(false); startBurst(); }}
+          onBurstSuggestionAccept={() => { setShowBurstSuggestion(false); startBurst(doCapture); }}
           onBurstSuggestionDismiss={() => setShowBurstSuggestion(false)} burstActive={burstActive}
           showKeypoints={showKeypoints} keypoints={keypoints} showScoreOverlay={showScoreOverlay}
           scoreOverlayResult={scoreOverlayResult} challengeMode={challengeMode}
@@ -302,7 +287,7 @@ export function CameraScreen() {
         />
         <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
       </CameraView>
-      <BubbleOverlay items={bubbleItems} loading={loading} onDismiss={handleDismiss} onDismissAll={handleDismissAll} onBubbleAppear={(text) => { if (voiceEnabled) checkAndSpeak(text); }} />
+      <BubbleOverlay items={bubbleItems} loading={loading} onDismiss={handleDismissWithKeypoints} onDismissAll={handleDismissAll} onBubbleAppear={(text) => { if (voiceEnabled) checkAndSpeak(text); }} />
       <TimerSelectorModal
         visible={showTimerModal}
         selectedDuration={timerDuration}
