@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SceneTagOverlayProps {
@@ -40,7 +41,7 @@ const containerStyles = StyleSheet.create({
 
 export function SceneTagOverlay({ tag, visible }: SceneTagOverlayProps) {
   const { colors } = useTheme();
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useSharedValue(0);
 
   const staticTagStyles = { fontSize: 15, fontWeight: '600' as const, letterSpacing: 1 };
   // Theme-dependent tag text style — use useMemo
@@ -51,24 +52,20 @@ export function SceneTagOverlay({ tag, visible }: SceneTagOverlayProps) {
 
   useEffect(() => {
     if (!visible) {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      opacity.value = withTiming(0, { duration: 300 });
       return;
     }
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [visible, opacity]);
+    opacity.value = withTiming(1, { duration: 200 });
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
   if (!tag) return null;
 
   return (
-    <Animated.View style={[containerStyles.container, { opacity }]} pointerEvents="none">
+    <Animated.View style={[containerStyles.container, animatedStyle]} pointerEvents="none">
       <View style={containerStyles.badge}>
         <Text style={containerStyles.label}>📷</Text>
         <Text style={tagStyle}>{tag}</Text>

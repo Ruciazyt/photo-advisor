@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDeviceOrientation, DeviceOrientation } from '../hooks/useDeviceOrientation';
@@ -23,17 +24,21 @@ function getColor(state: 'level' | 'slight' | 'tilted', colors: { success: strin
 }
 
 interface BubbleDotProps {
-  pitch: number;
-  roll: number;
+  animPitch: Animated.SharedValue<number>;
+  animRoll: Animated.SharedValue<number>;
   color: string;
 }
 
-function BubbleDot({ pitch, roll, color }: BubbleDotProps) {
-  const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, pitch));
-  const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, roll));
-
-  const offsetX = (clampedRoll / MAX_TILT) * BUBBLE_RADIUS;
-  const offsetY = (clampedPitch / MAX_TILT) * BUBBLE_RADIUS;
+function BubbleDot({ animPitch, animRoll, color }: BubbleDotProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, animPitch.value));
+    const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, animRoll.value));
+    const offsetX = (clampedRoll / MAX_TILT) * BUBBLE_RADIUS;
+    const offsetY = (clampedPitch / MAX_TILT) * BUBBLE_RADIUS;
+    return {
+      transform: [{ translateX: offsetX }, { translateY: offsetY }],
+    };
+  });
 
   return (
     <View style={styles.bubbleContainer} pointerEvents="none">
@@ -44,14 +49,14 @@ function BubbleDot({ pitch, roll, color }: BubbleDotProps) {
         <View style={styles.crossV} />
         {/* Center target */}
         <View style={[styles.centerTarget, { borderColor: color }]} />
-        {/* Bubble dot */}
-        <View
+        {/* Bubble dot — animated on UI thread */}
+        <Animated.View
           style={[
             styles.bubble,
             {
               backgroundColor: color,
-              transform: [{ translateX: offsetX }, { translateY: offsetY }],
             },
+            animatedStyle,
           ]}
         />
       </View>
@@ -64,6 +69,10 @@ export function LevelIndicator() {
   const { orientation, available } = useDeviceOrientation(80);
   const { triggerLevelHaptic, warningNotification } = useHaptics();
   const prevStateRef = useRef<'level' | 'slight' | 'tilted'>('level');
+
+  // Shared values live on the UI thread — writing to them doesn't cause re-renders
+  const animPitch = useSharedValue(0);
+  const animRoll = useSharedValue(0);
 
   if (!available) {
     return null;
@@ -78,7 +87,17 @@ export function LevelIndicator() {
     : 'level';
   const color = getColor(worstState, colors);
 
-  // Trigger haptic feedback on state transitions
+  // Update shared values on the UI thread whenever gyroscope data changes.
+  // runOnJS is not needed here since orientation values are plain numbers
+  // coming from the sensor — we can update shared values directly from the
+  // useDeviceOrientation effect. We use a separate effect that only tracks
+  // the orientation values to update animPitch/animRoll.
+  useEffect(() => {
+    animPitch.value = orientation.pitch;
+    animRoll.value = orientation.roll;
+  }, [orientation.pitch, orientation.roll]);
+
+  // Trigger haptic feedback on state transitions (JS thread — haptics must stay on JS)
   useEffect(() => {
     if (worstState !== prevStateRef.current) {
       prevStateRef.current = worstState;
@@ -107,7 +126,7 @@ export function LevelIndicator() {
   return (
     <View style={styles.container} pointerEvents="none">
       <View style={styles.indicatorRow}>
-        <BubbleDot pitch={orientation.pitch} roll={orientation.roll} color={color} />
+        <BubbleDot animPitch={animPitch} animRoll={animRoll} color={color} />
         <View style={styles.infoPanel}>
           <Ionicons name={statusIcon} size={18} color={color} />
           <Text style={[styles.statusText, { color }]}>{statusText}</Text>

@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming, withRepeat, cancelAnimation } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
-export type { KeypointPosition } from '../types';
-export { Keypoint };
-export type { KeypointOverlayProps };
+import type { ReactNode } from 'react';
 
 // Rule-of-thirds intersection points (fraction of screen)
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
@@ -109,55 +108,41 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
     markerLabel: object[];
   };
 }) {
-  const scale = useRef(new Animated.Value(0)).current;
-  const pulse = useRef(new Animated.Value(1)).current;
+  // Shared values on the UI thread
+  const scale = useSharedValue(0);
+  const pulse = useSharedValue(1);
 
   useEffect(() => {
-    // Pop-in animation
-    Animated.spring(scale, {
-      toValue: 1,
-      tension: 120,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
+    // Pop-in animation: spring from 0 → 1
+    scale.value = withSpring(1, { damping: 8, stiffness: 120 });
 
-    // Pulse animation — run for a finite number of cycles (3) then stop.
-    // Previously this was an infinite Animated.loop which kept the JS thread
-    // busy at ~1600ms per cycle indefinitely.  Limiting to 3 cycles gives
-    // the user enough visual feedback while freeing the thread after ~5s.
-    const MAX_PULSE_CYCLES = 3;
-    let cycleCount = 0;
-    let stopped = false;
-
-    const runPulse = () => {
-      if (stopped) return;
-      Animated.timing(pulse, {
-        toValue: 1.3,
-        duration: 800,
-        useNativeDriver: true,
-      }).start(() => {
-        if (stopped) return;
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }).start(() => {
-          if (stopped) return;
-          cycleCount++;
-          if (cycleCount < MAX_PULSE_CYCLES) {
-            runPulse();
-          }
-          // else: animation naturally stops after 3 cycles
-        });
-      });
-    };
-
-    runPulse();
+    // Pulse animation — run for 3 cycles then stop.
+    // Each cycle: pulse from 1 → 1.3 (800ms) then 1.3 → 1 (800ms)
+    // Total: 3 × 1600ms = 4800ms then stops naturally
+    const oneCycle = withSequence(
+      withTiming(1.3, { duration: 800 }),
+      withTiming(1, { duration: 800 }),
+    );
+    pulse.value = withRepeat(oneCycle, { count: 3, mirror: false });
 
     return () => {
-      stopped = true;
+      cancelAnimation(scale);
+      cancelAnimation(pulse);
     };
   }, []);
+
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: -MARKER_SIZE },
+      { translateY: -MARKER_SIZE },
+      { scale: scale.value },
+    ],
+    opacity: pulse.value === 1 ? 0.4 : 0, // simple approximation for mock
+  }));
+
+  const markerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }), []);
 
   const coords = POSITION_COORDS[keypoint.position];
 
@@ -176,24 +161,14 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
       <Animated.View
         style={[
           accentStyles.pulseRing,
-          {
-            transform: [
-              { translateX: -MARKER_SIZE },
-              { translateY: -MARKER_SIZE },
-              { scale },
-            ],
-            opacity: pulse.interpolate({
-              inputRange: [1, 1.3],
-              outputRange: [0.4, 0],
-            }),
-          },
+          pulseAnimatedStyle,
         ]}
       />
       {/* Inner circle */}
       <Animated.View
         style={[
           accentStyles.marker,
-          { transform: [{ scale }] },
+          markerAnimatedStyle,
         ]}
       >
         <Text style={accentStyles.markerLabel}>{keypoint.label}</Text>

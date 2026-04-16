@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, cancelAnimation } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 
@@ -14,9 +14,11 @@ interface CountdownOverlayProps {
 export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
   const { colors } = useTheme();
   const { announce } = useAccessibilityAnnouncement();
+  // Scale starts at 1.4 (pop-in from previous cycle), springs down to 1
   const scale = useSharedValue(1.4);
+  // Opacity fades from 1 → 0.3 over the countdown duration
   const opacity = useSharedValue(1);
-  const prevCountRef = { current: null as number | null };
+  const prevCountRef = useRef<number | null>(null);
 
   // Announce count change
   useEffect(() => {
@@ -28,8 +30,10 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
 
   // Reset and animate on count change
   useEffect(() => {
-    // withSpring starts from current value (1.4 from previous cycle end)
-    opacity.value = 1;
+    // Cancel any in-flight animations so they don't conflict
+    cancelAnimation(scale);
+    cancelAnimation(opacity);
+    // Start from current value and spring/fade to target
     scale.value = withSpring(1, { damping: 3, stiffness: 100 });
     opacity.value = withTiming(0.3, { duration: 900 });
   }, [count]);
