@@ -265,15 +265,17 @@ describe('resultOf', () => {
       ErrorCode.API_AUTH_FAILED
     );
     expect(result.ok).toBe(false);
-    expect(result.error).toBeInstanceOf(APIError);
-    expect(result.error.message).toBe('auth failed');
-    expect((result.error as APIError).statusCode).toBe(401);
+    const err = result as { ok: false; error: AppError };
+    expect(err.error).toBeInstanceOf(APIError);
+    expect(err.error.message).toBe('auth failed');
+    expect((err.error as APIError).statusCode).toBe(401);
   });
 
   it('wraps unknown errors with default code', async () => {
     const result = await resultOf(() => Promise.reject('string error'));
     expect(result.ok).toBe(false);
-    expect(result.error.code).toBe(ErrorCode.GEN_UNKNOWN);
+    const err = result as { ok: false; error: { code: ErrorCode } };
+    expect(err.error.code).toBe(ErrorCode.GEN_UNKNOWN);
   });
 });
 

@@ -20,6 +20,7 @@ import { useCamera } from '../hooks/useCamera';
 import { useCountdown, TimerDuration } from '../hooks/useCountdown';
 import { useHistogramToggle } from '../hooks/useHistogramToggle';
 import { useFocusPeaking, PeakPoint } from '../hooks/useFocusPeaking';
+import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
 import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { useCompositionScore } from '../hooks/useCompositionScore';
@@ -34,6 +35,7 @@ import { CameraOverlays } from '../components/CameraOverlays';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
 import { useBurstMode } from '../hooks/useBurstMode';
+import { useBubbleChat, parseBubbleItemsFromTexts } from '../hooks/useBubbleChat';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -61,6 +63,22 @@ export function CameraScreen() {
   const preAnalysisStartedRef = useRef(false);
 
   const { suggestions, setSuggestions, loading, setLoading, handleDismiss, handleDismissAll, bubbleItems } = useSuggestions();
+
+  // useBubbleChat manages staggered reveal of bubble items
+  const { visibleItems, setItems: bubbleChatSetItems, setLoading: bubbleChatSetLoading, handleDismiss: bubbleChatDismiss, handleDismissAll: bubbleChatDismissAll } = useBubbleChat({
+    onBubbleAppear: (text) => { if (voiceEnabled) checkAndSpeak(text); },
+    staggerDelayMs: 250,
+  });
+
+  // Sync loading state from useSuggestions to useBubbleChat
+  useEffect(() => {
+    bubbleChatSetLoading(loading);
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Feed bubbleItems (parsed from suggestions) into useBubbleChat to trigger stagger reveal
+  useEffect(() => {
+    bubbleChatSetItems(bubbleItems);
+  }, [bubbleItems]); // eslint-disable-line react-hooks/exhaustive-deps
   const {
     showComparison, setShowComparison,
     showGridModal, setShowGridModal,
@@ -153,18 +171,13 @@ export function CameraScreen() {
 
   const { active: countdownActive, count: countdownCount, startCountdown, cancelCountdown } = useCountdown({ onComplete: doCapture });
 
-  // Focus peaking — capture peak points at regular intervals while guide is visible
-  useEffect(() => {
-    if (!showFocusGuide) { if (peakingTimerRef.current) { clearInterval(peakingTimerRef.current); peakingTimerRef.current = null; } setPeakPoints([]); return; }
-    const doCapture = async () => { const points = await capturePeaks(cameraRef, screenWidth, screenHeight); if (points.length > 0) setPeakPoints(points); };
-    doCapture();
-    peakingTimerRef.current = setInterval(doCapture, 500);
-    return () => { if (peakingTimerRef.current) clearInterval(peakingTimerRef.current); };
-  }, [showFocusGuide, capturePeaks, cameraRef, screenWidth, screenHeight]);
-
-  useEffect(() => {
-    return () => { if (peakingTimerRef.current) clearInterval(peakingTimerRef.current); };
-  }, []);
+  // Focus peaking — use useAnimationFrameTimer for 60fps-synced capture
+  const doCapturePeaks = useCallback(async () => {
+    const points = await capturePeaks(cameraRef, screenWidth, screenHeight);
+    if (points.length > 0) setPeakPoints(points);
+  }, [capturePeaks, cameraRef, screenWidth, screenHeight]);
+  useAnimationFrameTimer({ intervalMs: 500, onTick: doCapturePeaks, enabled: showFocusGuide });
+  useEffect(() => { if (!showFocusGuide) setPeakPoints([]); }, [showFocusGuide]);
 
   // Score overlay
   const prevKeypointsRef = useRef<Keypoint[]>([]);
@@ -287,7 +300,7 @@ export function CameraScreen() {
         />
         <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
       </CameraView>
-      <BubbleOverlay items={bubbleItems} loading={loading} onDismiss={handleDismissWithKeypoints} onDismissAll={handleDismissAll} onBubbleAppear={(text) => { if (voiceEnabled) checkAndSpeak(text); }} />
+      <BubbleOverlay visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); }} />
       <TimerSelectorModal
         visible={showTimerModal}
         selectedDuration={timerDuration}

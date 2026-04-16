@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Sharing from 'expo-sharing';
 import type { ShareOptions } from '../types';
+export type { ShareOptions } from '../types';
 
 /**
  * Resize image to a sharing-friendly dimension (max 1920px on longest edge)

@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, w
 import { useTheme } from '../contexts/ThemeContext';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
 import type { ReactNode } from 'react';
+export type { Keypoint } from '../types';
 
 // Rule-of-thirds intersection points (fraction of screen)
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
@@ -123,7 +124,7 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
       withTiming(1.3, { duration: 800 }),
       withTiming(1, { duration: 800 }),
     );
-    pulse.value = withRepeat(oneCycle, { count: 3, mirror: false });
+    pulse.value = withRepeat(oneCycle, -1, false);
 
     return () => {
       cancelAnimation(scale);

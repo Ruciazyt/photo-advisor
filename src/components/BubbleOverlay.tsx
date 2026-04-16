@@ -1,26 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withDelay,
   Easing,
 } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
-import type { BubbleItem, BubbleOverlayProps } from '../types';
+import type { BubbleItem } from '../types';
 export type { BubblePosition } from '../types';
 export { BubbleItem };
-export type { BubbleOverlayProps };
-
-function parsePosition(text: string): BubbleItem['position'] {
-  if (text.includes('[左上]')) return 'top-left';
-  if (text.includes('[右上]')) return 'top-right';
-  if (text.includes('[左下]')) return 'bottom-left';
-  if (text.includes('[右下]')) return 'bottom-right';
-  if (text.includes('[中间]')) return 'center';
-  return 'center';
-}
 
 const POSITION_STYLES: Record<BubbleItem['position'], object> = {
   'top-left':     { top: 80,  left: 12,        alignSelf: 'flex-start' },
@@ -122,12 +111,17 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
   );
 }
 
-export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbleAppear }: BubbleOverlayProps) {
+export interface BubbleOverlayProps {
+  /** Items currently visible (managed externally via useBubbleChat stagger logic) */
+  visibleItems: BubbleItem[];
+  loading: boolean;
+  onDismiss: (id: number) => void;
+  onDismissAll: () => void;
+  onBubbleAppear?: (text: string) => void;
+}
+
+export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll }: BubbleOverlayProps) {
   const { colors } = useTheme();
-  const [visibleItems, setVisibleItems] = useState<BubbleItem[]>([]);
-  const [nextId, setNextId] = useState(0);
-  const loadingRef = useRef(loading);
-  loadingRef.current = loading;
 
   const loadingTextStyle = useMemo(() => [
     { color: colors.accent },
@@ -138,38 +132,7 @@ export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbl
     { color: colors.accent },
   ], [colors.accent]);
 
-  // When new items come in, show them one by one using withDelay on UI thread
-  useEffect(() => {
-    if (items.length === 0) return;
-
-    const newItems = items.slice(visibleItems.length);
-    if (newItems.length === 0) return;
-
-    newItems.forEach((item, idx) => {
-      // Schedule each bubble to appear with a staggered delay — all UI thread
-      withDelay(idx * 250, () => {
-        setVisibleItems(prev => {
-          if (prev.find(i => i.id === item.id)) return prev;
-          return [...prev, item];
-        });
-        onBubbleAppear?.(item.text);
-        setNextId(item.id + 1);
-      });
-    });
-  }, [items]);
-
-  // Clear all when loading starts
-  useEffect(() => {
-    if (loading) {
-      setVisibleItems([]);
-    }
-  }, [loading]);
-
-  const handleDismiss = (id: number) => {
-    setVisibleItems(prev => prev.filter(i => i.id !== id));
-  };
-
-  if (!loading && visibleItems.length === 0 && items.length === 0) {
+  if (!loading && visibleItems.length === 0) {
     return null;
   }
 
@@ -184,7 +147,7 @@ export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbl
         <SingleBubble
           key={item.id}
           item={item}
-          onDismiss={() => handleDismiss(item.id)}
+          onDismiss={() => onDismiss(item.id)}
         />
       ))}
       {visibleItems.length > 1 && !loading && (
@@ -196,28 +159,48 @@ export function BubbleOverlay({ items, loading, onDismiss, onDismissAll, onBubbl
   );
 }
 
-// Parse raw suggestion text into structured BubbleItem
-// Supports formats: "[区域] 内容" or plain "内容"
-export function parseBubbleItems(rawTexts: string[]): BubbleItem[] {
+// ============================================================
+// Parsing utilities (kept for backwards compatibility / exports)
+// ============================================================
+
+import type { BubblePosition } from '../types';
+
+const ROUND_ROBIN: BubblePosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+
+const POSITION_MAP: Record<string, BubblePosition> = {
+  '[左上]': 'top-left',
+  '[右上]': 'top-right',
+  '[左下]': 'bottom-left',
+  '[右下]': 'bottom-right',
+  '[中间]': 'center',
+};
+
+/**
+ * Parse raw AI suggestion text into a BubbleItem.
+ * Supports formats: "[区域] 内容" or plain "内容"
+ */
+export function parseBubbleItemFromText(text: string, id: number): BubbleItem {
+  let position: BubblePosition = ROUND_ROBIN[id % ROUND_ROBIN.length];
+  for (const [tag, pos] of Object.entries(POSITION_MAP)) {
+    if (text.includes(tag)) {
+      position = pos;
+      break;
+    }
+  }
+  return { id, text, position };
+}
+
+/**
+ * Parse an array of raw suggestion strings into BubbleItem[].
+ * This is the primary entry point for converting AI suggestions to bubble items.
+ */
+export function parseBubbleItemsFromTexts(rawTexts: string[]): BubbleItem[] {
   return rawTexts
     .filter(text => text.trim().length > 0)
-    .map((text, i) => {
-      const match = text.match(/^\[([^\]]+)\]\s*(.*)$/);
-      if (match) {
-        const pos = match[1];
-        const content = match[2].trim();
-        const position = (
-          pos.includes('左上') ? 'top-left' :
-          pos.includes('右上') ? 'top-right' :
-          pos.includes('左下') ? 'bottom-left' :
-          pos.includes('右下') ? 'bottom-right' :
-          pos.includes('中间') ? 'center' :
-          'center'
-        );
-        return { id: i, text: `[${pos}] ${content}`, position };
-      }
-      // No position tag — use a round-robin default
-      const defaults: BubbleItem['position'][] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-      return { id: i, text, position: defaults[i % defaults.length] };
-    });
+    .map((text, i) => parseBubbleItemFromText(text, i));
+}
+
+// Re-export parseBubbleItems for any existing callers
+export function parseBubbleItems(rawTexts: string[]): BubbleItem[] {
+  return parseBubbleItemsFromTexts(rawTexts);
 }

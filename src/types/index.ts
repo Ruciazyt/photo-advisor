@@ -23,11 +23,10 @@ export interface BubbleItem {
 }
 
 export interface BubbleOverlayProps {
-  items: BubbleItem[];
+  visibleItems: BubbleItem[];
   loading: boolean;
   onDismiss: (id: number) => void;
   onDismissAll: () => void;
-  onBubbleAppear?: (text: string) => void;
 }
 
 // ============================================================

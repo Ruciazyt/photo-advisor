@@ -258,7 +258,7 @@ export function CompositionScoreOverlay({
     overlayOpacity.value = withTiming(1, { duration: 200, easing: Easing.linear });
 
     // Count-up displayScore via UI thread + runOnJS
-    withDelay(1550, runOnJS(setDisplayScore)(score));
+    setTimeout(() => { runOnJS(setDisplayScore)(score); }, 1550);
 
     // After count-up, show grade
     const gradeTimer = setTimeout(() => {
@@ -272,6 +272,7 @@ export function CompositionScoreOverlay({
       dismissTimerRef.current = setTimeout(() => {
         overlayOpacity.value = withTiming(0, { duration: 300, easing: Easing.linear }, (finished) => {
           if (finished) runOnJS(onDismiss)();
+          return finished;
         });
       }, 2500);
     }, 1500);
@@ -286,6 +287,7 @@ export function CompositionScoreOverlay({
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     overlayOpacity.value = withTiming(0, { duration: 200, easing: Easing.linear }, (finished) => {
       if (finished) runOnJS(onDismiss)();
+      return finished;
     });
   };
 

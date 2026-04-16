@@ -153,7 +153,7 @@ export function ComparisonOverlay({
           <>
             <KeypointOverlay keypoints={keypoints} visible={true} />
             <BubbleOverlay
-              items={bubbles}
+              visibleItems={bubbles ?? []}
               loading={false}
               onDismiss={noop}
               onDismissAll={noopAll}

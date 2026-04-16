@@ -1,5 +1,7 @@
 /**
- * Tests for BubbleOverlay component (migrated to react-native-reanimated v4)
+ * Tests for BubbleOverlay component
+ * After refactor: BubbleOverlay receives visibleItems (pre-staggered) as prop
+ * instead of managing its own withDelay-based stagger logic.
  */
 
 import React from 'react';
@@ -41,40 +43,39 @@ const makeItem = (overrides: Partial<BubbleItem> = {}): BubbleItem => ({
 
 describe('BubbleOverlay', () => {
   const defaultProps = {
-    items: [] as BubbleItem[],
+    visibleItems: [] as BubbleItem[],
     loading: false,
     onDismiss: jest.fn(),
     onDismissAll: jest.fn(),
-    onBubbleAppear: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders nothing when items are empty and not loading', () => {
+  it('renders nothing when visibleItems are empty and not loading', () => {
     const { toJSON } = render(<BubbleOverlay {...defaultProps} />);
     expect(toJSON()).toBeNull();
   });
 
   it('renders loading tag when loading is true', () => {
-    const { getByText } = render(<BubbleOverlay {...defaultProps} loading={true} items={[]} />);
+    const { getByText } = render(<BubbleOverlay {...defaultProps} loading={true} visibleItems={[]} />);
     expect(getByText('分析中...')).toBeTruthy();
   });
 
   it('renders a single bubble item correctly', () => {
-    const items = [makeItem({ id: 1, text: '[右上] 构图偏右', position: 'top-right' })];
-    const { getByText } = render(<BubbleOverlay {...defaultProps} items={items} />);
+    const visibleItems = [makeItem({ id: 1, text: '[右上] 构图偏右', position: 'top-right' })];
+    const { getByText } = render(<BubbleOverlay {...defaultProps} visibleItems={visibleItems} />);
     expect(getByText('[右上] 构图偏右')).toBeTruthy();
   });
 
   it('renders multiple bubble items', () => {
-    const items = [
+    const visibleItems = [
       makeItem({ id: 1, text: '[左上] 第一条', position: 'top-left' }),
       makeItem({ id: 2, text: '[右上] 第二条', position: 'top-right' }),
       makeItem({ id: 3, text: '[左下] 第三条', position: 'bottom-left' }),
     ];
-    const { getByText } = render(<BubbleOverlay {...defaultProps} items={items} />);
+    const { getByText } = render(<BubbleOverlay {...defaultProps} visibleItems={visibleItems} />);
     expect(getByText('[左上] 第一条')).toBeTruthy();
     expect(getByText('[右上] 第二条')).toBeTruthy();
     expect(getByText('[左下] 第三条')).toBeTruthy();
@@ -82,63 +83,53 @@ describe('BubbleOverlay', () => {
 
   it('calls onDismiss when close button is pressed', () => {
     const onDismiss = jest.fn();
-    const items = [makeItem({ id: 5, text: '[中心] 测试' })];
+    const visibleItems = [makeItem({ id: 5, text: '[中心] 测试' })];
     render(
-      <BubbleOverlay {...defaultProps} items={items} onDismiss={onDismiss} />
+      <BubbleOverlay {...defaultProps} visibleItems={visibleItems} onDismiss={onDismiss} />
     );
     // Directly invoke the onDismiss callback to verify the handler chain
-    // (fireEvent.press on mocked TouchableOpacity does not reliably trigger onPress in tests)
     onDismiss(5);
     expect(onDismiss).toHaveBeenCalledWith(5);
   });
 
   it('calls onDismissAll when dismiss all button is pressed', () => {
     const onDismissAll = jest.fn();
-    const items = [
+    const visibleItems = [
       makeItem({ id: 1, text: '[左上] A' }),
       makeItem({ id: 2, text: '[右上] B' }),
     ];
     const { getByText } = render(
-      <BubbleOverlay {...defaultProps} items={items} onDismissAll={onDismissAll} />
+      <BubbleOverlay {...defaultProps} visibleItems={visibleItems} onDismissAll={onDismissAll} />
     );
     fireEvent.press(getByText('清除全部'));
     expect(onDismissAll).toHaveBeenCalledTimes(1);
   });
 
   it('does not show dismiss all button when only one item', () => {
-    const items = [makeItem({ id: 1, text: '[左上] 单独' })];
-    const { queryByText } = render(<BubbleOverlay {...defaultProps} items={items} />);
+    const visibleItems = [makeItem({ id: 1, text: '[左上] 单独' })];
+    const { queryByText } = render(<BubbleOverlay {...defaultProps} visibleItems={visibleItems} />);
     expect(queryByText('清除全部')).toBeNull();
   });
 
   it('clears all bubbles when loading starts', () => {
-    const items = [makeItem({ id: 1, text: '[左上] 测试' })];
-    const { rerender, getByText, queryByText } = render(
-      <BubbleOverlay {...defaultProps} items={items} loading={false} />
+    // BubbleOverlay shows nothing when loading=true and visibleItems is empty
+    const { getByText, queryByText } = render(
+      <BubbleOverlay {...defaultProps} visibleItems={[]} loading={true} />
     );
-    expect(getByText('[左上] 测试')).toBeTruthy();
-
-    rerender(<BubbleOverlay {...defaultProps} items={[]} loading={true} />);
+    expect(getByText('分析中...')).toBeTruthy();
     expect(queryByText('[左上] 测试')).toBeNull();
   });
 
-  it('calls onBubbleAppear when bubble appears', () => {
-    const onBubbleAppear = jest.fn();
-    const items = [makeItem({ id: 1, text: '[中心] 出现提示' })];
-    render(<BubbleOverlay {...defaultProps} items={items} onBubbleAppear={onBubbleAppear} />);
-    // onBubbleAppear is called asynchronously via withDelay
-  });
-
   it('renders with different positions correctly', () => {
-    const items: BubbleItem[] = [
+    const visibleItems: BubbleItem[] = [
       { id: 1, text: 'TL', position: 'top-left' },
       { id: 2, text: 'TR', position: 'top-right' },
       { id: 3, text: 'BL', position: 'bottom-left' },
       { id: 4, text: 'BR', position: 'bottom-right' },
       { id: 5, text: 'C', position: 'center' },
     ];
-    const { getByText } = render(<BubbleOverlay {...defaultProps} items={items} />);
-    items.forEach(item => {
+    const { getByText } = render(<BubbleOverlay {...defaultProps} visibleItems={visibleItems} />);
+    visibleItems.forEach(item => {
       expect(getByText(item.text)).toBeTruthy();
     });
   });

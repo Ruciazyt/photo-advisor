@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS, SharedValue } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDeviceOrientation, DeviceOrientation } from '../hooks/useDeviceOrientation';
@@ -24,8 +24,8 @@ function getColor(state: 'level' | 'slight' | 'tilted', colors: { success: strin
 }
 
 interface BubbleDotProps {
-  animPitch: Animated.SharedValue<number>;
-  animRoll: Animated.SharedValue<number>;
+  animPitch: SharedValue<number>;
+  animRoll: SharedValue<number>;
   color: string;
 }
 

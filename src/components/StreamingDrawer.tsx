@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay, Easing, runOnJS, SharedValue } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay, Easing, cancelAnimation, SharedValue } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -35,30 +35,33 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
     }
   }, [visible]);
 
+  // Stable bounce worklet — extracted to avoid stale closure on every render
+  const bounceDot = (dot: SharedValue<number>, delay: number) => {
+    dot.value = withRepeat(
+      withSequence(
+        withDelay(delay, withTiming(-8, { duration: 300, easing: Easing.out(Easing.quad) })),
+        withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) }),
+      ),
+      -1, // infinite
+      false
+    );
+  };
+
   useEffect(() => {
     if (!loading) {
-      dot1.value = 0;
-      dot2.value = 0;
-      dot3.value = 0;
+      // cancelAnimation runs on the UI thread — no runOnJS needed
+      cancelAnimation(dot1);
+      cancelAnimation(dot2);
+      cancelAnimation(dot3);
       return;
     }
-    const bounce = (dot: SharedValue<number>, delay: number) => {
-      dot.value = withRepeat(
-        withSequence(
-          withDelay(delay, withTiming(-8, { duration: 300, easing: Easing.out(Easing.quad) })),
-          withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) }),
-        ),
-        -1, // infinite
-        false
-      );
-    };
-    bounce(dot1, 0);
-    bounce(dot2, 150);
-    bounce(dot3, 300);
+    bounceDot(dot1, 0);
+    bounceDot(dot2, 150);
+    bounceDot(dot3, 300);
     return () => {
-      dot1.value = 0;
-      dot2.value = 0;
-      dot3.value = 0;
+      cancelAnimation(dot1);
+      cancelAnimation(dot2);
+      cancelAnimation(dot3);
     };
   }, [loading]);
 
