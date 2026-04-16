@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedReaction,
   withTiming,
   withSpring,
   withDelay,
@@ -13,6 +14,15 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps } from '../types';
 export type { CompositionScoreOverlayProps };
+
+// ---- 60fps animation constants ----
+// All durations are even multiples of ~16.67ms (60fps frame time).
+const OVERLAY_FADE_IN_MS = 200;
+const GRADE_DELAY_MS = 1500;        // delay before grade pops in
+const GRADE_SCALE_MS = 400;          // grade spring animation duration
+const OVERLAY_AUTO_DISMISS_MS = 4000; // overlay visible total time
+const OVERLAY_FADE_OUT_MS = 300;
+const SPARKLE_DURATION_MS = 600;     // 36 frames — snappier sparkle trail
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -181,11 +191,11 @@ function SparkleView({ originX, originY, targetX, targetY, color }: Omit<Sparkle
   const rotation = useSharedValue(0);
 
   // Animate all properties on mount — all UI thread
-  x.value = withTiming(targetX, { duration: 800, easing: Easing.out(Easing.ease) });
-  y.value = withTiming(targetY, { duration: 800, easing: Easing.out(Easing.ease) });
-  scale.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
-  opacity.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.ease) });
-  rotation.value = withTiming(1, { duration: 800, easing: Easing.linear });
+  x.value = withTiming(targetX, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
+  y.value = withTiming(targetY, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
+  scale.value = withTiming(1, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
+  opacity.value = withTiming(0, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
+  rotation.value = withTiming(1, { duration: SPARKLE_DURATION_MS, easing: Easing.linear });
 
   const animatedStyle = useAnimatedStyle(() => ({
     left: x.value,
@@ -229,12 +239,12 @@ export function CompositionScoreOverlay({
   const isHighRank = grade === 'S' || grade === 'A';
   const gradeColor = GRADE_COLORS[grade];
 
-  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  // ---- Reset + set up all animations on component mount ----
   useEffect(() => {
     // Reset
     setDisplayScore(0);
     setShowGrade(false);
+    announcedRef.current = false;
     overlayOpacity.value = 0;
     gradePopScale.value = 0;
 
@@ -254,41 +264,63 @@ export function CompositionScoreOverlay({
       setSparkleItems([]);
     }
 
-    // Fade in overlay
-    overlayOpacity.value = withTiming(1, { duration: 200, easing: Easing.linear });
+    // Fade in overlay (pure UI-thread animation)
+    overlayOpacity.value = withTiming(1, { duration: OVERLAY_FADE_IN_MS, easing: Easing.linear });
 
-    // Count-up displayScore via UI thread + runOnJS
-    setTimeout(() => { runOnJS(setDisplayScore)(score); }, 1550);
+    // Grade badge pop: delayed on UI thread via withDelay (no JS setTimeout)
+    gradePopScale.value = withDelay(
+      GRADE_DELAY_MS,
+      withSpring(1, { stiffness: 120, damping: 8 }),
+    );
 
-    // After count-up, show grade
-    const gradeTimer = setTimeout(() => {
-      setShowGrade(true);
-      if (!announcedRef.current) {
-        announce('构图评分 ' + score + '分，等级' + grade, 'assertive');
-        announcedRef.current = true;
-      }
-      gradePopScale.value = withSpring(1, { stiffness: 120, damping: 8 });
+    // Auto-dismiss: fade out on UI thread after total visible duration
+    overlayOpacity.value = withDelay(
+      OVERLAY_AUTO_DISMISS_MS,
+      withTiming(0, { duration: OVERLAY_FADE_OUT_MS, easing: Easing.linear }),
+    );
 
-      dismissTimerRef.current = setTimeout(() => {
-        overlayOpacity.value = withTiming(0, { duration: 300, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(onDismiss)();
-          return finished;
-        });
-      }, 2500);
-    }, 1500);
+    // Count-up displayScore: JS thread (needs setState), fires after GRADE_DELAY_MS
+    const scoreTimer = setTimeout(() => {
+      runOnJS(setDisplayScore)(score);
+    }, GRADE_DELAY_MS + 50);
 
     return () => {
-      clearTimeout(gradeTimer);
-      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      clearTimeout(scoreTimer);
     };
   }, [score, grade]);
 
+  // ---- Trigger grade + announcement when GRADE_DELAY_MS has elapsed ----
+  // Uses useAnimatedReaction to detect gradePopScale crossing 0→non-zero
+  // on the UI thread, then jumps to JS for setState + a11y announcement.
+  useAnimatedReaction(
+    () => gradePopScale.value > 0 && !showGrade,
+    (isVisible, previousIsVisible) => {
+      if (isVisible && !previousIsVisible) {
+        runOnJS(setShowGrade)(true);
+        if (!announcedRef.current) {
+          runOnJS(announce)('构图评分 ' + score + '分，等级' + grade, 'assertive');
+          announcedRef.current = true;
+        }
+      }
+    },
+    [score, grade, announce],
+  );
+
+  // ---- Trigger onDismiss when overlay fully fades out ----
+  // Monitors overlayOpacity on UI thread; calls onDismiss via runOnJS when it reaches 0.
+  useAnimatedReaction(
+    () => overlayOpacity.value,
+    (opacity) => {
+      if (opacity === 0) {
+        runOnJS(onDismiss)();
+      }
+    },
+    [],
+  );
+
+  // Tap to dismiss: cancel auto-dismiss timer by resetting overlayOpacity
   const handleTap = () => {
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    overlayOpacity.value = withTiming(0, { duration: 200, easing: Easing.linear }, (finished) => {
-      if (finished) runOnJS(onDismiss)();
-      return finished;
-    });
+    overlayOpacity.value = withTiming(0, { duration: 200, easing: Easing.linear });
   };
 
   const overlayAnimatedStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));

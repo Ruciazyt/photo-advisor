@@ -35,6 +35,14 @@ function useAnimatedStyle(styleFn) {
   return styleFn();
 }
 
+function useAnimatedReaction(derive, react, deps) {
+  // No-op in mock — just calls derive once to get initial state
+  // and ignores further updates
+  if (typeof derive === 'function') {
+    derive();
+  }
+}
+
 function withSpring(val, _opts) { return val; }
 function withTiming(val, _opts) { return val; }
 function withSequence(...vals) { return vals[vals.length - 1]; }
@@ -55,6 +63,7 @@ module.exports = {
   ...Animated,
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedReaction,
   withSpring,
   withTiming,
   withSequence,

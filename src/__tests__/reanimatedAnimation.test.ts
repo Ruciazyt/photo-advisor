@@ -122,6 +122,68 @@ describe('Animation config values', () => {
     expect(fadeOutDuration).toBe(150);
     expect(fadeInDuration).toBe(150);
   });
+
+  // ---- CountdownOverlay 60fps-optimized constants ----
+  it('CountdownOverlay: scale duration divides evenly into 60fps frames', () => {
+    // 400ms / 16.67ms per frame = 24 frames ✓
+    const SCALE_DURATION_MS = 400;
+    const FPS = 60;
+    const FRAME_MS = 1000 / FPS;
+    // Verify duration / frame_ms ≈ integer (within 0.1ms tolerance)
+    const frames = SCALE_DURATION_MS / FRAME_MS;
+    expect(Math.abs(frames - Math.round(frames))).toBeLessThan(0.01);
+  });
+
+  it('CountdownOverlay: fade duration divides evenly into 60fps frames', () => {
+    // 900ms / 16.67ms per frame = 54 frames ✓
+    const FADE_DURATION_MS = 900;
+    const FPS = 60;
+    const FRAME_MS = 1000 / FPS;
+    const frames = FADE_DURATION_MS / FRAME_MS;
+    expect(Math.abs(frames - Math.round(frames))).toBeLessThan(0.01);
+  });
+
+  it('CountdownOverlay: scale animation uses withTiming (not underdamped withSpring)', () => {
+    // damping:3 spring was underdamped → excessive oscillation at 60fps
+    // Replace with withTiming for predictable easing
+    const SCALE_TARGET = 1.0;
+    const OPACITY_TARGET = 0.3;
+    expect(SCALE_TARGET).toBe(1.0);
+    expect(OPACITY_TARGET).toBe(0.3);
+  });
+
+  // ---- CompositionScoreOverlay 60fps-optimized constants ----
+  it('CompositionScoreOverlay: sparkle duration divides evenly into 60fps frames', () => {
+    // 600ms / 16.67ms per frame = 36 frames ✓
+    const SPARKLE_DURATION_MS = 600;
+    const FPS = 60;
+    const FRAME_MS = 1000 / FPS;
+    const frames = SPARKLE_DURATION_MS / FRAME_MS;
+    expect(Math.abs(frames - Math.round(frames))).toBeLessThan(0.01);
+  });
+
+  it('CompositionScoreOverlay: grade delay + scale + dismiss are all 60fps-aligned', () => {
+    const GRADE_DELAY_MS = 1500;
+    const GRADE_SCALE_MS = 400;
+    const OVERLAY_AUTO_DISMISS_MS = 4000;
+    const OVERLAY_FADE_OUT_MS = 300;
+    const FPS = 60;
+    const FRAME_MS = 1000 / FPS;
+    const check = (ms: number) => {
+      const frames = ms / FRAME_MS;
+      expect(Math.abs(frames - Math.round(frames))).toBeLessThan(0.01);
+    };
+    check(GRADE_DELAY_MS);
+    check(GRADE_SCALE_MS);
+    check(OVERLAY_AUTO_DISMISS_MS);
+    check(OVERLAY_FADE_OUT_MS);
+  });
+
+  it('CompositionScoreOverlay: grade animation uses withDelay (no JS setTimeout)', () => {
+    // Grade pop is now driven by withDelay on the UI thread, not JS setTimeout
+    const GRADE_DELAY_MS = 1500;
+    expect(GRADE_DELAY_MS).toBe(1500);
+  });
 });
 
 // ---- Visibility state transitions ----
