@@ -48,7 +48,7 @@
 | Sensors | expo-sensors（陀螺仪 / 加速度计） |
 | Location | expo-location |
 | Storage | expo-media-library / AsyncStorage |
-| AI Services | 东方财富 AI 接口（妙想系列 Skills） |
+| AI Services | MiniMax VLM（构图分析）+ Claude API（对话） |
 
 ---
 
