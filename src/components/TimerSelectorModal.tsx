@@ -1,12 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Animated,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { TIMER_OPTIONS, TimerDuration } from '../hooks/useCountdown';
@@ -177,52 +183,35 @@ export function TimerSelectorModal({
   onSelect,
   onClose,
 }: TimerSelectorModalProps) {
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useSharedValue(SHEET_HEIGHT);
+  const opacity = useSharedValue(0);
   const [isShown, setIsShown] = useState(false);
+
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 
   useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      translateY.value = withSpring(0, { stiffness: 100, damping: 20 });
+      opacity.value = withTiming(1, { duration: 250 });
       setIsShown(true);
     } else {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: SHEET_HEIGHT,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsShown(false);
+      translateY.value = withTiming(SHEET_HEIGHT, { duration: 250 }, (finished) => {
+        if (finished) runOnJS(setIsShown)(false);
       });
+      opacity.value = withTiming(0, { duration: 200 });
     }
-  }, [visible, translateY, opacity]);
+  }, [visible]);
 
   if (!isShown) return null;
 
   return (
     <View style={modalStaticStyles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[modalStaticStyles.backdrop, { opacity }]} />
+        <Animated.View style={[modalStaticStyles.backdrop, backdropStyle]} />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[modalStaticStyles.sheet, { transform: [{ translateY }] }]}>
+      <Animated.View style={[modalStaticStyles.sheet, sheetStyle]}>
         {/* Header */}
         <View style={modalStaticStyles.header}>
           <Text style={modalStaticStyles.title}>定时拍摄</Text>

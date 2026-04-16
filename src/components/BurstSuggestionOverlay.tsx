@@ -1,5 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
@@ -101,8 +107,8 @@ export function BurstSuggestionOverlay({
 }: BurstSuggestionOverlayProps) {
   const { colors } = useTheme();
   const { announce } = useAccessibilityAnnouncement();
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useSharedValue(0);
+  const opacityAnim = useSharedValue(0);
   const announcedRef = useRef(false);
 
   useEffect(() => {
@@ -111,36 +117,28 @@ export function BurstSuggestionOverlay({
         announce('建议连拍: ' + suggestion, 'polite');
         announcedRef.current = true;
       }
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 6,
-          tension: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      scaleAnim.value = withSpring(1, { damping: 10, stiffness: 100 });
+      opacityAnim.value = withTiming(1, { duration: 200 });
     } else {
-      scaleAnim.setValue(0);
-      opacityAnim.setValue(0);
+      scaleAnim.value = 0;
+      opacityAnim.value = 0;
     }
-  }, [visible, scaleAnim, opacityAnim]);
+  }, [visible, suggestion, announce, scaleAnim, opacityAnim]);
+
+  const containerStyle = useAnimatedStyle(() => ({ opacity: opacityAnim.value }));
+  const panelStyle = useAnimatedStyle(() => ({ transform: [{ scale: scaleAnim.value }] }));
 
   if (!visible) return null;
 
   return (
     <Animated.View
-      style={[burstStyles.container, { opacity: opacityAnim }]}
+      style={[burstStyles.container, containerStyle]}
       pointerEvents="box-none"
     >
       <Animated.View
         style={[
           burstStyles.panel,
-          { transform: [{ scale: scaleAnim }] },
+          panelStyle,
         ]}
       >
         <View style={burstStyles.header}>

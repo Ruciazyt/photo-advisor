@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Image,
@@ -6,8 +6,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Animated,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { KeypointOverlay } from './KeypointOverlay';
 import { BubbleOverlay } from './BubbleOverlay';
 import { useTheme } from '../contexts/ThemeContext';
@@ -120,15 +125,18 @@ export function ComparisonOverlay({
 }: ComparisonOverlayProps) {
   const { colors } = useTheme();
   const [showAnnotated, setShowAnnotated] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useSharedValue(1);
 
-  const toggleView = (show: boolean) => {
-    Animated.sequence([
-      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
-    ]).start();
-    setShowAnnotated(show);
-  };
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: fadeAnim.value }));
+
+  const toggleView = useCallback((show: boolean) => {
+    fadeAnim.value = withTiming(0, { duration: 150 }, (finished) => {
+      if (finished) {
+        runOnJS(setShowAnnotated)(show);
+        fadeAnim.value = withTiming(1, { duration: 150 });
+      }
+    });
+  }, []);
 
   if (!visible) return null;
 
@@ -139,7 +147,7 @@ export function ComparisonOverlay({
   return (
     <View style={staticStyles.container}>
       {/* Image */}
-      <Animated.View style={[staticStyles.imageContainer, { opacity: fadeAnim }]}>
+      <Animated.View style={[staticStyles.imageContainer, animatedStyle]}>
         <Image source={{ uri: imageUri }} style={staticStyles.image} resizeMode="contain" />
         {showAnnotated && (
           <>
