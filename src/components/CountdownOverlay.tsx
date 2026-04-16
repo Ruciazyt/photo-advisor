@@ -28,8 +28,7 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
 
   // Reset and animate on count change
   useEffect(() => {
-    // Reset for next count
-    scale.value = 1.4;
+    // withSpring starts from current value (1.4 from previous cycle end)
     opacity.value = 1;
     scale.value = withSpring(1, { damping: 3, stiffness: 100 });
     opacity.value = withTiming(0.3, { duration: 900 });

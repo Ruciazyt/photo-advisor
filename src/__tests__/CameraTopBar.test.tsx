@@ -1,7 +1,13 @@
 import React from 'react';
-import { Animated } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { CameraTopBar, CameraTopBarProps } from '../components/CameraTopBar';
+
+// Mock Reanimated v4
+jest.mock('react-native-reanimated');
+jest.mock('react-native-worklets');
+
+// Mock SharedValue for toastOpacity
+const mockToastOpacity = { value: 0 };
 
 jest.mock('../components/SunPositionOverlay', () => ({
   SunToggleButton: ({ visible, onPress }: { visible: boolean; onPress: () => void }) => {
@@ -63,7 +69,7 @@ const defaultProps: CameraTopBarProps = {
   onComparePress: jest.fn(),
   burstActive: false,
   burstCount: 0,
-  toastOpacity: new Animated.Value(0),
+  toastOpacity: mockToastOpacity,
   toastMessage: '已收藏！',
 };
 

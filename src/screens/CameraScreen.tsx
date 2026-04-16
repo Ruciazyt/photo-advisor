@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -24,6 +24,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { useCompositionScore } from '../hooks/useCompositionScore';
 import { useSceneRecognition } from '../hooks/useSceneRecognition';
+import { useToast } from '../hooks/useToast';
 import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { loadApiConfig } from '../services/api';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
@@ -83,8 +84,7 @@ export function CameraScreen() {
   const [showComparison, setShowComparison] = useState(false);
   const [showGridModal, setShowGridModal] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
-  const [toastOpacity] = useState(new Animated.Value(0));
-  const [toastMessage, setToastMessage] = useState('已收藏！');
+  const { opacity: toastOpacity, toastMessage, showToast } = useToast();
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [burstActive, setBurstActive] = useState(false);
   const [burstCount, setBurstCount] = useState(0);
@@ -189,11 +189,6 @@ export function CameraScreen() {
     }, 200);
     return () => clearTimeout(timer);
   }, [keypoints, showKeypoints, computeScore, gridVariant, challengeMode, addScore]);
-
-  const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    Animated.sequence([Animated.timing(toastOpacity, { toValue: 1, duration: 200, useNativeDriver: true }), Animated.delay(1200), Animated.timing(toastOpacity, { toValue: 0, duration: 200, useNativeDriver: true })]).start();
-  }, [toastOpacity]);
 
   const handleSaveToFavorites = useCallback(async () => {
     if (!lastCapturedUri) return;

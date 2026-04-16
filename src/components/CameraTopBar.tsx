@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraType } from 'expo-camera';
 import { useTheme } from '../contexts/ThemeContext';
@@ -7,6 +8,7 @@ import { SunToggleButton } from './SunPositionOverlay';
 import { ShareButton } from './ShareButton';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { GridVariant } from '../types';
+import type { SharedValue } from 'react-native-reanimated';
 
 const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法',
@@ -65,7 +67,7 @@ export interface CameraTopBarProps {
   burstActive: boolean;
   burstCount: number;
   // Toast
-  toastOpacity: Animated.Value;
+  toastOpacity: SharedValue<number>;
   toastMessage: string;
 }
 
@@ -372,6 +374,10 @@ export function CameraTopBar({  gridVariant,
     role: 'button',
   });
 
+  const toastAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: toastOpacity.value,
+  }));
+
   return (
     <>
       {/* Grid Type Selector */}
@@ -554,7 +560,7 @@ export function CameraTopBar({  gridVariant,
       )}
 
       {/* Toast */}
-      <Animated.View style={[staticTopBarStyles.toast, { opacity: toastOpacity }]} pointerEvents="none">
+      <Animated.View style={[staticTopBarStyles.toast, toastAnimatedStyle]} pointerEvents="none">
         <Text style={staticTopBarStyles.toastText}>{toastMessage}</Text>
       </Animated.View>
     </>
