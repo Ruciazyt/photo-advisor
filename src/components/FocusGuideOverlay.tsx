@@ -4,11 +4,16 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   TouchableWithoutFeedback,
   Platform,
   ToastAndroid,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import type { FocusGuideOverlayProps } from '../types';
 export type { FocusGuideOverlayProps };
 
@@ -30,22 +35,21 @@ interface FocusRingProps {
 }
 
 function FocusRing({ x, y, onComplete }: FocusRingProps) {
-  const scale = useRef(new Animated.Value(0.5)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(0.5);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(scale, {
-        toValue: 1.8,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start(onComplete);
+    // Both animations run simultaneously on the UI thread — no JS thread needed.
+    // Wrap onComplete in runOnJS since it's a host function (state setter).
+    scale.value = withTiming(1.8, { duration: 500 });
+    opacity.value = withTiming(0, { duration: 500 }, (finished) => {
+      if (finished) runOnJS(onComplete)();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -56,9 +60,8 @@ function FocusRing({ x, y, onComplete }: FocusRingProps) {
         {
           left: x - 30,
           top: y - 30,
-          transform: [{ scale }],
-          opacity,
         },
+        animatedStyle,
       ]}
       pointerEvents="none"
     >
