@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay, runOnJS } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { sharePhoto } from '../services/share';
@@ -65,24 +66,32 @@ const staticStyles = StyleSheet.create({
   },
 });
 
-/** Animated toast for share result */
-function ShareToast({ message, visible }: { message: string; visible: boolean }) {
-  const opacity = React.useRef(new Animated.Value(0)).current;
+/** Animated toast for share result — driven entirely on the UI thread via Reanimated */
+function ShareToast({ message, visible, onHidden }: { message: string; visible: boolean; onHidden?: () => void }) {
+  const opacity = useSharedValue(0);
 
   React.useEffect(() => {
     if (visible) {
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.delay(1500),
-        Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start();
+      // Fade in → hold 1500ms → fade out, all on UI thread
+      opacity.value = withSequence(
+        withTiming(1, { duration: 200 }),
+        withDelay(1500, withTiming(0, { duration: 200 }, (finished) => {
+          if (finished && onHidden) {
+            runOnJS(onHidden)();
+          }
+        }))
+      );
+    } else {
+      opacity.value = withTiming(0, { duration: 100 });
     }
   }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   if (!visible) return null;
 
   return (
-    <Animated.View style={[staticStyles.toast, { opacity }]} pointerEvents="none">
+    <Animated.View style={[staticStyles.toast, animatedStyle]} pointerEvents="none">
       <Text style={staticStyles.toastText}>{message}</Text>
     </Animated.View>
   );
@@ -133,10 +142,7 @@ export function ShareButton({
     } finally {
       setSharing(false);
       setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-        onShareEnd?.();
-      }, 2000);
+      // onHidden is called by the Reanimated animation chain after fade-out completes
     }
   };
 
@@ -163,7 +169,14 @@ export function ShareButton({
         </Text>
       </TouchableOpacity>
 
-      <ShareToast message={toastMessage} visible={showToast} />
+      <ShareToast
+        message={toastMessage}
+        visible={showToast}
+        onHidden={() => {
+          setShowToast(false);
+          onShareEnd?.();
+        }}
+      />
     </>
   );
 }

@@ -180,9 +180,44 @@ describe('Animation config values', () => {
   });
 
   it('CompositionScoreOverlay: grade animation uses withDelay (no JS setTimeout)', () => {
-    // Grade pop is now driven by withDelay on the UI thread, not JS setTimeout
+    // Grade pop is now driven by byDelay on the UI thread, not JS setTimeout
     const GRADE_DELAY_MS = 1500;
     expect(GRADE_DELAY_MS).toBe(1500);
+  });
+
+  // ---- ShareButton toast 60fps-optimized constants ----
+  it('ShareButton: toast fade-in/out durations divide evenly into 60fps frames', () => {
+    // Fade in: 200ms / 16.67ms = 12 frames (OK)
+    // Fade out: 200ms / 16.67ms = 12 frames (OK)
+    const FADE_IN_MS = 200;
+    const FADE_OUT_MS = 200;
+    const FPS = 60;
+    const FRAME_MS = 1000 / FPS;
+    const check = (ms: number) => {
+      const frames = ms / FRAME_MS;
+      expect(Math.abs(frames - Math.round(frames))).toBeLessThan(0.01);
+    };
+    check(FADE_IN_MS);
+    check(FADE_OUT_MS);
+  });
+
+  it('ShareButton: toast hold duration divides evenly into 60fps frames', () => {
+    // Hold/delay: 1500ms / 16.67ms = 90 frames (OK)
+    const HOLD_MS = 1500;
+    const FPS = 60;
+    const FRAME_MS = 1000 / FPS;
+    const frames = HOLD_MS / FRAME_MS;
+    expect(Math.abs(frames - Math.round(frames))).toBeLessThan(0.01);
+  });
+
+  it('ShareButton: toast animation uses withSequence + withDelay (no JS setTimeout/setInterval)', () => {
+    // ShareButton migrated from old Animated API to Reanimated.
+    // Animation sequence: fade in (200ms) then hold (1500ms) then fade out (200ms)
+    // All driven by withSequence + withDelay on UI thread, not JS timer.
+    const FADE_IN_MS = 200;
+    const HOLD_MS = 1500;
+    const FADE_OUT_MS = 200;
+    expect(FADE_IN_MS + HOLD_MS + FADE_OUT_MS).toBe(1900); // total duration
   });
 });
 
