@@ -173,4 +173,22 @@ describe('CompositionScoreOverlay', () => {
     const { getByText } = render(<CompositionScoreOverlay {...defaultProps} result={result} />);
     expect(getByText('构图评分')).toBeTruthy();
   });
+
+  it('score display is driven by withDelay + useAnimatedReaction (no JS setTimeout)', () => {
+    // Verify the component source does NOT contain a setTimeout for score display.
+    // The score reveal is now fully UI-thread driven via withDelay on gradePopScale.value.
+    const fs = require('fs');
+    const path = require('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../components/CompositionScoreOverlay.tsx'),
+      'utf8',
+    );
+    // The old implementation had: setTimeout(() => { runOnJS(setDisplayScore)(score) }, GRADE_DELAY_MS + 50)
+    // That setTimeout must NOT appear in the source.
+    expect(source).not.toMatch(/setTimeout.*setDisplayScore/);
+    // The correct pattern: gradePopScale.value = withDelay(GRADE_DELAY_MS, withSpring(...))
+    expect(source).toMatch(/gradePopScale\.value\s*=\s*withDelay/);
+    // Score is set via runOnJS inside useAnimatedReaction (not via setTimeout callback)
+    expect(source).toMatch(/runOnJS\(setDisplayScore\)/);
+  });
 });

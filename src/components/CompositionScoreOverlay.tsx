@@ -267,7 +267,8 @@ export function CompositionScoreOverlay({
     // Fade in overlay (pure UI-thread animation)
     overlayOpacity.value = withTiming(1, { duration: OVERLAY_FADE_IN_MS, easing: Easing.linear });
 
-    // Grade badge pop: delayed on UI thread via withDelay (no JS setTimeout)
+    // Grade badge pop + score display: both triggered at GRADE_DELAY_MS via withDelay.
+    // The grade badge uses withSpring for bounce; score reveal uses withDelay + useAnimatedReaction.
     gradePopScale.value = withDelay(
       GRADE_DELAY_MS,
       withSpring(1, { stiffness: 120, damping: 8 }),
@@ -278,25 +279,18 @@ export function CompositionScoreOverlay({
       OVERLAY_AUTO_DISMISS_MS,
       withTiming(0, { duration: OVERLAY_FADE_OUT_MS, easing: Easing.linear }),
     );
-
-    // Count-up displayScore: JS thread (needs setState), fires after GRADE_DELAY_MS
-    const scoreTimer = setTimeout(() => {
-      runOnJS(setDisplayScore)(score);
-    }, GRADE_DELAY_MS + 50);
-
-    return () => {
-      clearTimeout(scoreTimer);
-    };
   }, [score, grade]);
 
-  // ---- Trigger grade + announcement when GRADE_DELAY_MS has elapsed ----
+  // ---- Trigger grade + score display + announcement when GRADE_DELAY_MS has elapsed ----
   // Uses useAnimatedReaction to detect gradePopScale crossing 0→non-zero
   // on the UI thread, then jumps to JS for setState + a11y announcement.
+  // All driven by withDelay on UI thread — no JS setTimeout/setInterval.
   useAnimatedReaction(
     () => gradePopScale.value > 0 && !showGrade,
     (isVisible, previousIsVisible) => {
       if (isVisible && !previousIsVisible) {
         runOnJS(setShowGrade)(true);
+        runOnJS(setDisplayScore)(score);
         if (!announcedRef.current) {
           runOnJS(announce)('构图评分 ' + score + '分，等级' + grade, 'assertive');
           announcedRef.current = true;
