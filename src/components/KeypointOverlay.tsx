@@ -1,9 +1,19 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming, withRepeat, cancelAnimation } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useDerivedValue,
+  withSpring,
+  withSequence,
+  withTiming,
+  withRepeat,
+  cancelAnimation,
+} from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
-import type { ReactNode } from 'react';
+
+export type { KeypointPosition } from '../types';
 export type { Keypoint } from '../types';
 
 // Rule-of-thirds intersection points (fraction of screen)
@@ -111,7 +121,8 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
 }) {
   // Shared values on the UI thread
   const scale = useSharedValue(0);
-  const pulse = useSharedValue(1);
+  // pulseValue: 1 → 1.3 → 1 over 1600ms, loops 3 times (4800ms total)
+  const pulseValue = useSharedValue(1);
 
   useEffect(() => {
     // Pop-in animation: spring from 0 → 1
@@ -119,18 +130,25 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
 
     // Pulse animation — run for 3 cycles then stop.
     // Each cycle: pulse from 1 → 1.3 (800ms) then 1.3 → 1 (800ms)
-    // Total: 3 × 1600ms = 4800ms then stops naturally
     const oneCycle = withSequence(
       withTiming(1.3, { duration: 800 }),
-      withTiming(1, { duration: 800 }),
+      withTiming(1,   { duration: 800 }),
     );
-    pulse.value = withRepeat(oneCycle, -1, false);
+    // Run exactly 3 cycles then stop (mirrored=false = no reverse on last)
+    pulseValue.value = withRepeat(oneCycle, 3, false);
 
     return () => {
       cancelAnimation(scale);
-      cancelAnimation(pulse);
+      cancelAnimation(pulseValue);
     };
   }, []);
+
+  // Ring opacity: fades from 0.4 at rest to 0 at peak expansion
+  // pulseValue goes 1 → 1.3 → 1, so map [1, 1.3] → [0.4, 0]
+  const pulseOpacity = useDerivedValue(() => {
+    const raw = (pulseValue.value - 1) / (1.3 - 1); // 0 at rest, 1 at peak
+    return 0.4 * (1 - raw); // 0.4 → 0 as pulse grows
+  });
 
   const pulseAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -138,7 +156,7 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
       { translateY: -MARKER_SIZE },
       { scale: scale.value },
     ],
-    opacity: pulse.value === 1 ? 0.4 : 0, // simple approximation for mock
+    opacity: pulseOpacity.value,
   }));
 
   const markerAnimatedStyle = useAnimatedStyle(() => ({
