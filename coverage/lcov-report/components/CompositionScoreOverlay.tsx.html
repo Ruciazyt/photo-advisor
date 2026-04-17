@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.35% </span>
+                <span class="strong">81.7% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>70/85</span>
+                <span class='fraction'>67/82</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">87.5% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>15/18</span>
+                <span class='fraction'>14/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">84.21% </span>
+                <span class="strong">83.56% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>64/76</span>
+                <span class='fraction'>61/73</span>
             </div>
         
             
@@ -476,13 +476,7 @@
 <a name='L411'></a><a href='#L411'>411</a>
 <a name='L412'></a><a href='#L412'>412</a>
 <a name='L413'></a><a href='#L413'>413</a>
-<a name='L414'></a><a href='#L414'>414</a>
-<a name='L415'></a><a href='#L415'>415</a>
-<a name='L416'></a><a href='#L416'>416</a>
-<a name='L417'></a><a href='#L417'>417</a>
-<a name='L418'></a><a href='#L418'>418</a>
-<a name='L419'></a><a href='#L419'>419</a>
-<a name='L420'></a><a href='#L420'>420</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L414'></a><a href='#L414'>414</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -752,11 +746,6 @@
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -765,20 +754,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1170,7 +1158,8 @@ export function CompositionScoreOverlay({
     // Fade in overlay (pure UI-thread animation)
     overlayOpacity.value = withTiming(1, { duration: OVERLAY_FADE_IN_MS, easing: Easing.linear });
 &nbsp;
-    // Grade badge pop: delayed on UI thread via withDelay (no JS setTimeout)
+    // Grade badge pop + score display: both triggered at GRADE_DELAY_MS via withDelay.
+    // The grade badge uses withSpring for bounce; score reveal uses withDelay + useAnimatedReaction.
     gradePopScale.value = withDelay(
       GRADE_DELAY_MS,
       withSpring(1, { stiffness: 120, damping: 8 }),
@@ -1181,25 +1170,18 @@ export function CompositionScoreOverlay({
       OVERLAY_AUTO_DISMISS_MS,
       withTiming(0, { duration: OVERLAY_FADE_OUT_MS, easing: Easing.linear }),
     );
-&nbsp;
-    // Count-up displayScore: JS thread (needs setState), fires after GRADE_DELAY_MS
-    const scoreTimer = setTimeout(<span class="fstat-no" title="function not covered" >()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >      runOnJS(setDisplayScore)(score);</span>
-    }, GRADE_DELAY_MS + 50);
-&nbsp;
-    return () =&gt; {
-      clearTimeout(scoreTimer);
-    };
   }, [score, grade]);
 &nbsp;
-  // ---- Trigger grade + announcement when GRADE_DELAY_MS has elapsed ----
+  // ---- Trigger grade + score display + announcement when GRADE_DELAY_MS has elapsed ----
   // Uses useAnimatedReaction to detect gradePopScale crossing 0→non-zero
   // on the UI thread, then jumps to JS for setState + a11y announcement.
+  // All driven by withDelay on UI thread — no JS setTimeout/setInterval.
   useAnimatedReaction(
     () =&gt; gradePopScale.value &gt; 0 &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >!showGrade,</span>
 <span class="fstat-no" title="function not covered" >    (i</span>sVisible, previousIsVisible) =&gt; {
 <span class="cstat-no" title="statement not covered" >      if (isVisible &amp;&amp; !previousIsVisible) {</span>
 <span class="cstat-no" title="statement not covered" >        runOnJS(setShowGrade)(true);</span>
+<span class="cstat-no" title="statement not covered" >        runOnJS(setDisplayScore)(score);</span>
 <span class="cstat-no" title="statement not covered" >        if (!announcedRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >          runOnJS(announce)('构图评分 ' + score + '分，等级' + grade, 'assertive');</span>
 <span class="cstat-no" title="statement not covered" >          announcedRef.current = true;</span>
@@ -1327,7 +1309,7 @@ function BreakdownRow({ label, value, accentColor }: { label: string; value: num
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-17T09:17:07.150Z
+                at 2026-04-17T19:58:08.045Z
             </div>
         <script src="../prettify.js"></script>
         <script>

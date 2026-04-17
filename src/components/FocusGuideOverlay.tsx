@@ -48,6 +48,9 @@ function FocusRing({ x, y, onComplete }: FocusRingProps) {
     // Both animations run simultaneously on the UI thread — no JS thread needed.
     // Wrap onComplete in runOnJS since it's a host function (state setter).
     scale.value = withTiming(1.8, { duration: 500 });
+    // NOTE: onEnd callback fires on the UI thread (not the JS thread).
+    // This is intentional — it means onComplete runs without a JS→UI round-trip,
+    // providing smoother animation completion with no frame drops.
     opacity.value = withTiming(0, { duration: 500 }, (finished) => {
       if (finished) runOnJS(onComplete)();
     });

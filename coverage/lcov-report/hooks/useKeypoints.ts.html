@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.74% </span>
+                <span class="strong">97.05% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>45/47</span>
+                <span class='fraction'>33/34</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.66% </span>
+                <span class="strong">77.77% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/15</span>
+                <span class='fraction'>7/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>9/9</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.67% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>42/43</span>
+                <span class='fraction'>32/32</span>
             </div>
         
             
@@ -157,30 +157,7 @@
 <a name='L92'></a><a href='#L92'>92</a>
 <a name='L93'></a><a href='#L93'>93</a>
 <a name='L94'></a><a href='#L94'>94</a>
-<a name='L95'></a><a href='#L95'>95</a>
-<a name='L96'></a><a href='#L96'>96</a>
-<a name='L97'></a><a href='#L97'>97</a>
-<a name='L98'></a><a href='#L98'>98</a>
-<a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a>
-<a name='L101'></a><a href='#L101'>101</a>
-<a name='L102'></a><a href='#L102'>102</a>
-<a name='L103'></a><a href='#L103'>103</a>
-<a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a>
-<a name='L107'></a><a href='#L107'>107</a>
-<a name='L108'></a><a href='#L108'>108</a>
-<a name='L109'></a><a href='#L109'>109</a>
-<a name='L110'></a><a href='#L110'>110</a>
-<a name='L111'></a><a href='#L111'>111</a>
-<a name='L112'></a><a href='#L112'>112</a>
-<a name='L113'></a><a href='#L113'>113</a>
-<a name='L114'></a><a href='#L114'>114</a>
-<a name='L115'></a><a href='#L115'>115</a>
-<a name='L116'></a><a href='#L116'>116</a>
-<a name='L117'></a><a href='#L117'>117</a>
-<a name='L118'></a><a href='#L118'>118</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L95'></a><a href='#L95'>95</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -209,33 +186,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">16x</span>
-<span class="cline-any cline-yes">16x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -307,7 +261,13 @@
  */
 &nbsp;
 import React, { useState, useCallback, useRef } from 'react';
-import type { Keypoint, KeypointPosition } from '../types';
+import type { Keypoint } from '../types';
+&nbsp;
+// Shared parsing utilities — single source of truth
+import { parseKeypointFromText } from '../utils/parsing';
+&nbsp;
+// Re-export for callers that import from useKeypoints
+export { parseKeypointFromText };
 &nbsp;
 export interface UseKeypointsOptions {
   /** Called when keypoint list changes (e.g. to show overlay) */
@@ -326,35 +286,6 @@ export interface UseKeypointsReturn {
 }
 &nbsp;
 // Position detection from label text
-const POSITION_MAP: Record&lt;string, KeypointPosition&gt; = {
-  '左上': 'top-left',
-  '右上': 'top-right',
-  '左下': 'bottom-left',
-  '右下': 'bottom-right',
-  '中间': 'center',
-};
-&nbsp;
-const ROUND_ROBIN: KeypointPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'];
-&nbsp;
-function labelToPosition(label: string): KeypointPosition {
-  for (const [tag, pos] of Object.entries(POSITION_MAP)) {
-    if (label.includes(tag)) return pos;
-  }
-<span class="cstat-no" title="statement not covered" >  return 'center';</span>
-}
-&nbsp;
-/** Parse a raw AI suggestion string into a Keypoint (mirrors bubbleTextToKeypoint in KeypointOverlay) */
-export function parseKeypointFromText(text: string, id: number): Keypoint | null {
-  const match = text.match(/^\[([^\]]+)\]\s*(.*)$/);
-  if (!match) return null;
-&nbsp;
-  const label = match[1].trim();
-  const instruction = match[2].trim();
-  const position = labelToPosition(label);
-&nbsp;
-  return { id, label, position, instruction: instruction || undefined };
-}
-&nbsp;
 export function useKeypoints({ onVisibilityChange }: UseKeypointsOptions = {}): UseKeypointsReturn {
   const [keypoints, setKeypoints] = useState&lt;Keypoint[]&gt;([]);
   const [showKeypoints, setShowKeypointsInternal] = useState(false);
@@ -421,7 +352,7 @@ export function useKeypoints({ onVisibilityChange }: UseKeypointsOptions = {}): 
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-17T09:17:07.150Z
+                at 2026-04-17T19:58:08.045Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -18,6 +18,36 @@ const WARN_BRIGHT_RATIO = 0.55; // fraction of bright bins to trigger 过曝 war
 const EMPTY_BARS = Array.from({ length: BAR_COUNT }, () => 0.05);
 const EMPTY_HISTOGRAM = new Array(256).fill(0);
 
+// Individual bar memo — only re-renders when its own height/color actually changes
+const Bar = React.memo(
+  function Bar({
+    height,
+    backgroundColor,
+    opacity,
+  }: {
+    height: number;
+    backgroundColor: string;
+    opacity: number;
+  }) {
+    return (
+      <View
+        style={[
+          staticStyles.bar,
+          {
+            height: Math.max(2, height * HIST_HEIGHT),
+            backgroundColor,
+            opacity,
+          },
+        ]}
+      />
+    );
+  },
+  (prev, next) =>
+    prev.height === next.height &&
+    prev.backgroundColor === next.backgroundColor &&
+    prev.opacity === next.opacity
+);
+
 // Module-level static styles
 const staticStyles = StyleSheet.create({
   container: {
@@ -152,20 +182,19 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
       </View>
 
       <View style={staticStyles.barContainer}>
-        {bars.map((height, i) => (
-          <View
-            key={i}
-            style={[
-              staticStyles.bar,
-              {
-                height: Math.max(2, height * HIST_HEIGHT),
-                backgroundColor:
-                  i < 3 ? colors.error : i > 12 ? colors.error : colors.accent,
-                opacity: 0.45 + height * 0.55,
-              },
-            ]}
-          />
-        ))}
+        {bars.map((height, i) => {
+          const backgroundColor =
+            i < 3 ? colors.error : i > 12 ? colors.error : colors.accent;
+          const opacity = 0.45 + height * 0.55;
+          return (
+            <Bar
+              key={i}
+              height={height}
+              backgroundColor={backgroundColor}
+              opacity={opacity}
+            />
+          );
+        })}
       </View>
 
       <View style={staticStyles.scaleRow}>

@@ -33,19 +33,23 @@ const EMPTY_DOTS: Array<{ key: number; style: object[] }> = [];
 
 // Pure component for rendering dots — receives dots as a stable prop
 // Memoized to only re-render when dots content actually changes
-const DotMarkers = React.memo(function DotMarkers({
-  dots,
-}: {
-  dots: Array<{ key: number; style: object[] }>;
-}) {
-  return (
-    <>
-      {dots.map(dot => (
-        <View key={dot.key} style={dot.style} pointerEvents="none" />
-      ))}
-    </>
-  );
-});
+const DotMarkers = React.memo(
+  function DotMarkers({
+    dots,
+  }: {
+    dots: Array<{ key: number; style: object[] }>;
+  }) {
+    return (
+      <>
+        {dots.map(dot => (
+          <View key={dot.key} style={dot.style} pointerEvents="none" />
+        ))}
+      </>
+    );
+  },
+  // Custom areEqual: only re-render when dots array reference actually changes
+  (prev, next) => prev.dots === next.dots
+);
 
 // Dummy component that receives a stable empty array prop
 // It only re-renders when its prop actually changes, not when parent state changes
@@ -70,6 +74,9 @@ export const FocusPeakingOverlay = React.memo(function FocusPeakingOverlay({
   // Stable ref to the dots array — avoids creating new arrays on every render
   const dotsRef = useRef<Array<{ key: number; style: object[] }>>(EMPTY_DOTS);
 
+  // Stable ref for dots version counter — avoids Date.now() object allocation
+  const dotsVersionRef = useRef(0);
+
   // Dummy state to force re-render when dots need to update
   // Using an object reference allows React.memo on Dummy to work correctly
   const [, setDotsVersion] = useState<{ v: number }>({ v: 0 });
@@ -90,7 +97,7 @@ export const FocusPeakingOverlay = React.memo(function FocusPeakingOverlay({
     if (!visible || peaks.length === 0) {
       if (dotsRef.current.length !== 0) {
         dotsRef.current = EMPTY_DOTS;
-        setDotsVersion({ v: Date.now() }); // Force re-render with new ref
+        setDotsVersion({ v: ++dotsVersionRef.current }); // Force re-render with incremented counter
       }
       prevPeaksHashRef.current = '';
       return;
