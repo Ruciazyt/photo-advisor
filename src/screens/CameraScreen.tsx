@@ -6,7 +6,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useTheme } from '../contexts/ThemeContext';
 import { BubbleOverlay } from '../components/BubbleOverlay';
-import { KeypointOverlay, Keypoint } from '../components/KeypointOverlay';
+import { KeypointOverlay } from '../components/KeypointOverlay';
+import type { Keypoint } from '../types';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
 import { GridVariant } from '../components/GridOverlay';
 import { GridSelectorModal } from '../components/GridSelectorModal';
@@ -36,6 +37,7 @@ import { useSuggestions } from '../hooks/useSuggestions';
 import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
 import { useBurstMode } from '../hooks/useBurstMode';
 import { useBubbleChat, parseBubbleItemsFromTexts } from '../hooks/useBubbleChat';
+import { useKeypoints } from '../hooks/useKeypoints';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -96,8 +98,7 @@ export function CameraScreen() {
   } = useBurstMode({ setSuggestions });
 
   const [apiConfigured, setApiConfigured] = useState(false);
-  const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
-  const [showKeypoints, setShowKeypoints] = useState(false);
+  const { keypoints, showKeypoints, setKeypoints, setShowKeypoints, handleDismiss: keypointsHandleDismiss, handleDismissAll: keypointsHandleDismissAll } = useKeypoints();
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
   const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
@@ -221,8 +222,8 @@ export function CameraScreen() {
 
   const handleDismissWithKeypoints = useCallback((id: number) => {
     handleDismiss(id);
-    setKeypoints(prev => { const next = prev.filter(kp => kp.id !== id); if (next.length === 0) setShowKeypoints(false); return next; });
-  }, [handleDismiss]);
+    keypointsHandleDismiss(id);
+  }, [handleDismiss, keypointsHandleDismiss]);
 
   useEffect(() => {
     loadAppSettings().then((settings) => {
@@ -300,7 +301,7 @@ export function CameraScreen() {
         />
         <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
       </CameraView>
-      <BubbleOverlay visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); }} />
+      <BubbleOverlay visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); keypointsHandleDismissAll(); }} />
       <TimerSelectorModal
         visible={showTimerModal}
         selectedDuration={timerDuration}
