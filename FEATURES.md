@@ -53,7 +53,7 @@
 
 ### 代码结构
 - [x] 将 CameraScreen 拆分为多个 sub-components（控制在 400 行以内）
-- [ ] 提取通用 hooks（useCamera, useKeypoints, useBubbleChat）
+- [x] 提取通用 hooks（useCamera, useKeypoints, useBubbleChat）
 - [x] 建立统一的错误处理层 — errors.ts + useErrorHandler
 - [x] 补充 TypeScript 类型定义 — types/index.ts
 
