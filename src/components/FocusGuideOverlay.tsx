@@ -79,9 +79,12 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
   const [focusRings, setFocusRings] = useState<{ id: number; x: number; y: number }[]>([]);
   const ringCounterRef = useRef(0);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mountedRef = useRef(true);
 
   // Poll camera zoom value periodically
   useEffect(() => {
+    mountedRef.current = true;
+
     if (!visible) {
       if (pollTimerRef.current) {
         clearInterval(pollTimerRef.current);
@@ -91,6 +94,8 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
     }
 
     const poll = () => {
+      // Guard: don't update state if component has unmounted
+      if (!mountedRef.current) return;
       if (cameraRef.current) {
         // Try to read zoom from camera ref (expo-camera may expose it)
         const cam = cameraRef.current as any;
@@ -109,6 +114,7 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
     poll();
     pollTimerRef.current = setInterval(poll, ZOOM_POLL_INTERVAL_MS);
     return () => {
+      mountedRef.current = false;
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

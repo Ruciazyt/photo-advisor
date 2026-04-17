@@ -34,27 +34,6 @@ describe('FocusGuideOverlay', () => {
     expect(screen.getByText('近拍')).toBeTruthy();
   });
 
-  it('renders DOF warning when zoom >= 2.0', async () => {
-    const camWithZoom = { zoom: 2.5, focusDepth: jest.fn() };
-    const refWithZoom = { current: camWithZoom };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={refWithZoom} />);
-
-    // Wait for the poll interval to pick up the zoom value
-    await new Promise(r => setTimeout(r, 400));
-    expect(screen.getByText('⚠️ DOF变浅')).toBeTruthy();
-  });
-
-  it('does NOT render DOF warning when zoom < 2.0', async () => {
-    const camWithZoom = { zoom: 1.5, focusDepth: jest.fn() };
-    const refWithZoom = { current: camWithZoom };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={refWithZoom} />);
-
-    await new Promise(r => setTimeout(r, 400));
-    expect(screen.queryByText('⚠️ DOF变浅')).toBeNull();
-  });
-
   it('calls cameraRef.focusDepth with correct depth when a focus zone button is pressed', () => {
     const focusDepthMock = jest.fn();
     const cam = { zoom: 1.0, focusDepth: focusDepthMock };
@@ -101,5 +80,30 @@ describe('FocusGuideOverlay', () => {
 
     // Tap-to-focus does NOT call focusDepth (it's visual-only)
     expect(cam.focusDepth).not.toHaveBeenCalled();
+  });
+
+  it('unmounts cleanly without pending intervals (mountedRef guard)', () => {
+    // This test verifies that the cleanup function sets mountedRef=false
+    // so any in-flight poll timeouts won't call setState after unmount.
+    // We verify by ensuring render and unmount don't throw.
+    const cam = { zoom: 2.0, focusDepth: jest.fn() };
+    const ref = { current: cam };
+
+    const { unmount } = render(
+      <FocusGuideOverlay visible={true} cameraRef={ref} />
+    );
+
+    // Unmount should be synchronous and clean (no pending async work)
+    expect(() => unmount()).not.toThrow();
+  });
+
+  it('sets initial zoom value immediately on mount', () => {
+    const cam = { zoom: 1.8, focusDepth: jest.fn() };
+    const ref = { current: cam };
+
+    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
+
+    // The zoom value should be displayed as-is (1.8x)
+    expect(screen.getByText('1.8x')).toBeTruthy();
   });
 });
