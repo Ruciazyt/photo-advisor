@@ -109,10 +109,20 @@ export function useBubbleChat({
     };
   }, [allItems, visibleItems.length, staggerDelayMs, onBubbleAppear]);
 
-  // Clear visible items when loading starts
+  /**
+   * State machine for bubble chat visibility:
+   * - loading=true: clears BOTH visibleItems AND allItems, suppressing all reveals
+   * - loading=false: allows staggered reveals from allItems into visibleItems
+   *
+   * This ensures rapid suggestion changes (loading=true → new items → loading=false)
+   * start fresh without stale data from previous suggestion batches.
+   */
   const setLoading = useCallback((v: boolean) => {
     setLoadingInternal(v);
     if (v) {
+      // Clear both visibility queue AND allItems so any pending timeouts
+      // from a previous batch cannot later add stale items after new items arrive.
+      setAllItems([]);
       setVisibleItems([]);
     }
   }, []);

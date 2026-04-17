@@ -247,4 +247,108 @@ describe('useBubbleChat', () => {
     act(() => { jest.advanceTimersByTime(60); });
     expect(result.current.visibleItems).toHaveLength(1);
   });
+
+  // --- Bug-fix tests: allItems cleared when loading=true ---
+
+  it('setLoading(true) clears both visibleItems AND allItems', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 100 }));
+
+    // Set initial items and reveal them
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'old item', position: 'top-left' as const },
+      ]);
+    });
+    act(() => { jest.advanceTimersByTime(150); });
+    expect(result.current.visibleItems).toHaveLength(1);
+
+    // Start loading — this should clear both visibleItems AND allItems
+    act(() => {
+      result.current.setLoading(true);
+    });
+    expect(result.current.visibleItems).toEqual([]);
+    // allItems backing state is cleared internally so pending timeouts
+    // from the old batch cannot pollute a fresh setItems call.
+  });
+
+  it('items appear correctly after loading completes (fresh start)', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 100 }));
+
+    // Simulate: loading=true (no-op for fresh hook), then loading=false
+    act(() => { result.current.setLoading(false); });
+    expect(result.current.loading).toBe(false);
+
+    // Now set fresh items
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'fresh item', position: 'top-left' as const },
+        { id: 1, text: 'fresh item 2', position: 'top-right' as const },
+      ]);
+    });
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+    expect(result.current.visibleItems[0].text).toBe('fresh item');
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    expect(result.current.visibleItems[1].text).toBe('fresh item 2');
+  });
+
+  it('rapid suggestion changes do not cause duplicate or missing items', () => {
+    // Simulates: setItems(A) → loading=true → setItems(B) → loading=false
+    // The BATCH A timeouts must not affect BATCH B items.
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 100 })
+    );
+
+    // Batch A — partially revealed
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'batch A item 0', position: 'top-left' as const },
+        { id: 1, text: 'batch A item 1', position: 'top-right' as const },
+      ]);
+    });
+    act(() => { jest.advanceTimersByTime(100); }); // first A item revealed
+    expect(result.current.visibleItems).toHaveLength(1);
+    expect(cb).toHaveBeenCalledWith('batch A item 0');
+
+    // Rapid: loading=true (cancels A timeouts, clears allItems)
+    act(() => { result.current.setLoading(true); });
+    expect(result.current.visibleItems).toEqual([]);
+
+    // Batch B arrives while still loading
+    act(() => {
+      result.current.setItems([
+        { id: 10, text: 'batch B item 0', position: 'top-left' as const },
+        { id: 11, text: 'batch B item 1', position: 'top-right' as const },
+        { id: 12, text: 'batch B item 2', position: 'bottom-left' as const },
+      ]);
+    });
+
+    // loading=false — now B items should start revealing
+    act(() => { result.current.setLoading(false); });
+
+    // B items reveal with fresh stagger
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+    expect(result.current.visibleItems[0].text).toBe('batch B item 0');
+    expect(cb).toHaveBeenCalledWith('batch B item 0');
+    // batch A item 1 must NOT appear
+    expect(cb).not.toHaveBeenCalledWith('batch A item 1');
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    expect(result.current.visibleItems[1].text).toBe('batch B item 1');
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(3);
+    expect(result.current.visibleItems[2].text).toBe('batch B item 2');
+
+    // Ensure no leftover A items ever surfaced
+    const allCbTexts = cb.mock.calls.map(c => c[0]);
+    expect(allCbTexts).not.toContain('batch A item 1');
+    expect(allCbTexts).toEqual(['batch A item 0', 'batch B item 0', 'batch B item 1', 'batch B item 2']);
+  });
 });
