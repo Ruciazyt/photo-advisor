@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
 import {
   View,
   Text,
@@ -72,53 +73,42 @@ function FocusRing({ x, y, onComplete }: FocusRingProps) {
 
 export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps) {
   // Zoom level is tracked from periodic polling since CameraView.zoom is read-only
-  const [zoomLevel, setZoomLevel] = useState(1.0);
+  // Read initial zoom synchronously from cameraRef (safe: ref is always current)
+  const initialZoom = cameraRef.current
+    ? (cameraRef.current as any).zoom ?? 1.0
+    : 1.0;
+  const [zoomLevel, setZoomLevel] = useState(initialZoom);
   // Tracks whether the current device supports focusDepth
   const [focusDepthSupported, setFocusDepthSupported] = useState<boolean | null>(null);
   // Active focus rings from tap-to-focus
   const [focusRings, setFocusRings] = useState<{ id: number; x: number; y: number }[]>([]);
   const ringCounterRef = useRef(0);
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
 
-  // Poll camera zoom value periodically
-  useEffect(() => {
-    mountedRef.current = true;
-
-    if (!visible) {
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
+  // Poll camera zoom value periodically using UI-thread timer
+  const poll = useCallback(() => {
+    // Guard: don't update state if component has unmounted
+    if (!mountedRef.current) return;
+    if (cameraRef.current) {
+      // Try to read zoom from camera ref (expo-camera may expose it)
+      const cam = cameraRef.current as any;
+      if (cam.zoom !== undefined && typeof cam.zoom === 'number') {
+        setZoomLevel(cam.zoom);
       }
-      return;
+      // Check if focusDepth method is available once
+      if (focusDepthSupported === null && typeof cam.focusDepth === 'function') {
+        setFocusDepthSupported(true);
+      } else if (focusDepthSupported === null) {
+        setFocusDepthSupported(false);
+      }
     }
+  }, [cameraRef, focusDepthSupported]);
 
-    const poll = () => {
-      // Guard: don't update state if component has unmounted
-      if (!mountedRef.current) return;
-      if (cameraRef.current) {
-        // Try to read zoom from camera ref (expo-camera may expose it)
-        const cam = cameraRef.current as any;
-        if (cam.zoom !== undefined && typeof cam.zoom === 'number') {
-          setZoomLevel(cam.zoom);
-        }
-        // Check if focusDepth method is available once
-        if (focusDepthSupported === null && typeof cam.focusDepth === 'function') {
-          setFocusDepthSupported(true);
-        } else if (focusDepthSupported === null) {
-          setFocusDepthSupported(false);
-        }
-      }
-    };
-
-    poll();
-    pollTimerRef.current = setInterval(poll, ZOOM_POLL_INTERVAL_MS);
-    return () => {
-      mountedRef.current = false;
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
+  useAnimationFrameTimer({
+    intervalMs: ZOOM_POLL_INTERVAL_MS,
+    onTick: poll,
+    enabled: visible,
+  });
 
   const handleFocusZonePress = useCallback(
     (zone: (typeof FOCUS_ZONES)[number]) => {

@@ -57,6 +57,34 @@ const Easing = {
   ease: (t) => t,
 };
 
+// Shared state for useFrameCallback mock — persists across renders
+let _frameCallback = null;
+let _frameCallbackEnabled = false;
+let _frameCount = 0;
+
+function useFrameCallback(callback, enabled = true) {
+  _frameCallback = callback;
+  _frameCallbackEnabled = enabled;
+}
+
+function advanceAnimationByFrame(count = 1) {
+  if (!_frameCallback || !_frameCallbackEnabled) return;
+  for (let i = 0; i < count; i++) {
+    _frameCount++;
+    _frameCallback({ timeSincePreviousFrame: 16 }); // simulate ~60fps delta
+  }
+}
+
+function advanceAnimationByTime(ms) {
+  if (!_frameCallback || !_frameCallbackEnabled) return;
+  // Simulate enough frames to cover the time (assume 16ms per frame)
+  const frames = Math.ceil(ms / 16);
+  for (let i = 0; i < frames; i++) {
+    _frameCount++;
+    _frameCallback({ timeSincePreviousFrame: 16 });
+  }
+}
+
 module.exports = {
   default: Animated.View,
   AnimatedView: Animated.View,
@@ -72,14 +100,15 @@ module.exports = {
   withRepeat,
   Easing,
   runOnJS,
+  useFrameCallback,
+  advanceAnimationByFrame,
+  advanceAnimationByTime,
   useAnimatedProps: () => ({}),
   useDerivedValue: (fn) => ({ value: fn() }),
   interpolate: () => 0,
   Extrapolation: { CLAMP: 'clamp', EXTEND: 'extend', IDENTITY: 'identity' },
   createAnimatedComponent,
   setUpTests: () => {},
-  advanceAnimationByFrame: () => {},
-  advanceAnimationByTime: () => {},
   withReanimatedTimer: () => {},
   reanimatedVersion: '4.0.0',
   ReduceMotion: { Never: 'never', Always: 'always', GetSetting: 'getSetting' },

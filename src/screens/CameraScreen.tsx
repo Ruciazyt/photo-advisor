@@ -59,7 +59,6 @@ function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: s
 export function CameraScreen() {
   const { colors } = useTheme();
   const cameraRef = useRef<CameraView>(null);
-  const peakingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
   const preAnalysisStartedRef = useRef(false);
