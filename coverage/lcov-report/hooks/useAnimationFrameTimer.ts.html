@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for hooks/useDeviceOrientation.ts</title>
+    <title>Code coverage report for hooks/useAnimationFrameTimer.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">hooks</a> useDeviceOrientation.ts</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">hooks</a> useAnimationFrameTimer.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92% </span>
+                <span class="strong">53.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>23/25</span>
+                <span class='fraction'>8/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.42% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/7</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">57.14% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>22/22</span>
+                <span class='fraction'>8/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -106,97 +106,91 @@
 <a name='L41'></a><a href='#L41'>41</a>
 <a name='L42'></a><a href='#L42'>42</a>
 <a name='L43'></a><a href='#L43'>43</a>
-<a name='L44'></a><a href='#L44'>44</a>
-<a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L44'></a><a href='#L44'>44</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useState, useEffect, useRef } from 'react';
-import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
-import { EventSubscription } from 'expo-modules-core';
-import type { DeviceOrientation } from '../types';
-export type { DeviceOrientation } from '../types';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useRef } from 'react';
+import { useFrameCallback, runOnJS } from 'react-native-reanimated';
 &nbsp;
-const GRAVITY = 9.81;
+// Exported for testability
+export const TIMER_INTERVAL_MS = 500;
 &nbsp;
-function computeOrientation({ x, y, z }: AccelerometerMeasurement): DeviceOrientation {
-  // pitch: rotation around X-axis (front/back tilt)
-  // roll: rotation around Y-axis (left/right tilt)
-  const pitch = Math.atan2(-x, Math.sqrt(y * y + z * z)) * (180 / Math.PI);
-  const roll = Math.atan2(y, z) * (180 / Math.PI);
-  return { pitch, roll };
+interface UseAnimationFrameTimerOptions {
+  intervalMs: number;
+  onTick: () =&gt; void;
+  enabled: boolean;
 }
 &nbsp;
-export function useDeviceOrientation(updateIntervalMs = 100) {
-  const [orientation, setOrientation] = useState&lt;DeviceOrientation&gt;({ pitch: 0, roll: 0 });
-  const [available, setAvailable] = useState(false);
-  const subscriptionRef = useRef&lt;EventSubscription | null&gt;(null);
-  const mountedRef = useRef(true);
+/**
+ * useAnimationFrameTimer — UI-thread interval timer using useFrameCallback.
+ * Replaces setInterval for animation-synced timing (e.g., focus peaking capture).
+ * The onTick callback is still called on the JS thread (for async work like camera.capture),
+ * but the scheduling itself runs on the UI thread.
+ */
+export function useAnimationFrameTimer({ intervalMs, onTick, enabled }: UseAnimationFrameTimerOptions) {
+  const lastTickRef = useRef(0);
+  const enabledRef = useRef(enabled);
+  const onTickRef = useRef(onTick);
 &nbsp;
-  useEffect(() =&gt; {
-    mountedRef.current = true;
+  // Keep refs up to date without restarting the frame callback
+  enabledRef.current = enabled;
+  onTickRef.current = onTick;
 &nbsp;
-    Accelerometer.isAvailableAsync().then((isAvailable) =&gt; {
-      <span class="missing-if-branch" title="if path not taken" >I</span>if (!mountedRef.current) <span class="cstat-no" title="statement not covered" >return;</span>
-      setAvailable(isAvailable);
-      if (!isAvailable) return;
+  // useFrameCallback runs on the UI thread — time delta is available as a worklet
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useFrameCallback(<span class="fstat-no" title="function not covered" >(f</span>rameInfo) =&gt; {
+    'worklet';
+<span class="cstat-no" title="statement not covered" >    if (!enabledRef.current) <span class="cstat-no" title="statement not covered" >return;</span></span>
+    const now = <span class="cstat-no" title="statement not covered" >frameInfo.timeSincePreviousFrame ?? 0;</span>
+<span class="cstat-no" title="statement not covered" >    lastTickRef.current += now;</span>
+<span class="cstat-no" title="statement not covered" >    if (lastTickRef.current &gt;= intervalMs) {</span>
+<span class="cstat-no" title="statement not covered" >      lastTickRef.current = 0;</span>
+      // runOnJS to call the async onTick on JS thread
+<span class="cstat-no" title="statement not covered" >      runOnJS(onTickRef.current)();</span>
+    }
+  }, enabled);
 &nbsp;
-      Accelerometer.setUpdateInterval(updateIntervalMs);
-      subscriptionRef.current = Accelerometer.addListener((measurement) =&gt; {
-        <span class="missing-if-branch" title="if path not taken" >I</span>if (!mountedRef.current) <span class="cstat-no" title="statement not covered" >return;</span>
-        setOrientation(computeOrientation(measurement));
-      });
-    });
-&nbsp;
-    return () =&gt; {
-      mountedRef.current = false;
-      subscriptionRef.current?.remove();
-    };
-  }, [updateIntervalMs]);
-&nbsp;
-  return { orientation, available };
+  return {};
 }
 &nbsp;</pre></td></tr></table></pre>
 

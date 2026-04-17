@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.09% </span>
+                <span class="strong">82.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>27/31</span>
+                <span class='fraction'>29/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.85% </span>
+                <span class="strong">81.25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>26/28</span>
+                <span class='fraction'>26/32</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">71.42% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>5/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.65% </span>
+                <span class="strong">84.37% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>26/29</span>
+                <span class='fraction'>27/32</span>
             </div>
         
             
@@ -232,7 +232,21 @@
 <a name='L167'></a><a href='#L167'>167</a>
 <a name='L168'></a><a href='#L168'>168</a>
 <a name='L169'></a><a href='#L169'>169</a>
-<a name='L170'></a><a href='#L170'>170</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -305,13 +319,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -367,9 +389,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -401,8 +420,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay, runOnJS } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { sharePhoto } from '../services/share';
@@ -468,24 +495,32 @@ const staticStyles = StyleSheet.create({
   },
 });
 &nbsp;
-/** Animated toast for share result */
-function ShareToast({ message, visible }: { message: string; visible: boolean }) {
-  const opacity = React.useRef(new Animated.Value(0)).current;
+/** Animated toast for share result — driven entirely on the UI thread via Reanimated */
+function ShareToast({ message, visible, onHidden }: { message: string; visible: boolean; onHidden?: () =&gt; void }) {
+  const opacity = useSharedValue(0);
 &nbsp;
   React.useEffect(() =&gt; {
     if (visible) {
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.delay(1500),
-        Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start();
+      // Fade in → hold 1500ms → fade out, all on UI thread
+      opacity.value = withSequence(
+        withTiming(1, { duration: 200 }),
+        withDelay(1500, withTiming(0, { duration: 200 }, <span class="fstat-no" title="function not covered" >(f</span>inished) =&gt; {
+<span class="cstat-no" title="statement not covered" >          if (finished &amp;&amp; onHidden) {</span>
+<span class="cstat-no" title="statement not covered" >            runOnJS(onHidden)();</span>
+          }
+        }))
+      );
+    } else {
+      opacity.value = withTiming(0, { duration: 100 });
     }
   }, [visible]);
+&nbsp;
+  const animatedStyle = useAnimatedStyle(() =&gt; ({ opacity: opacity.value }));
 &nbsp;
   if (!visible) return null;
 &nbsp;
   return (
-    &lt;Animated.View style={[staticStyles.toast, { opacity }]} pointerEvents="none"&gt;
+    &lt;Animated.View style={[staticStyles.toast, animatedStyle]} pointerEvents="none"&gt;
       &lt;Text style={staticStyles.toastText}&gt;{message}&lt;/Text&gt;
     &lt;/Animated.View&gt;
   );
@@ -536,10 +571,7 @@ export function ShareButton({
     } finally {
       setSharing(false);
       setShowToast(true);
-      setTimeout(<span class="fstat-no" title="function not covered" >()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >        setShowToast(false);</span>
-<span class="cstat-no" title="statement not covered" >        onShareEnd?.();</span>
-      }, 2000);
+      // onHidden is called by the Reanimated animation chain after fade-out completes
     }
   };
 &nbsp;
@@ -566,7 +598,14 @@ export function ShareButton({
         &lt;/Text&gt;
       &lt;/TouchableOpacity&gt;
 &nbsp;
-      &lt;ShareToast message={toastMessage} visible={showToast} /&gt;
+      &lt;ShareToast
+        message={toastMessage}
+        visible={showToast}
+        onHidden={<span class="fstat-no" title="function not covered" >()</span> =&gt; {
+<span class="cstat-no" title="statement not covered" >          setShowToast(false);</span>
+<span class="cstat-no" title="statement not covered" >          onShareEnd?.();</span>
+        }}
+      /&gt;
     &lt;/&gt;
   );
 }
@@ -577,7 +616,7 @@ export function ShareButton({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-15T13:57:00.778Z
+                at 2026-04-17T09:14:36.707Z
             </div>
         <script src="../prettify.js"></script>
         <script>

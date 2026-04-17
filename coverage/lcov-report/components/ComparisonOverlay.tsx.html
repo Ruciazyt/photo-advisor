@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">84.21% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>15/15</span>
+                <span class='fraction'>16/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">86.11% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>32/32</span>
+                <span class='fraction'>31/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">62.5% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/6</span>
+                <span class='fraction'>5/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">82.35% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>14/17</span>
             </div>
         
             
@@ -263,7 +263,20 @@
 <a name='L198'></a><a href='#L198'>198</a>
 <a name='L199'></a><a href='#L199'>199</a>
 <a name='L200'></a><a href='#L200'>200</a>
-<a name='L201'></a><a href='#L201'>201</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -383,25 +396,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -463,7 +479,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useRef } from 'react';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useCallback } from 'react';
 import {
   View,
   Image,
@@ -471,8 +487,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Animated,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { KeypointOverlay } from './KeypointOverlay';
 import { BubbleOverlay } from './BubbleOverlay';
 import { useTheme } from '../contexts/ThemeContext';
@@ -585,15 +606,18 @@ export function ComparisonOverlay({
 }: ComparisonOverlayProps) {
   const { colors } = useTheme();
   const [showAnnotated, setShowAnnotated] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useSharedValue(1);
 &nbsp;
-  const toggleView = (show: boolean) =&gt; {
-    Animated.sequence([
-      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
-    ]).start();
-    setShowAnnotated(show);
-  };
+  const animatedStyle = useAnimatedStyle(() =&gt; ({ opacity: fadeAnim.value }));
+&nbsp;
+  const toggleView = useCallback((show: boolean) =&gt; {
+    fadeAnim.value = withTiming(0, { duration: 150 }, <span class="fstat-no" title="function not covered" >(f</span>inished) =&gt; {
+<span class="cstat-no" title="statement not covered" >      if (finished) {</span>
+<span class="cstat-no" title="statement not covered" >        runOnJS(setShowAnnotated)(show);</span>
+<span class="cstat-no" title="statement not covered" >        fadeAnim.value = withTiming(1, { duration: 150 });</span>
+      }
+    });
+  }, []);
 &nbsp;
   if (!visible) return null;
 &nbsp;
@@ -604,13 +628,13 @@ export function ComparisonOverlay({
   return (
     &lt;View style={staticStyles.container}&gt;
       {/* Image */}
-      &lt;Animated.View style={[staticStyles.imageContainer, { opacity: fadeAnim }]}&gt;
+      &lt;Animated.View style={[staticStyles.imageContainer, animatedStyle]}&gt;
         &lt;Image source={{ uri: imageUri }} style={staticStyles.image} resizeMode="contain" /&gt;
         {showAnnotated &amp;&amp; (
           &lt;&gt;
             &lt;KeypointOverlay keypoints={keypoints} visible={true} /&gt;
             &lt;BubbleOverlay
-              items={bubbles}
+              visibleItems={bubbles ?? <span class="branch-1 cbranch-no" title="branch not covered" >[]}</span>
               loading={false}
               onDismiss={noop}
               onDismissAll={noopAll}
@@ -641,11 +665,11 @@ export function ComparisonOverlay({
         {/* Bottom toggle */}
         &lt;View style={staticStyles.toggleContainer}&gt;
           &lt;TouchableOpacity
-            style={[staticStyles.toggleBtn, !showAnnotated &amp;&amp; { backgroundColor: colors.accent, borderColor: colors.accent }]}
+            style={[staticStyles.toggleBtn, !showAnnotated &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ backgroundColor: colors.accent, borderColor: colors.accent }]</span>}
             onPress={() =&gt; toggleView(false)}
             activeOpacity={0.8}
           &gt;
-            &lt;Text style={[staticStyles.toggleText, !showAnnotated &amp;&amp; staticStyles.toggleTextActive]}&gt;
+            &lt;Text style={[staticStyles.toggleText, !showAnnotated &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >staticStyles.toggleTextActive]</span>}&gt;
               📷 原图
             &lt;/Text&gt;
           &lt;/TouchableOpacity&gt;
@@ -670,7 +694,7 @@ export function ComparisonOverlay({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-15T13:57:00.778Z
+                at 2026-04-17T09:14:36.707Z
             </div>
         <script src="../prettify.js"></script>
         <script>
