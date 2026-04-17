@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1776417276756" clover="3.2.0">
-  <project timestamp="1776417276756" name="All files">
-    <metrics statements="1662" coveredstatements="1355" conditionals="882" coveredconditionals="607" methods="418" coveredmethods="336" elements="2962" coveredelements="2298" complexity="0" loc="1662" ncloc="1662" packages="6" files="51" classes="51"/>
+<coverage generated="1776417427182" clover="3.2.0">
+  <project timestamp="1776417427182" name="All files">
+    <metrics statements="1665" coveredstatements="1358" conditionals="880" coveredconditionals="606" methods="419" coveredmethods="337" elements="2964" coveredelements="2301" complexity="0" loc="1665" ncloc="1665" packages="6" files="51" classes="51"/>
     <package name="components">
-      <metrics statements="525" coveredstatements="460" conditionals="373" coveredconditionals="288" methods="145" coveredmethods="114"/>
+      <metrics statements="528" coveredstatements="463" conditionals="371" coveredconditionals="287" methods="146" coveredmethods="115"/>
       <file name="BubbleOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/BubbleOverlay.tsx">
         <metrics statements="31" coveredstatements="20" conditionals="11" coveredconditionals="9" methods="14" coveredmethods="8"/>
         <line num="14" count="2" type="stmt"/>
@@ -406,42 +406,45 @@
         <line num="156" count="112" type="stmt"/>
       </file>
       <file name="KeypointOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/KeypointOverlay.tsx">
-        <metrics statements="35" coveredstatements="35" conditionals="12" coveredconditionals="11" methods="10" coveredmethods="10"/>
-        <line num="10" count="2" type="stmt"/>
+        <metrics statements="38" coveredstatements="38" conditionals="10" coveredconditionals="10" methods="11" coveredmethods="11"/>
         <line num="19" count="2" type="stmt"/>
-        <line num="22" count="2" type="stmt"/>
-        <line num="72" count="26" type="stmt"/>
-        <line num="75" count="26" type="stmt"/>
-        <line num="82" count="26" type="stmt"/>
-        <line num="83" count="26" type="cond" truecount="4" falsecount="0"/>
-        <line num="84" count="8" type="stmt"/>
-        <line num="87" count="18" type="stmt"/>
-        <line num="97" count="26" type="stmt"/>
-        <line num="101" count="2" type="stmt"/>
-        <line num="113" count="14" type="stmt"/>
-        <line num="114" count="14" type="stmt"/>
-        <line num="116" count="14" type="stmt"/>
-        <line num="118" count="14" type="stmt"/>
-        <line num="123" count="14" type="stmt"/>
-        <line num="127" count="14" type="stmt"/>
-        <line num="129" count="14" type="stmt"/>
-        <line num="130" count="14" type="stmt"/>
-        <line num="131" count="14" type="stmt"/>
-        <line num="135" count="14" type="stmt"/>
-        <line num="144" count="14" type="stmt"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="31" count="2" type="stmt"/>
+        <line num="81" count="26" type="stmt"/>
+        <line num="84" count="26" type="stmt"/>
+        <line num="91" count="26" type="stmt"/>
+        <line num="92" count="26" type="cond" truecount="4" falsecount="0"/>
+        <line num="93" count="8" type="stmt"/>
+        <line num="96" count="18" type="stmt"/>
+        <line num="106" count="26" type="stmt"/>
+        <line num="110" count="2" type="stmt"/>
+        <line num="122" count="14" type="stmt"/>
+        <line num="124" count="14" type="stmt"/>
+        <line num="126" count="14" type="stmt"/>
+        <line num="128" count="14" type="stmt"/>
+        <line num="132" count="14" type="stmt"/>
+        <line num="137" count="14" type="stmt"/>
+        <line num="139" count="14" type="stmt"/>
+        <line num="140" count="14" type="stmt"/>
+        <line num="141" count="14" type="stmt"/>
+        <line num="147" count="14" type="stmt"/>
         <line num="148" count="14" type="stmt"/>
-        <line num="150" count="14" type="stmt"/>
-        <line num="191" count="4" type="stmt"/>
-        <line num="192" count="4" type="cond" truecount="2" falsecount="0"/>
-        <line num="194" count="3" type="stmt"/>
-        <line num="195" count="3" type="stmt"/>
-        <line num="197" count="3" type="stmt"/>
-        <line num="205" count="3" type="stmt"/>
-        <line num="206" count="3" type="stmt"/>
-        <line num="207" count="10" type="cond" truecount="2" falsecount="0"/>
-        <line num="208" count="3" type="stmt"/>
-        <line num="209" count="3" type="stmt"/>
-        <line num="213" count="3" type="stmt"/>
+        <line num="149" count="14" type="stmt"/>
+        <line num="152" count="14" type="stmt"/>
+        <line num="161" count="14" type="stmt"/>
+        <line num="165" count="14" type="stmt"/>
+        <line num="167" count="14" type="stmt"/>
+        <line num="208" count="4" type="stmt"/>
+        <line num="209" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="211" count="3" type="stmt"/>
+        <line num="212" count="3" type="stmt"/>
+        <line num="214" count="3" type="stmt"/>
+        <line num="222" count="3" type="stmt"/>
+        <line num="223" count="3" type="stmt"/>
+        <line num="224" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="225" count="3" type="stmt"/>
+        <line num="226" count="3" type="stmt"/>
+        <line num="230" count="3" type="stmt"/>
       </file>
       <file name="LevelIndicator.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/LevelIndicator.tsx">
         <metrics statements="43" coveredstatements="42" conditionals="32" coveredconditionals="31" methods="7" coveredmethods="7"/>
