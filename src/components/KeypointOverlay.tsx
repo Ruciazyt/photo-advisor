@@ -13,6 +13,9 @@ import Animated, {
 import { useTheme } from '../contexts/ThemeContext';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
 
+// Shared parsing utilities
+import { parseKeypointFromText, labelToKeypointPosition } from '../utils/parsing';
+
 export type { KeypointPosition } from '../types';
 export type { Keypoint } from '../types';
 
@@ -204,29 +207,7 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
   );
 });
 
-// Convert BubbleItem text to Keypoint
+// Backward-compatible alias using the shared parser
 export function bubbleTextToKeypoint(text: string, id: number): Keypoint | null {
-  const match = text.match(/^\[([^\]]+)\]\s*(.*)$/);
-  if (!match) return null;
-
-  const label = match[1].trim();
-  const instruction = match[2].trim();
-
-  const positionMap: Record<string, KeypointPosition> = {
-    '左上': 'top-left',
-    '右上': 'top-right',
-    '左下': 'bottom-left',
-    '右下': 'bottom-right',
-    '中间': 'center',
-  };
-
-  let position: KeypointPosition = 'center';
-  for (const [tag, pos] of Object.entries(positionMap)) {
-    if (label.includes(tag)) {
-      position = pos;
-      break;
-    }
-  }
-
-  return { id, label, position, instruction };
+  return parseKeypointFromText(text, id);
 }

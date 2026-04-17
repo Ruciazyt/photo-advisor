@@ -1,4 +1,14 @@
 import React, { useEffect, useMemo } from 'react';
+
+// Shared parsing utilities — single source of truth
+import {
+  parseBubbleItemFromText,
+  parseBubbleItemsFromTexts,
+  parseBubbleItems,
+} from '../utils/parsing';
+
+// Re-export for callers that import from BubbleOverlay
+export { parseBubbleItemFromText, parseBubbleItemsFromTexts, parseBubbleItems };
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -159,48 +169,4 @@ export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll }
   );
 }
 
-// ============================================================
-// Parsing utilities (kept for backwards compatibility / exports)
-// ============================================================
 
-import type { BubblePosition } from '../types';
-
-const ROUND_ROBIN: BubblePosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-
-const POSITION_MAP: Record<string, BubblePosition> = {
-  '[左上]': 'top-left',
-  '[右上]': 'top-right',
-  '[左下]': 'bottom-left',
-  '[右下]': 'bottom-right',
-  '[中间]': 'center',
-};
-
-/**
- * Parse raw AI suggestion text into a BubbleItem.
- * Supports formats: "[区域] 内容" or plain "内容"
- */
-export function parseBubbleItemFromText(text: string, id: number): BubbleItem {
-  let position: BubblePosition = ROUND_ROBIN[id % ROUND_ROBIN.length];
-  for (const [tag, pos] of Object.entries(POSITION_MAP)) {
-    if (text.includes(tag)) {
-      position = pos;
-      break;
-    }
-  }
-  return { id, text, position };
-}
-
-/**
- * Parse an array of raw suggestion strings into BubbleItem[].
- * This is the primary entry point for converting AI suggestions to bubble items.
- */
-export function parseBubbleItemsFromTexts(rawTexts: string[]): BubbleItem[] {
-  return rawTexts
-    .filter(text => text.trim().length > 0)
-    .map((text, i) => parseBubbleItemFromText(text, i));
-}
-
-// Re-export parseBubbleItems for any existing callers
-export function parseBubbleItems(rawTexts: string[]): BubbleItem[] {
-  return parseBubbleItemsFromTexts(rawTexts);
-}

@@ -9,7 +9,16 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { BubbleItem, BubblePosition } from '../types';
+import type { BubbleItem } from '../types';
+
+// Shared parsing utilities — single source of truth
+import {
+  parseBubbleItemFromText,
+  parseBubbleItemsFromTexts,
+} from '../utils/parsing';
+
+// Re-export for callers that import from useBubbleChat
+export { parseBubbleItemFromText, parseBubbleItemsFromTexts };
 
 export interface UseBubbleChatOptions {
   /** Called when a new bubble becomes visible (for voice feedback) */
@@ -27,45 +36,6 @@ export interface UseBubbleChatReturn {
   setItems: (items: BubbleItem[]) => void;
   /** Update loading state (clears visible items when true) */
   setLoading: (loading: boolean) => void;
-}
-
-const ROUND_ROBIN: BubblePosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-
-const POSITION_MAP: Record<string, BubblePosition> = {
-  '[左上]': 'top-left',
-  '[右上]': 'top-right',
-  '[左下]': 'bottom-left',
-  '[右下]': 'bottom-right',
-  '[中间]': 'center',
-};
-
-/**
- * Parse raw AI suggestion text into a BubbleItem.
- * Supports formats: "[区域] 内容" or plain "内容"
- */
-export function parseBubbleItemFromText(text: string, id: number): BubbleItem {
-  const roundRobin: BubblePosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-
-  // Check for explicit position tag
-  let position: BubblePosition = roundRobin[id % roundRobin.length];
-  for (const [tag, pos] of Object.entries(POSITION_MAP)) {
-    if (text.includes(tag)) {
-      position = pos;
-      break;
-    }
-  }
-
-  return { id, text, position };
-}
-
-/**
- * Parse an array of raw suggestion strings into BubbleItem[].
- * This is the primary entry point for converting AI suggestions to bubble items.
- */
-export function parseBubbleItemsFromTexts(rawTexts: string[]): BubbleItem[] {
-  return rawTexts
-    .filter(text => text.trim().length > 0)
-    .map((text, i) => parseBubbleItemFromText(text, i));
 }
 
 export function useBubbleChat({
