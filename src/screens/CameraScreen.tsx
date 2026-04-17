@@ -36,7 +36,7 @@ import { CameraOverlays } from '../components/CameraOverlays';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
 import { useBurstMode } from '../hooks/useBurstMode';
-import { useBubbleChat, parseBubbleItemsFromTexts } from '../hooks/useBubbleChat';
+import { useBubbleChat } from '../hooks/useBubbleChat';
 import { useKeypoints } from '../hooks/useKeypoints';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
