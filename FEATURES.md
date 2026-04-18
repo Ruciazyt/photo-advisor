@@ -1,6 +1,6 @@
 # 拍摄参谋 - 功能规划
 
-> 最后更新：2026-04-15
+> 最后更新：2026-04-18
 
 ## 一、当前能力
 
@@ -47,7 +47,7 @@
 
 ### UI 优化
 - [x] 统一颜色系统 — ThemeContext + colors.ts（消除硬编码色值）
-- [ ] 动画流畅度优化（60fps）
+- [x] 动画流畅度优化（60fps） — 所有动画组件迁移至 react-native-reanimated + useFrameCallback，React.memo 防止不必要重渲染
 - [x] 深色/浅色主题适配 — ThemeContext 全局支持 + App.tsx 集成
 - [x] 无障碍支持（VoiceOver/TalkBack）
 
