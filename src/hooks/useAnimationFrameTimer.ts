@@ -32,8 +32,9 @@ export function useAnimationFrameTimer({ intervalMs, onTick, enabled }: UseAnima
     if (!enabledRef.current) return;
     const now = frameInfo.timeSincePreviousFrame ?? 0;
     lastTickRef.current += now;
-    if (lastTickRef.current >= intervalMs) {
-      lastTickRef.current = 0;
+    // Support multiple triggers if time significantly exceeds interval
+    while (lastTickRef.current >= intervalMs) {
+      lastTickRef.current -= intervalMs;
       // runOnJS to call the async onTick on JS thread
       runOnJS(onTickRef.current)();
     }
