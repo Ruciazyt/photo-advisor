@@ -6,12 +6,12 @@
 jest.mock('expo-image-manipulator');
 jest.mock('expo-file-system/legacy');
 
-import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { useHistogram } from '../hooks/useHistogram';
 import { manipulateAsync } from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const mockTakePictureAsync = jest.fn<() => Promise<{ uri: string }>>();
+const mockTakePictureAsync = jest.fn().mockResolvedValue({ uri: "file:///test.jpg" });
 const mockManipulateAsync = manipulateAsync as jest.Mock;
 const mockReadAsStringAsync = FileSystem.readAsStringAsync as jest.Mock;
 

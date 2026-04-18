@@ -180,7 +180,7 @@ describe('CompositionScoreOverlay', () => {
     const fs = require('fs');
     const path = require('path');
     const source = fs.readFileSync(
-      path.resolve(__dirname, '../components/CompositionScoreOverlay.tsx'),
+      path.resolve(process.cwd(), 'src/components/CompositionScoreOverlay.tsx'),
       'utf8',
     );
     // The old implementation had: setTimeout(() => { runOnJS(setDisplayScore)(score) }, GRADE_DELAY_MS + 50)

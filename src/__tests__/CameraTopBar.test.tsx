@@ -7,7 +7,7 @@ jest.mock('react-native-reanimated');
 jest.mock('react-native-worklets');
 
 // Mock SharedValue for toastOpacity
-const mockToastOpacity = { value: 0 };
+const mockToastOpacity = { value: 0 } as any;
 
 jest.mock('../components/SunPositionOverlay', () => ({
   SunToggleButton: ({ visible, onPress }: { visible: boolean; onPress: () => void }) => {

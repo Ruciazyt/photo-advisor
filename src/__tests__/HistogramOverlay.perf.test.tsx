@@ -23,7 +23,7 @@ jest.mock('../contexts/ThemeContext', () => ({
 }));
 
 // Build a valid 256-element histogramData array
-const makeHistogramData = (peaks: number[]): number[] => {
+const makeHistogramData = (peaks: [number, number][]): number[] => {
   const data = new Array(256).fill(0);
   peaks.forEach(([bin, value]) => {
     if (bin >= 0 && bin < 256) data[bin] = value;

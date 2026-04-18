@@ -62,8 +62,6 @@ describe('useAccessibilityAnnouncement', () => {
       listenerCallback(true);
     });
 
-    rerender();
-
     // The hook should have called addEventListener with screenReaderChanged
     expect(AccessibilityInfo.addEventListener).toHaveBeenCalledWith('screenReaderChanged', expect.any(Function));
   });

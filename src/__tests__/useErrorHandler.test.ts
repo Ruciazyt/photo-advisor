@@ -100,7 +100,7 @@ describe('useErrorHandler', () => {
   describe('safeTry', () => {
     it('returns ok:true with value on success', async () => {
       const { result } = renderHook(() => useErrorHandler());
-      let returned: { ok: true; value: number } | { ok: false; error: AppError };
+      let returned: { ok: true; value: number } | { ok: false; error: AppError } = { ok: false, error: new AppError('', ErrorCode.GEN_UNKNOWN) };
       await act(async () => {
         returned = await result.current.safeTry(() => Promise.resolve(42), ErrorCode.GEN_UNKNOWN);
       });
@@ -110,7 +110,7 @@ describe('useErrorHandler', () => {
     it('returns ok:false with AppError on failure', async () => {
       const { result } = renderHook(() => useErrorHandler());
       const testErr = new AppError('async fail', ErrorCode.API_NETWORK_ERROR);
-      let returned: { ok: true; value: number } | { ok: false; error: AppError };
+      let returned: { ok: true; value: number } | { ok: false; error: AppError } = { ok: false, error: new AppError('', ErrorCode.GEN_UNKNOWN) };
       await act(async () => {
         returned = await result.current.safeTry(
           () => Promise.reject(testErr),

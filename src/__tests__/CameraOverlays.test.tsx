@@ -200,9 +200,7 @@ describe('CameraOverlays', () => {
     const mockResult: CompositionScoreResult = {
       score: 75,
       grade: 'B',
-      label: '良好',
-      reason: '构图不错',
-      tips: [],
+      breakdown: { alignment: 80, balance: 70, centrality: 75 },
     };
     const mockSession: ChallengeSession = { scores: [], bestScore: 0, cumulative: 0, count: 0 };
     const { getByTestId } = render(

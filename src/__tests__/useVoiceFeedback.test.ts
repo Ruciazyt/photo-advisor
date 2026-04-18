@@ -8,7 +8,7 @@ const { speak: mockSpeak, stop: mockStop } = require('expo-speech');
 describe('useVoiceFeedback', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSpeak.mockImplementation((text, opts) => {
+    mockSpeak.mockImplementation((text: string, opts: { onDone?: () => void; onError?: () => void; onStopped?: () => void } | undefined) => {
       opts?.onDone?.();
     });
     mockStop.mockReturnValue();
