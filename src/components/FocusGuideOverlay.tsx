@@ -81,10 +81,6 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
     ? (cameraRef.current as any).zoom ?? 1.0
     : 1.0;
   const [zoomLevel, setZoomLevel] = useState(initialZoom);
-  // Tracks whether the current device supports focusDepth
-  const [focusDepthSupported, setFocusDepthSupported] = useState<boolean | null>(null);
-  // Ref to track whether focusDepth check has been performed (avoids state dependency in poll)
-  const focusDepthCheckedRef = useRef(false);
   // Active focus rings from tap-to-focus
   const [focusRings, setFocusRings] = useState<{ id: number; x: number; y: number }[]>([]);
   const ringCounterRef = useRef(0);
@@ -99,12 +95,6 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
       const cam = cameraRef.current as any;
       if (cam.zoom !== undefined && typeof cam.zoom === 'number') {
         setZoomLevel(cam.zoom);
-      }
-      // Check if focusDepth method is available — only once, using ref to avoid callback recreation
-      if (!focusDepthCheckedRef.current) {
-        focusDepthCheckedRef.current = true;
-        const supported = typeof cam.focusDepth === 'function';
-        setFocusDepthSupported(supported);
       }
     }
   }, [cameraRef]);
