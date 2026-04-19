@@ -9,8 +9,10 @@
  * identify which parts of the scene have sharp edges (i.e., are in focus).
  */
 
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import { CameraView } from 'expo-camera';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system/legacy';
 
 // ---- Exported for testing ----
 export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS };
@@ -191,17 +193,13 @@ export function useFocusPeaking(): UseFocusPeakingReturn {
         });
         if (!photo?.uri) return [];
 
-        // Import dynamically to keep this file test-friendly
-        const { manipulateAsync, SaveFormat } = await import('expo-image-manipulator');
-        const { readAsStringAsync } = await import('expo-file-system/legacy');
-
         const resized = await manipulateAsync(
           photo.uri,
           [{ resize: { width: SAMPLE_SIZE, height: SAMPLE_SIZE } }],
           { compress: 0.3, format: SaveFormat.JPEG }
         );
 
-        const base64 = await readAsStringAsync(resized.uri, { encoding: 'base64' });
+        const base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
         if (!base64 || base64.length < 100) return [];
 
         const { pixels, width, height } = await samplePixels(base64, SAMPLE_SIZE);
