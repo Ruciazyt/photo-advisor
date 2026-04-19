@@ -91,9 +91,8 @@ function GoldenSpiral({ gridAccent, onActivate, accessibilityLabel, subLabel }: 
         accessible
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
-        pointerEvents="box-none"
       >
-        {content}
+        <View pointerEvents="box-none">{content}</View>
       </TouchableOpacity>
     );
   }
@@ -141,9 +140,8 @@ function DiagonalGrid({ gridAccent, onActivate, accessibilityLabel, subLabel }: 
         accessible
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
-        pointerEvents="box-none"
       >
-        {content}
+        <View pointerEvents="box-none">{content}</View>
       </TouchableOpacity>
     );
   }
@@ -194,9 +192,8 @@ function SpiralGrid({ gridAccent, onActivate, accessibilityLabel, subLabel }: Gr
         accessible
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
-        pointerEvents="box-none"
       >
-        {content}
+        <View pointerEvents="box-none">{content}</View>
       </TouchableOpacity>
     );
   }
@@ -240,9 +237,8 @@ function ThirdsGrid({ gridAccent, onActivate, accessibilityLabel, subLabel }: Gr
         accessible
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
-        pointerEvents="box-none"
       >
-        {content}
+        <View pointerEvents="box-none">{content}</View>
       </TouchableOpacity>
     );
   }
@@ -281,7 +277,7 @@ export function GridOverlay({
   // Announce grid type whenever variant changes (live region)
   // Only fires on actual prop changes, not on mount
   useEffect(() => {
-    if (variant !== 'none' && description) {
+    if (description) {
       announce(description, 'polite');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
