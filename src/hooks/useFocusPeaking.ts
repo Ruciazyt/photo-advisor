@@ -13,6 +13,7 @@ import { useCallback } from 'react';
 import { CameraView } from 'expo-camera';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system/legacy';
+import jpeg from 'jpeg-js';
 
 // ---- Exported for testing ----
 export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS };
@@ -34,63 +35,48 @@ function computeLuminance(r: number, g: number, b: number): number {
 }
 
 /**
- * Decode a base64 JPEG string to a grayscale pixel array at sampleSize×sampleSize.
- * We avoid external dependencies by using the Canvas API in a WebView or,
- * alternatively, sampling raw JPEG bytes (DCT coefficient energy as a proxy for edges).
- *
- * For React Native without canvas, we take a pragmatic approach:
- * use expo-image-manipulator to resize to SAMPLE_SIZE×SAMPLE_SIZE,
- * read base64, then sample luminance from the raw JPEG byte stream.
+ * Decode a resized JPEG image to a grayscale luminance array.
+ * Uses jpeg-js for accurate luminance extraction from actual decoded pixel data,
+ * then converts to luminance using the standard Rec. 601 formula.
  */
 async function samplePixels(
-  base64: string,
+  uri: string,
   size: number
 ): Promise<{ pixels: Uint8Array; width: number; height: number }> {
-  // Use the atob approach to get raw bytes from the resized JPEG
+  // Read JPEG as base64
+  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+  if (!base64 || base64.length < 100) {
+    return { pixels: new Uint8Array(0), width: 0, height: 0 };
+  }
+
+  // Decode base64 to raw bytes
   const raw = atob(base64);
   const bytes = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; i++) {
     bytes[i] = raw.charCodeAt(i) & 0xff;
   }
 
-  // Find the SOS marker (start of scan) to skip header/metadata
-  let dataStart = 0;
-  for (let i = 0; i < bytes.length - 1; i++) {
-    if (bytes[i] === 0xff && bytes[i + 1] === 0xda) {
-      dataStart = i + 2;
-      break;
-    }
+  // Decode JPEG to RGBA pixel data
+  let decoded: { width: number; height: number; data: Uint8Array };
+  try {
+    decoded = jpeg.decode(bytes);
+  } catch {
+    return { pixels: new Uint8Array(0), width: 0, height: 0 };
   }
 
-  // Sample evenly from the compressed data region — DCT energy correlates with edge strength
-  const total = bytes.length - dataStart;
-  const samples: number[] = [];
-  const step = Math.max(1, Math.floor(total / (size * size * 4)));
-  for (let i = dataStart; i < bytes.length && samples.length < size * size * 4; i += step) {
-    samples.push(bytes[i]);
+  const { width, height, data } = decoded;
+  const pixelCount = width * height;
+
+  // Convert RGBA to luminance using Rec. 601: Y = 0.299R + 0.587G + 0.114B
+  const pixelData = new Uint8Array(pixelCount);
+  for (let i = 0; i < pixelCount; i++) {
+    const r = data[i * 4];
+    const g = data[i * 4 + 1];
+    const b = data[i * 4 + 2];
+    pixelData[i] = computeLuminance(r, g, b);
   }
 
-  // Build a SAMPLE_SIZE×SAMPLE_SIZE luminance map from the sampled bytes
-  // (approximate — we use the sampled bytes directly as a proxy for luminance)
-  const luminance: number[][] = [];
-  for (let y = 0; y < size; y++) {
-    const row: number[] = [];
-    for (let x = 0; x < size; x++) {
-      const idx = (y * size + x) % samples.length;
-      row.push(samples[idx] ?? 128);
-    }
-    luminance.push(row);
-  }
-
-  // Convert to Uint8Array in row-major order
-  const pixelData = new Uint8Array(size * size);
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      pixelData[y * size + x] = luminance[y][x];
-    }
-  }
-
-  return { pixels: pixelData, width: size, height: size };
+  return { pixels: pixelData, width, height };
 }
 
 /**
@@ -199,10 +185,8 @@ export function useFocusPeaking(): UseFocusPeakingReturn {
           { compress: 0.3, format: SaveFormat.JPEG }
         );
 
-        const base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
-        if (!base64 || base64.length < 100) return [];
-
-        const { pixels, width, height } = await samplePixels(base64, SAMPLE_SIZE);
+        const { pixels, width, height } = await samplePixels(resized.uri, SAMPLE_SIZE);
+        if (!pixels || pixels.length === 0) return [];
 
         // Build luminance 2D array
         const lum: number[][] = [];
