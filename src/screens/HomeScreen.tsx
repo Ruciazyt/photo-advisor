@@ -240,6 +240,7 @@ export function HomeScreen() {
       )}
 
       <TouchableOpacity
+        testID="sendButton"
         style={[
           staticStyles.sendBtn,
           { backgroundColor: colors.accent },

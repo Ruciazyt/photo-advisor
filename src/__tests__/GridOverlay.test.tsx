@@ -23,43 +23,164 @@ jest.mock('../contexts/ThemeContext', () => ({
   })),
 }));
 
+// Mock useAccessibilityAnnouncement hook
+jest.mock('../hooks/useAccessibility', () => ({
+  useAccessibilityAnnouncement: jest.fn(() => ({
+    announce: jest.fn(),
+    isScreenReaderEnabled: false,
+  })),
+  useAccessibilityButton: jest.fn(() => ({
+    accessibilityLabel: 'mock label',
+    accessibilityHint: 'mock hint',
+    accessibilityRole: 'button',
+  })),
+}));
+
 describe('GridOverlay', () => {
-  it('returns null for variant "none"', () => {
-    const { toJSON } = render(<GridOverlay variant="none" />);
-    expect(toJSON()).toBeNull();
+  describe('rendering', () => {
+    it('returns null for variant "none"', () => {
+      const { toJSON } = render(<GridOverlay variant="none" />);
+      expect(toJSON()).toBeNull();
+    });
+
+    it('renders thirds variant with correct structure', () => {
+      const { toJSON } = render(<GridOverlay variant="thirds" />);
+      expect(toJSON()).not.toBeNull();
+    });
+
+    it('renders golden variant', () => {
+      const { toJSON } = render(<GridOverlay variant="golden" />);
+      expect(toJSON()).not.toBeNull();
+    });
+
+    it('renders diagonal variant', () => {
+      const { toJSON } = render(<GridOverlay variant="diagonal" />);
+      expect(toJSON()).not.toBeNull();
+    });
+
+    it('renders spiral variant', () => {
+      const { toJSON } = render(<GridOverlay variant="spiral" />);
+      expect(toJSON()).not.toBeNull();
+    });
+
+    it('defaults to thirds variant', () => {
+      const { toJSON } = render(<GridOverlay />);
+      expect(toJSON()).not.toBeNull();
+    });
   });
 
-  it('renders thirds variant with 4 lines', () => {
-    const { toJSON } = render(<GridOverlay variant="thirds" />);
-    const tree = toJSON();
-    expect(tree).not.toBeNull();
+  describe('accessibility props', () => {
+    it('thirds variant has correct accessibilityLabel', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="thirds" />);
+      const elements = getAllByLabelText('三分法构图网格：将画面水平和垂直各分为三等份，形成九宫格，适合人像和风景构图');
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
 
-    // Thirds should have 2 horizontal + 2 vertical = 4 lines
-    // Count View children in the rendered output
-    const json = JSON.stringify(tree);
-    // The thirds variant renders 4 View elements for lines
-    // We verify it renders by checking it's not null
-    expect(tree).toBeTruthy();
+    it('golden variant has correct accessibilityLabel', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="golden" />);
+      const elements = getAllByLabelText('黄金比例网格：基于黄金分割比例1比1.618的网格，帮助创建视觉平衡与和谐');
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('diagonal variant has correct accessibilityLabel', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="diagonal" />);
+      const elements = getAllByLabelText('对角线网格：提供对角线构图引导，适合建筑、风光和动态场景');
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('spiral variant has correct accessibilityLabel', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="spiral" />);
+      const elements = getAllByLabelText('斐波那契螺旋网格：斐波那契螺旋引导，帮助创建自然流畅的视觉路径');
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('subcomponents have accessibilityRole="image"', () => {
+      const { getAllByRole } = render(<GridOverlay variant="thirds" />);
+      const imageElements = getAllByRole('image');
+      expect(imageElements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('main component has accessibilityLiveRegion="polite"', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="thirds" />);
+      const elements = getAllByLabelText('三分法构图网格：将画面水平和垂直各分为三等份，形成九宫格，适合人像和风景构图');
+      // The outer View (main component) should have accessibilityLiveRegion="polite"
+      const outerElement = elements.find(el => el.props.accessibilityLiveRegion === 'polite');
+      expect(outerElement).toBeTruthy();
+    });
   });
 
-  it('renders golden variant', () => {
-    const { toJSON } = render(<GridOverlay variant="golden" />);
-    expect(toJSON()).not.toBeNull();
+  describe('variant-based rendering isolation', () => {
+    it('only renders thirds grid when variant is "thirds"', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="thirds" />);
+      const thirdsElements = getAllByLabelText('三分法构图网格：将画面水平和垂直各分为三等份，形成九宫格，适合人像和风景构图');
+      expect(thirdsElements.length).toBeGreaterThanOrEqual(1);
+
+      const goldenQuery = render(<GridOverlay variant="thirds" />);
+      const diagonalQuery = render(<GridOverlay variant="thirds" />);
+      const spiralQuery = render(<GridOverlay variant="thirds" />);
+
+      expect(goldenQuery.queryByLabelText('黄金比例网格：基于黄金分割比例1比1.618的网格，帮助创建视觉平衡与和谐')).toBeNull();
+      expect(diagonalQuery.queryByLabelText('对角线网格：提供对角线构图引导，适合建筑、风光和动态场景')).toBeNull();
+      expect(spiralQuery.queryByLabelText('斐波那契螺旋网格：斐波那契螺旋引导，帮助创建自然流畅的视觉路径')).toBeNull();
+    });
+
+    it('only renders golden grid when variant is "golden"', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="golden" />);
+      const goldenElements = getAllByLabelText('黄金比例网格：基于黄金分割比例1比1.618的网格，帮助创建视觉平衡与和谐');
+      expect(goldenElements.length).toBeGreaterThanOrEqual(1);
+
+      const thirdsQuery = render(<GridOverlay variant="golden" />);
+      const diagonalQuery = render(<GridOverlay variant="golden" />);
+      const spiralQuery = render(<GridOverlay variant="golden" />);
+
+      expect(thirdsQuery.queryByLabelText('三分法构图网格：将画面水平和垂直各分为三等份，形成九宫格，适合人像和风景构图')).toBeNull();
+      expect(diagonalQuery.queryByLabelText('对角线网格：提供对角线构图引导，适合建筑、风光和动态场景')).toBeNull();
+      expect(spiralQuery.queryByLabelText('斐波那契螺旋网格：斐波那契螺旋引导，帮助创建自然流畅的视觉路径')).toBeNull();
+    });
+
+    it('only renders diagonal grid when variant is "diagonal"', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="diagonal" />);
+      const diagonalElements = getAllByLabelText('对角线网格：提供对角线构图引导，适合建筑、风光和动态场景');
+      expect(diagonalElements.length).toBeGreaterThanOrEqual(1);
+
+      const thirdsQuery = render(<GridOverlay variant="diagonal" />);
+      const goldenQuery = render(<GridOverlay variant="diagonal" />);
+      const spiralQuery = render(<GridOverlay variant="diagonal" />);
+
+      expect(thirdsQuery.queryByLabelText('三分法构图网格：将画面水平和垂直各分为三等份，形成九宫格，适合人像和风景构图')).toBeNull();
+      expect(goldenQuery.queryByLabelText('黄金比例网格：基于黄金分割比例1比1.618的网格，帮助创建视觉平衡与和谐')).toBeNull();
+      expect(spiralQuery.queryByLabelText('斐波那契螺旋网格：斐波那契螺旋引导，帮助创建自然流畅的视觉路径')).toBeNull();
+    });
+
+    it('only renders spiral grid when variant is "spiral"', () => {
+      const { getAllByLabelText } = render(<GridOverlay variant="spiral" />);
+      const spiralElements = getAllByLabelText('斐波那契螺旋网格：斐波那契螺旋引导，帮助创建自然流畅的视觉路径');
+      expect(spiralElements.length).toBeGreaterThanOrEqual(1);
+
+      const thirdsQuery = render(<GridOverlay variant="spiral" />);
+      const goldenQuery = render(<GridOverlay variant="spiral" />);
+      const diagonalQuery = render(<GridOverlay variant="spiral" />);
+
+      expect(thirdsQuery.queryByLabelText('三分法构图网格：将画面水平和垂直各分为三等份，形成九宫格，适合人像和风景构图')).toBeNull();
+      expect(goldenQuery.queryByLabelText('黄金比例网格：基于黄金分割比例1比1.618的网格，帮助创建视觉平衡与和谐')).toBeNull();
+      expect(diagonalQuery.queryByLabelText('对角线网格：提供对角线构图引导，适合建筑、风光和动态场景')).toBeNull();
+    });
+
+    it('renders nothing when variant is "none"', () => {
+      const { toJSON } = render(<GridOverlay variant="none" />);
+      expect(toJSON()).toBeNull();
+    });
   });
 
-  it('renders diagonal variant', () => {
-    const { toJSON } = render(<GridOverlay variant="diagonal" />);
-    expect(toJSON()).not.toBeNull();
-  });
-
-  it('renders spiral variant', () => {
-    const { toJSON } = render(<GridOverlay variant="spiral" />);
-    expect(toJSON()).not.toBeNull();
-  });
-
-  it('defaults to thirds variant', () => {
-    const { toJSON } = render(<GridOverlay />);
-    // Default is 'thirds'
-    expect(toJSON()).not.toBeNull();
+  describe('interactive mode with onGridActivate', () => {
+    it('renders TouchableOpacity when onGridActivate is provided', () => {
+      const mockOnActivate = jest.fn();
+      const { getAllByRole } = render(
+        <GridOverlay variant="thirds" onGridActivate={mockOnActivate} />
+      );
+      // When interactive, accessibilityRole becomes 'button' instead of 'image'
+      const buttonElements = getAllByRole('button');
+      expect(buttonElements.length).toBeGreaterThanOrEqual(1);
+    });
   });
 });
