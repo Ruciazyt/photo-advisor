@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">47.54% </span>
+                <span class="strong">49.09% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>29/61</span>
+                <span class='fraction'>27/55</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.3% </span>
+                <span class="strong">45.83% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>11/26</span>
+                <span class='fraction'>11/24</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">52.83% </span>
+                <span class="strong">55.31% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>28/53</span>
+                <span class='fraction'>26/47</span>
             </div>
         
             
@@ -351,17 +351,7 @@
 <a name='L286'></a><a href='#L286'>286</a>
 <a name='L287'></a><a href='#L287'>287</a>
 <a name='L288'></a><a href='#L288'>288</a>
-<a name='L289'></a><a href='#L289'>289</a>
-<a name='L290'></a><a href='#L290'>290</a>
-<a name='L291'></a><a href='#L291'>291</a>
-<a name='L292'></a><a href='#L292'>292</a>
-<a name='L293'></a><a href='#L293'>293</a>
-<a name='L294'></a><a href='#L294'>294</a>
-<a name='L295'></a><a href='#L295'>295</a>
-<a name='L296'></a><a href='#L296'>296</a>
-<a name='L297'></a><a href='#L297'>297</a>
-<a name='L298'></a><a href='#L298'>298</a>
-<a name='L299'></a><a href='#L299'>299</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L289'></a><a href='#L289'>289</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -446,10 +436,6 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -459,12 +445,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -742,10 +722,6 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
     ? (cameraRef.current as any).zoom ?? <span class="branch-1 cbranch-no" title="branch not covered" >1.0</span>
     : 1.0;
   const [zoomLevel, setZoomLevel] = useState(initialZoom);
-  // Tracks whether the current device supports focusDepth
-  const [focusDepthSupported, setFocusDepthSupported] = useState&lt;boolean | null&gt;(null);
-  // Ref to track whether focusDepth check has been performed (avoids state dependency in poll)
-  const focusDepthCheckedRef = useRef(false);
   // Active focus rings from tap-to-focus
   const [focusRings, setFocusRings] = useState&lt;{ id: number; x: number; y: number }[]&gt;([]);
   const ringCounterRef = useRef(0);
@@ -760,12 +736,6 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
       const cam = <span class="cstat-no" title="statement not covered" >cameraRef.current as any;</span>
 <span class="cstat-no" title="statement not covered" >      if (cam.zoom !== undefined &amp;&amp; typeof cam.zoom === 'number') {</span>
 <span class="cstat-no" title="statement not covered" >        setZoomLevel(cam.zoom);</span>
-      }
-      // Check if focusDepth method is available — only once, using ref to avoid callback recreation
-<span class="cstat-no" title="statement not covered" >      if (!focusDepthCheckedRef.current) {</span>
-<span class="cstat-no" title="statement not covered" >        focusDepthCheckedRef.current = true;</span>
-        const supported = <span class="cstat-no" title="statement not covered" >typeof cam.focusDepth === 'function';</span>
-<span class="cstat-no" title="statement not covered" >        setFocusDepthSupported(supported);</span>
       }
     }
   }, [cameraRef]);
@@ -964,7 +934,7 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-18T19:55:07.153Z
+                at 2026-04-19T00:08:02.419Z
             </div>
         <script src="../prettify.js"></script>
         <script>
