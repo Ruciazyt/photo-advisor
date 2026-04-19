@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, RenderResult } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import {
@@ -87,22 +87,16 @@ describe('SettingsScreen', () => {
   // 3. switches to MiniMax mode — hides Base URL section
   it('switches to MiniMax mode and hides Base URL section', () => {
     const { getByText, queryByText } = render(<SettingsScreen />);
-    // Base URL input is shown by default for OpenAI
     expect(getByText('Base URL')).toBeTruthy();
-    // Tap MiniMax button
     fireEvent.press(getByText('MiniMax'));
-    // Base URL label should be gone (conditional render)
     expect(queryByText('Base URL')).toBeNull();
   });
 
   // 4. switches to OpenAI mode — shows Base URL input
   it('switches to OpenAI mode and shows Base URL input', () => {
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
-    // Start with MiniMax
     fireEvent.press(getByText('MiniMax'));
-    // Switch back to OpenAI
     fireEvent.press(getByText('OpenAI 兼容'));
-    // Base URL input should now be visible
     expect(getByText('Base URL')).toBeTruthy();
     expect(getByPlaceholderText('https://api.example.com/v1')).toBeTruthy();
   });
@@ -124,9 +118,7 @@ describe('SettingsScreen', () => {
   // 7. shows validation alert when saving OpenAI without base URL
   it('shows validation alert when saving OpenAI without base URL', () => {
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
-    // Fill API key but leave base URL blank
-    const apiKeyInput = getByPlaceholderText('sk-xxxxxxxx');
-    fireEvent.changeText(apiKeyInput, 'sk-testkey123');
+    fireEvent.changeText(getByPlaceholderText('sk-xxxxxxxx'), 'sk-testkey123');
     fireEvent.press(getByText('保存配置'));
     expect(mockAlert).toHaveBeenCalledWith('请填写 Base URL');
   });
@@ -134,7 +126,6 @@ describe('SettingsScreen', () => {
   // 8. shows validation alert when saving without selecting model
   it('shows validation alert when saving without selecting model', () => {
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
-    // Fill API key and base URL, but no model selected
     fireEvent.changeText(getByPlaceholderText('sk-xxxxxxxx'), 'sk-testkey123');
     fireEvent.changeText(getByPlaceholderText('https://api.example.com/v1'), 'https://api.test.com');
     fireEvent.press(getByText('保存配置'));
@@ -147,7 +138,6 @@ describe('SettingsScreen', () => {
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
     fireEvent.changeText(getByPlaceholderText('sk-xxxxxxxx'), 'sk-testkey123');
     fireEvent.changeText(getByPlaceholderText('https://api.example.com/v1'), 'https://api.test.com');
-    // Simulate model selected via fetched models
     (fetchAvailableModels as jest.Mock).mockResolvedValue({
       ok: true,
       models: [{ id: 'gpt-4o', name: 'GPT-4o' }],
@@ -156,9 +146,7 @@ describe('SettingsScreen', () => {
     await waitFor(() => {
       expect(getByText('GPT-4o')).toBeTruthy();
     });
-    // Select the model
     fireEvent.press(getByText('GPT-4o'));
-    // Save
     fireEvent.press(getByText('保存配置'));
     await waitFor(() => {
       expect(saveApiConfig).toHaveBeenCalledWith(
@@ -188,7 +176,6 @@ describe('SettingsScreen', () => {
   it('test connection button triggers testMinimaxConnection', async () => {
     (testMinimaxConnection as jest.Mock).mockResolvedValue({ ok: true });
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
-    // Switch to MiniMax
     fireEvent.press(getByText('MiniMax'));
     fireEvent.changeText(getByPlaceholderText('sk-xxxxxxxx'), 'test-minimax-key');
     fireEvent.press(getByText('🔗 Test Connection'));
@@ -224,9 +211,9 @@ describe('SettingsScreen', () => {
   it('voice toggle calls saveAppSettings with updated value', async () => {
     (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
     const { getByText } = render(<SettingsScreen />);
-    // Voice starts disabled
-    expect(getByText('关')).toBeTruthy();
-    // Toggle voice on
+    await waitFor(() => {
+      expect(getByText('关')).toBeTruthy();
+    });
     fireEvent.press(getByText('关'));
     await waitFor(() => {
       expect(saveAppSettings).toHaveBeenCalledWith({ voiceEnabled: true });
@@ -248,7 +235,6 @@ describe('SettingsScreen', () => {
       htmlUrl: 'https://github.com/example/release',
       downloadUrl: null,
     });
-    (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
     const { getByText } = render(<SettingsScreen />);
     fireEvent.press(getByText('检查更新'));
     await waitFor(() => {
@@ -281,40 +267,36 @@ describe('SettingsScreen', () => {
     });
     const { getByText } = render(<SettingsScreen />);
     await waitFor(() => {
-      // Voice toggle should show '开' when voiceEnabled is true
       expect(getByText('开')).toBeTruthy();
     });
   });
 
-  // Additional: MiniMax mode shows hardcoded model list without fetch
+  // 18. MiniMax mode shows hardcoded model list without fetch
   it('MiniMax mode shows hardcoded model list without fetch', () => {
     const { getByText, queryByText } = render(<SettingsScreen />);
     fireEvent.press(getByText('MiniMax'));
-    // MiniMax models are shown directly from MINIMAX_MODELS constant
     expect(getByText('MiniMax M2.7')).toBeTruthy();
-    expect(queryByText('获取模型列表')).toBeNull(); // fetch button should not appear
+    expect(queryByText('获取模型列表')).toBeNull();
   });
 
-  // Additional: toggling theme calls toggleTheme
+  // 19. toggling theme calls toggleTheme
   it('theme toggle button calls toggleTheme', () => {
     const ThemeContext = require('../contexts/ThemeContext');
     const { getByText } = render(<SettingsScreen />);
-    // Confirm the theme toggle UI is rendered
     expect(getByText('深色/浅色主题')).toBeTruthy();
-    // Get the mock function and invoke it — proves the onPress prop is wired
     const { toggleTheme } = ThemeContext.useTheme();
     toggleTheme();
     expect(toggleTheme).toHaveBeenCalled();
   });
 
-  // Additional: validation when fetching models without API key
+  // 20. validation when fetching models without API key
   it('shows alert when fetching models without API key or base URL', () => {
     const { getByText } = render(<SettingsScreen />);
     fireEvent.press(getByText('获取模型列表'));
     expect(mockAlert).toHaveBeenCalledWith('请先填写 API Key 和 Base URL');
   });
 
-  // Additional: connection test shows failure alert
+  // 21. connection test shows failure alert
   it('shows failure alert when test connection fails', async () => {
     (testOpenAIConnection as jest.Mock).mockResolvedValue({ ok: false, error: 'Invalid API key' });
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
@@ -326,7 +308,7 @@ describe('SettingsScreen', () => {
     });
   });
 
-  // Additional: save shows failure alert on error
+  // 22. save shows failure alert on error
   it('shows failure alert when save fails', async () => {
     (saveApiConfig as jest.Mock).mockRejectedValue(new Error('Network error'));
     (fetchAvailableModels as jest.Mock).mockResolvedValue({
@@ -345,13 +327,12 @@ describe('SettingsScreen', () => {
     });
   });
 
-  // Additional: save test with minimax
+  // 23. save test with minimax
   it('successful save in MiniMax mode calls saveApiConfig with minimax type', async () => {
     (saveApiConfig as jest.Mock).mockResolvedValue(undefined);
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
     fireEvent.press(getByText('MiniMax'));
     fireEvent.changeText(getByPlaceholderText('sk-xxxxxxxx'), 'test-minimax-key');
-    // Select MiniMax model
     fireEvent.press(getByText('MiniMax M2.7'));
     fireEvent.press(getByText('保存配置'));
     await waitFor(() => {
@@ -365,20 +346,19 @@ describe('SettingsScreen', () => {
     expect(mockAlert).toHaveBeenCalledWith('保存成功', 'API 配置已保存', expect.any(Array));
   });
 
-  // Additional: test connection without API key shows alert
+  // 24. test connection without API key shows alert
   it('test connection without API key shows validation alert', () => {
     const { getByText } = render(<SettingsScreen />);
     fireEvent.press(getByText('🔗 Test Connection'));
     expect(mockAlert).toHaveBeenCalledWith('请先填写 API Key');
   });
 
-  // Additional: check update shows "already latest" when no newer version
+  // 25. check update shows "already latest" when no newer version
   it('shows already latest alert when no newer version available', async () => {
     (checkForUpdate as jest.Mock).mockResolvedValue({
       version: '1.0.0',
       htmlUrl: 'https://github.com/example/release',
     });
-    (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
     const { getByText } = render(<SettingsScreen />);
     fireEvent.press(getByText('检查更新'));
     await waitFor(() => {
@@ -386,7 +366,7 @@ describe('SettingsScreen', () => {
     });
   });
 
-  // Additional: fetch models handles error response
+  // 26. fetch models handles error response
   it('shows alert when fetch models returns error', async () => {
     (fetchAvailableModels as jest.Mock).mockResolvedValue({
       ok: false,
@@ -401,7 +381,7 @@ describe('SettingsScreen', () => {
     });
   });
 
-  // Additional: loading existing config with minimax type defaults to correct state
+  // 27. loading existing config with minimax type defaults to correct state
   it('loads existing config with minimax type and shows MiniMax models', async () => {
     (loadApiConfig as jest.Mock).mockResolvedValue({
       apiType: 'minimax',
@@ -413,7 +393,6 @@ describe('SettingsScreen', () => {
     await waitFor(() => {
       expect(getByDisplayValue('sk-minimax-saved')).toBeTruthy();
     });
-    // MiniMax model should be visible
     expect(getByText('MiniMax M2.7')).toBeTruthy();
   });
 });
