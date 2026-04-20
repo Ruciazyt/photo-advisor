@@ -24,7 +24,7 @@ import {
 
 const mockLinking = require('react-native').Linking;
 const mockAlert = require('react-native').Alert;
-const realFetch = global.fetch;
+const realFetch = globalThis.fetch;
 
 describe('getAppVersion', () => {
   it('returns a non-empty version string', () => {
@@ -75,29 +75,29 @@ describe('compareVersions', () => {
 describe('checkForUpdate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    global.fetch = jest.fn();
+    globalThis.fetch = jest.fn();
   });
 
   afterEach(() => {
-    global.fetch = realFetch;
+    globalThis.fetch = realFetch;
   });
 
   it('returns null on fetch error', async () => {
-    (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+    (globalThis.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
     const result = await checkForUpdate();
     expect(result).toBeNull();
   });
 
   it('returns null when response is not ok', async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 404 });
+    (globalThis.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 404 });
 
     const result = await checkForUpdate();
     expect(result).toBeNull();
   });
 
   it('parses release info from GitHub API response', async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -122,7 +122,7 @@ describe('checkForUpdate', () => {
   });
 
   it('handles missing assets gracefully (no apk)', async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -142,7 +142,7 @@ describe('checkForUpdate', () => {
   });
 
   it('strips v prefix from tag_name for version field', async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -162,11 +162,12 @@ describe('checkForUpdate', () => {
 describe('downloadAndInstall', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    global.fetch = jest.fn();
+    globalThis.fetch = jest.fn();
   });
 
+
   afterEach(() => {
-    global.fetch = realFetch;
+    globalThis.fetch = realFetch;
   });
 
   it('opens URL when Linking.canOpenURL returns true', async () => {
