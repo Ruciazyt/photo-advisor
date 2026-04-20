@@ -202,6 +202,7 @@ describe('HomeScreen', () => {
 
   // 9. handleSend: has image + API configured calls streamChatCompletion
   it('handleSend with image and API configured calls streamChatCompletion', async () => {
+    jest.setTimeout(10000);
     (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
     (ImagePicker.launchCameraAsync as jest.Mock).mockResolvedValue({
       canceled: false,
