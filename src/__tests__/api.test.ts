@@ -34,6 +34,11 @@ import { AppError } from '../services/errors';
 
 const mockAxiosGet = axios.get as jest.MockedFunction<typeof axios.get>;
 const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+// Cast AsyncStorage mock so TypeScript knows it has Jest mock methods
+const MockAsyncStorage = AsyncStorage as unknown as {
+  multiGet: jest.MockedFunction<(_keys: readonly string[]) => Promise<readonly [string, string | null][]>>;
+  multiSet: jest.MockedFunction<(_pairs: readonly [string, string][]) => Promise<void>>;
+};
 
 describe('MINIMAX_MODELS constant', () => {
   it('contains at least 3 model options', () => {
@@ -102,30 +107,26 @@ describe('testOpenAIConnection', () => {
 });
 
 describe('testMinimaxConnection', () => {
-  const _globalFetch = global.fetch;
+  const _globalFetch = globalThis.fetch;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    global.fetch = mockFetch;
+    globalThis.fetch = mockFetch;
   });
 
   afterEach(() => {
-    global.fetch = _globalFetch;
+    globalThis.fetch = _globalFetch;
   });
 
   it('returns ok:true when fetch responds with ok=true', async () => {
-    mockFetch.mockResolvedValue({ ok: true });
+    mockFetch.mockResolvedValue(new Response('{}', { status: 200 }));
 
     const result = await testMinimaxConnection('test-key');
     expect(result).toEqual({ ok: true });
   });
 
   it('returns ok:false with HTTP status in error when fetch responds with ok=false', async () => {
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 401,
-      text: () => Promise.resolve('Unauthorized'),
-    });
+    mockFetch.mockResolvedValue(new Response('Unauthorized', { status: 401 }));
 
     const result = await testMinimaxConnection('bad-key');
     expect(result.ok).toBe(false);
@@ -189,7 +190,7 @@ describe('saveApiConfig / loadApiConfig', () => {
 
   describe('loadApiConfig', () => {
     it('returns null when apiKey is null', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'openai'],
         ['photo_advisor_api_key', null],
         ['photo_advisor_base_url', 'https://api.example.com'],
@@ -201,7 +202,7 @@ describe('saveApiConfig / loadApiConfig', () => {
     });
 
     it('returns null when openai apiKey is "null" string', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'openai'],
         ['photo_advisor_api_key', 'null'],
         ['photo_advisor_base_url', 'https://api.example.com'],
@@ -213,7 +214,7 @@ describe('saveApiConfig / loadApiConfig', () => {
     });
 
     it('returns null for openai when baseUrl is null', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'openai'],
         ['photo_advisor_api_key', 'sk-test'],
         ['photo_advisor_base_url', null],
@@ -225,7 +226,7 @@ describe('saveApiConfig / loadApiConfig', () => {
     });
 
     it('returns null for openai when model is null', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'openai'],
         ['photo_advisor_api_key', 'sk-test'],
         ['photo_advisor_base_url', 'https://api.example.com'],
@@ -237,7 +238,7 @@ describe('saveApiConfig / loadApiConfig', () => {
     });
 
     it('returns full config for openai', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'openai'],
         ['photo_advisor_api_key', 'sk-test'],
         ['photo_advisor_base_url', 'https://api.example.com'],
@@ -254,7 +255,7 @@ describe('saveApiConfig / loadApiConfig', () => {
     });
 
     it('returns config for minimax without baseUrl', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'minimax'],
         ['photo_advisor_api_key', 'mmx-key'],
         ['photo_advisor_base_url', ''],
@@ -271,7 +272,7 @@ describe('saveApiConfig / loadApiConfig', () => {
     });
 
     it('returns null when all values are "null" strings', async () => {
-      AsyncStorage.multiGet.mockResolvedValue([
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue([
         ['photo_advisor_api_type', 'null'],
         ['photo_advisor_api_key', 'null'],
         ['photo_advisor_base_url', 'null'],

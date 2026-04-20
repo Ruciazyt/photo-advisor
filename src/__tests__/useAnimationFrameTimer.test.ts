@@ -5,13 +5,22 @@ import { renderHook, act } from '@testing-library/react-native';
 const mockRunOnJS = jest.fn();
 const mockUseFrameCallback = jest.fn();
 
-jest.mock('react-native-reanimated', () => ({
-  useFrameCallback: (...args: unknown[]) => mockUseFrameCallback(...args),
-  runOnJS: (fn: () => void) => {
-    mockRunOnJS(fn);
-    return fn;
-  },
-}));
+jest.mock('react-native-reanimated', () => {
+  const mockUseFrameCallbackFn = (...args: unknown[]) => {
+    return (mockUseFrameCallback as jest.Mock).call(null, ...args);
+  };
+  return {
+    useFrameCallback: (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      callback: (frameInfo: any) => void,
+      _enabled?: boolean
+    ) => mockUseFrameCallbackFn(callback, _enabled),
+    runOnJS: (fn: () => void) => {
+      mockRunOnJS(fn);
+      return fn;
+    },
+  };
+});
 
 describe('useAnimationFrameTimer', () => {
   let mockCallbacks: Array<(frameInfo: { timeSincePreviousFrame: number | null }) => void> = [];
@@ -20,10 +29,9 @@ describe('useAnimationFrameTimer', () => {
     jest.useFakeTimers();
     mockCallbacks = [];
     mockRunOnJS.mockClear();
-    mockUseFrameCallback.mockImplementation((callback: (frameInfo: { timeSincePreviousFrame: number | null }) => void, _enabled?: boolean) => {
-      // Real implementation replaces callback when useFrameCallback re-renders with new enabled value
+    mockUseFrameCallback.mockImplementation((callback: Function, _enabled?: boolean) => {
       mockCallbacks.length = 0;
-      mockCallbacks.push(callback);
+      mockCallbacks.push(callback as (frameInfo: { timeSincePreviousFrame: number | null }) => void);
     });
   });
 
@@ -170,7 +178,7 @@ describe('useAnimationFrameTimer', () => {
     it('handles enabled state change correctly', () => {
       const onTick = jest.fn();
 
-      const { rerender } = renderHook(
+      const { rerender } = renderHook<ReturnType<typeof useAnimationFrameTimer>, { enabled: boolean }>(
         ({ enabled }) => useAnimationFrameTimer({ intervalMs: 500, onTick, enabled }),
         { initialProps: { enabled: true } }
       );
@@ -191,7 +199,7 @@ describe('useAnimationFrameTimer', () => {
     it('resumes timing after re-enabling', () => {
       const onTick = jest.fn();
 
-      const { rerender } = renderHook(
+      const { rerender } = renderHook<ReturnType<typeof useAnimationFrameTimer>, { enabled: boolean }>(
         ({ enabled }) => useAnimationFrameTimer({ intervalMs: 500, onTick, enabled }),
         { initialProps: { enabled: false } }
       );
@@ -208,7 +216,7 @@ describe('useAnimationFrameTimer', () => {
     it('uses the latest onTick when changed via enabled toggle', () => {
       const onTick = jest.fn();
 
-      const { rerender } = renderHook(
+      const { rerender } = renderHook<ReturnType<typeof useAnimationFrameTimer>, { enabled: boolean; onTick: () => void }>(
         ({ enabled, onTick: ot }) => useAnimationFrameTimer({ intervalMs: 500, onTick: ot, enabled }),
         { initialProps: { enabled: true, onTick } }
       );
