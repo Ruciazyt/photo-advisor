@@ -3,10 +3,12 @@ import { render, fireEvent, waitFor, screen } from '@testing-library/react-nativ
 import { Alert } from 'react-native';
 
 // Suppress act() warnings from @expo/vector-icons Icon component (async state updates in third-party code)
+// and from SettingsScreen's useEffect async microtasks resolving outside act boundaries
 const originalError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
-  if (typeof args[0] === 'string' && args[0].includes('An update to Icon inside a test was not wrapped in act')) {
-    return;
+  if (typeof args[0] === 'string') {
+    if (args[0].includes('An update to Icon inside a test was not wrapped in act')) return;
+    if (args[0].includes('An update to SettingsScreen inside a test was not wrapped in act')) return;
   }
   originalError(...args);
 };
@@ -291,16 +293,14 @@ describe('SettingsScreen', () => {
   // 19. toggling theme calls toggleTheme
   it('theme toggle button calls toggleTheme', () => {
     const ThemeContext = require('../contexts/ThemeContext');
-    const useThemeSpy = jest.spyOn(ThemeContext, 'useTheme');
+    // Replace mock implementation to capture the toggleTheme reference
+    const originalImpl = ThemeContext.useTheme.getMockImplementation();
     let capturedToggleTheme: jest.Mock | null = null;
-    useThemeSpy.mockImplementation(() => {
+    ThemeContext.useTheme.mockImplementation(() => {
       const toggleTheme = jest.fn();
       capturedToggleTheme = toggleTheme;
-      return {
-        theme: 'dark',
-        colors: { primary: '#000', accent: '#e8d5b7', text: '#fff', textSecondary: '#aaa', cardBg: '#111', border: '#333' },
-        toggleTheme,
-      };
+      const result = originalImpl!();
+      return { ...result, toggleTheme };
     });
     render(<SettingsScreen />);
     expect(capturedToggleTheme).not.toBeNull();
@@ -310,7 +310,8 @@ describe('SettingsScreen', () => {
     expect(themeToggle).toBeDefined();
     fireEvent.press(themeToggle);
     expect(capturedToggleTheme!.mock.calls.length).toBe(1);
-    useThemeSpy.mockRestore();
+    // Restore original mock
+    ThemeContext.useTheme.mockImplementation(originalImpl!);
   });
 
   // 20. validation when fetching models without API key
