@@ -257,6 +257,17 @@ function ThirdsGrid({ gridAccent, onActivate, accessibilityLabel, subLabel }: Gr
 }
 
 // ============================================================
+// ============================================================
+// Grid component registry — maps variant to the sub-component
+// ============================================================
+const GRID_COMPONENTS: Record<Exclude<GridVariant, 'none'>, React.ComponentType<GridSubProps>> = {
+  thirds: ThirdsGrid,
+  golden: GoldenSpiral,
+  diagonal: DiagonalGrid,
+  spiral: SpiralGrid,
+};
+
+// ============================================================
 // Main GridOverlay component
 // ============================================================
 
@@ -287,83 +298,25 @@ export function GridOverlay({
     onGridActivate?.(variant);
   };
 
-  if (variant === 'thirds') {
-    return (
-      <View
-        accessible
-        accessibilityLabel={fullA11yLabel}
-        accessibilityRole="image"
-        accessibilityLiveRegion="polite"
-        style={styles.overlay}
-        pointerEvents="box-none"
-      >
-        <ThirdsGrid
-          gridAccent={gridAccent}
-          onActivate={onGridActivate ? handleActivate : undefined}
-          accessibilityLabel={fullA11yLabel}
-        />
-      </View>
-    );
-  }
+  const GridComponent = GRID_COMPONENTS[variant as Exclude<GridVariant, 'none'>];
+  if (!GridComponent) return null;
 
-  if (variant === 'golden') {
-    return (
-      <View
-        accessible
+  return (
+    <View
+      accessible
+      accessibilityLabel={fullA11yLabel}
+      accessibilityRole="image"
+      accessibilityLiveRegion="polite"
+      style={styles.overlay}
+      pointerEvents="box-none"
+    >
+      <GridComponent
+        gridAccent={gridAccent}
+        onActivate={onGridActivate ? handleActivate : undefined}
         accessibilityLabel={fullA11yLabel}
-        accessibilityRole="image"
-        accessibilityLiveRegion="polite"
-        style={styles.overlay}
-        pointerEvents="box-none"
-      >
-        <GoldenSpiral
-          gridAccent={gridAccent}
-          onActivate={onGridActivate ? handleActivate : undefined}
-          accessibilityLabel={fullA11yLabel}
-        />
-      </View>
-    );
-  }
-
-  if (variant === 'diagonal') {
-    return (
-      <View
-        accessible
-        accessibilityLabel={fullA11yLabel}
-        accessibilityRole="image"
-        accessibilityLiveRegion="polite"
-        style={styles.overlay}
-        pointerEvents="box-none"
-      >
-        <DiagonalGrid
-          gridAccent={gridAccent}
-          onActivate={onGridActivate ? handleActivate : undefined}
-          accessibilityLabel={fullA11yLabel}
-        />
-      </View>
-    );
-  }
-
-  if (variant === 'spiral') {
-    return (
-      <View
-        accessible
-        accessibilityLabel={fullA11yLabel}
-        accessibilityRole="image"
-        accessibilityLiveRegion="polite"
-        style={styles.overlay}
-        pointerEvents="box-none"
-      >
-        <SpiralGrid
-          gridAccent={gridAccent}
-          onActivate={onGridActivate ? handleActivate : undefined}
-          accessibilityLabel={fullA11yLabel}
-        />
-      </View>
-    );
-  }
-
-  return null;
+      />
+    </View>
+  );
 }
 
 // ============================================================
