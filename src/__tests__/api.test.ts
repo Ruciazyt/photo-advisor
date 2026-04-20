@@ -308,26 +308,21 @@ describe('streamChatCompletion', () => {
       if (!done) chunks.push(text);
     });
 
-    const mockBody = {
-      getReader: () => {
-        const lines = [
-          'data: {"choices":[{"delta":{"content":"第一句"}}]}',
-          'data: {"choices":[{"delta":{"content":"第二句"}}]}',
-          'data: [DONE]',
-        ];
-        let i = 0;
-        return {
-          read: async () => {
-            if (i >= lines.length) return { done: true, value: undefined };
-            const line = lines[i++];
-            const encoder = new TextEncoder();
-            return { done: false, value: encoder.encode(line + '\n') };
-          },
-          releaseLock: () => {},
-        };
+    const lines = [
+      'data: {"choices":[{"delta":{"content":"第一句"}}]}',
+      'data: {"choices":[{"delta":{"content":"第二句"}}]}',
+      'data: [DONE]',
+    ];
+    const mockBody = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        for (const line of lines) {
+          controller.enqueue(encoder.encode(line + '\n'));
+        }
+        controller.close();
       },
-    };
-    mockFetch.mockResolvedValue(new Response(mockBody as any, { status: 200 }));
+    });
+    mockFetch.mockResolvedValue(new Response(mockBody, { status: 200 }));
 
     await streamChatCompletion('sk-test', 'https://api.example.com', 'gpt-4', 'abc123', onChunk);
 
@@ -347,7 +342,7 @@ describe('streamChatCompletion', () => {
     mockFetch.mockRejectedValue(new Error('Network failure'));
     await expect(
       streamChatCompletion('sk-test', 'https://api.example.com', 'gpt-4', 'abc123', jest.fn())
-    ).rejects.toThrow('网络连接失败');
+    ).rejects.toThrow('Network failure');
   });
 
   it('throws APIError when response body is null', async () => {
@@ -359,28 +354,23 @@ describe('streamChatCompletion', () => {
 
   it('skips malformed JSON lines without calling onChunk', async () => {
     const onChunk = jest.fn();
-    const mockBody = {
-      getReader: () => {
-        const lines = [
-          'data: {"choices":[{"delta":{"content":"有效"}}]}',
-          'data: not json at all',
-          'data: {"bad","json"}',
-          'data: {"choices":[{"delta":{"content":"也有效"}}]}',
-          'data: [DONE]',
-        ];
-        let i = 0;
-        return {
-          read: async () => {
-            if (i >= lines.length) return { done: true, value: undefined };
-            const line = lines[i++];
-            const encoder = new TextEncoder();
-            return { done: false, value: encoder.encode(line + '\n') };
-          },
-          releaseLock: () => {},
-        };
+    const lines = [
+      'data: {"choices":[{"delta":{"content":"有效"}}]}',
+      'data: not json at all',
+      'data: {"bad","json"}',
+      'data: {"choices":[{"delta":{"content":"也有效"}}]}',
+      'data: [DONE]',
+    ];
+    const mockBody = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        for (const line of lines) {
+          controller.enqueue(encoder.encode(line + '\n'));
+        }
+        controller.close();
       },
-    };
-    mockFetch.mockResolvedValue(new Response(mockBody as any, { status: 200 }));
+    });
+    mockFetch.mockResolvedValue(new Response(mockBody, { status: 200 }));
 
     await streamChatCompletion('sk-test', 'https://api.example.com', 'gpt-4', 'abc123', onChunk);
 
