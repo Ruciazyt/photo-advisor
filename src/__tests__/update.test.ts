@@ -20,7 +20,9 @@ import {
   checkForUpdate,
   downloadAndInstall,
   openReleasePage,
+  showUpdateDialog,
 } from '../services/update';
+import type { ReleaseInfo } from '../types';
 
 const mockLinking = require('react-native').Linking;
 const mockAlert = require('react-native').Alert;
@@ -210,5 +212,85 @@ describe('openReleasePage', () => {
   it('does not throw on error (silent failure)', async () => {
     mockLinking.openURL.mockRejectedValue(new Error('Failed to open'));
     await expect(openReleasePage('https://bad.com')).resolves.toBeUndefined();
+  });
+});
+
+describe('showUpdateDialog', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAlert.alert.mockClear();
+  });
+
+  const makeRelease = (overrides: Partial<ReleaseInfo> = {}): ReleaseInfo => ({
+    tagName: 'v1.0.0',
+    version: '1.0.0',
+    downloadUrl: 'https://example.com/app.apk',
+    htmlUrl: 'https://github.com/example/repo/releases/tag/v1.0.0',
+    publishedAt: '2026-04-01T12:00:00Z',
+    body: 'Bug fixes',
+    ...overrides,
+  });
+
+  it('calls Alert.alert with correct title and message', () => {
+    const release = makeRelease({ version: '1.2.3', publishedAt: '2026-04-15T10:00:00Z' });
+    showUpdateDialog(release, jest.fn(), jest.fn());
+    expect(mockAlert.alert).toHaveBeenCalledTimes(1);
+    const [title, message] = mockAlert.alert.mock.calls[0];
+    expect(title).toBe('发现新版本');
+    expect(message).toContain('1.2.3');
+  });
+
+  it('includes formatted publish date in message', () => {
+    const release = makeRelease({ publishedAt: '2026-04-15T10:00:00Z' });
+    showUpdateDialog(release, jest.fn(), jest.fn());
+    const [, message] = mockAlert.alert.mock.calls[0];
+    // Local date of 2026-04-15T10:00:00Z in zh-CN
+    expect(message).toContain('2026');
+  });
+
+  it('shows 稍后 button that calls onLater callback', () => {
+    const onLater = jest.fn();
+    const onUpdate = jest.fn();
+    const release = makeRelease();
+    showUpdateDialog(release, onUpdate, onLater);
+
+    const [, , buttons] = mockAlert.alert.mock.calls[0];
+    // First button is 稍后 (cancel)
+    const cancelBtn = buttons.find((b: any) => b.text === '稍后');
+    expect(cancelBtn).toBeDefined();
+    expect(cancelBtn.style).toBe('cancel');
+    cancelBtn.onPress();
+    expect(onLater).toHaveBeenCalledTimes(1);
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('shows 下载更新 button that calls onUpdate callback', () => {
+    const onLater = jest.fn();
+    const onUpdate = jest.fn();
+    const release = makeRelease();
+    showUpdateDialog(release, onUpdate, onLater);
+
+    const [, , buttons] = mockAlert.alert.mock.calls[0];
+    const updateBtn = buttons.find((b: any) => b.text === '下载更新');
+    expect(updateBtn).toBeDefined();
+    updateBtn.onPress();
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    expect(onLater).not.toHaveBeenCalled();
+  });
+
+  it('passes cancelable:false to Alert.alert', () => {
+    const release = makeRelease();
+    showUpdateDialog(release, jest.fn(), jest.fn());
+    const [, , , options] = mockAlert.alert.mock.calls[0];
+    expect(options).toEqual({ cancelable: false });
+  });
+
+  it('renders message with newline between version and date', () => {
+    const release = makeRelease({ version: '2.0.0', publishedAt: '2026-03-01T00:00:00Z' });
+    showUpdateDialog(release, jest.fn(), jest.fn());
+    const [, message] = mockAlert.alert.mock.calls[0];
+    // Message format: "发现新版本: {version}\n\n更新时间: {date}"
+    expect(message).toMatch(/发现新版本: 2\.0\.0/);
+    expect(message).toMatch(/更新时间:/);
   });
 });
