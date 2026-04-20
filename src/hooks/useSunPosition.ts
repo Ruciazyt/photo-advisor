@@ -5,7 +5,7 @@ import type { SunData, LocationCoords } from '../types';
 export type { SunData } from '../types';
 
 // Sun position using standard astronomical algorithms (no external library)
-function calculateSunPosition(lat: number, lng: number, date: Date) {
+export function calculateSunPosition(lat: number, lng: number, date: Date) {
   // Convert to Julian date
   const julianDate = getJulianDate(date);
 
@@ -79,7 +79,7 @@ function calculateSunPosition(lat: number, lng: number, date: Date) {
   };
 }
 
-function getJulianDate(date: Date): number {
+export function getJulianDate(date: Date): number {
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth() + 1;
   const d = date.getUTCDate() + date.getUTCHours() / 24 + date.getUTCMinutes() / 1440;
@@ -89,11 +89,11 @@ function getJulianDate(date: Date): number {
   return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
 }
 
-function jdToUnix(jd: number): number {
+export function jdToUnix(jd: number): number {
   return (jd - 2440587.5) * 86400;
 }
 
-function jdToDateTime(jd: number, refDate: Date): Date {
+export function jdToDateTime(jd: number, refDate: Date): Date {
   const ms = (jd - 2451545.0) * 86400000;
   const d = new Date(refDate.getTime() + ms);
   // Clamp to today
@@ -103,11 +103,11 @@ function jdToDateTime(jd: number, refDate: Date): Date {
   return d;
 }
 
-function addMinutes(date: Date, minutes: number): Date {
+export function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60000);
 }
 
-function getLMST(jd: number, lng: number): number {
+export function getLMST(jd: number, lng: number): number {
   const t = (jd - 2451545.0) / 36525.0;
   let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * t * t - t * t * t / 38710000;
   gmst = gmst % 360;
@@ -117,19 +117,19 @@ function getLMST(jd: number, lng: number): number {
   return lmst / 15; // in hours
 }
 
-function formatTime(date: Date): string {
+export function formatTime(date: Date): string {
   const h = date.getHours().toString().padStart(2, '0');
   const m = date.getMinutes().toString().padStart(2, '0');
   return `${h}:${m}`;
 }
 
-function getAzimuthDirection(azimuth: number): string {
+export function getAzimuthDirection(azimuth: number): string {
   const dirs = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
   const idx = Math.round(azimuth / 45) % 8;
   return dirs[idx];
 }
 
-function getSunAdvice(altitude: number, azimuth: number): string {
+export function getSunAdvice(altitude: number, azimuth: number): string {
   if (altitude < -6) return '太阳低于地平线，夜间拍摄';
   if (altitude < -4) return '蓝调时刻，光线柔和';
   if (altitude < 0) return '黄金时刻，暖色光线';
@@ -139,7 +139,7 @@ function getSunAdvice(altitude: number, azimuth: number): string {
   return '顶光较强，建议补光';
 }
 
-function getDirectionAdvice(altitude: number, azimuth: number): string {
+export function getDirectionAdvice(altitude: number, azimuth: number): string {
   if (altitude < 0) return '拍剪影或长曝光';
   if (altitude < 10) {
     if (azimuth > 315 || azimuth < 45) return '可拍逆光剪影';
