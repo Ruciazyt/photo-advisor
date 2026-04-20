@@ -6,6 +6,23 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 
+// Mock the useHaptics hook
+const mockMediumImpact = jest.fn();
+const mockErrorNotification = jest.fn();
+const mockWarningNotification = jest.fn();
+
+jest.mock('../hooks/useHaptics', () => ({
+  useHaptics: () => ({
+    mediumImpact: mockMediumImpact,
+    errorNotification: mockErrorNotification,
+    warningNotification: mockWarningNotification,
+    lightImpact: jest.fn(),
+    heavyImpact: jest.fn(),
+    successNotification: jest.fn(),
+    triggerLevelHaptic: jest.fn(),
+  }),
+}));
+
 describe('FocusGuideOverlay', () => {
   const mockCameraRef = { current: null };
 
@@ -63,6 +80,69 @@ describe('FocusGuideOverlay', () => {
 
     fireEvent.press(screen.getByText('标准'));
     // Should not crash and should not call focusDepth
+  });
+
+  it('calls showToast callback when device does not support focusDepth', () => {
+    const showToastMock = jest.fn();
+    const cam = { zoom: 1.0 }; // no focusDepth
+    const ref = { current: cam };
+
+    render(<FocusGuideOverlay visible={true} cameraRef={ref} showToast={showToastMock} />);
+
+    fireEvent.press(screen.getByText('标准'));
+    expect(showToastMock).toHaveBeenCalledWith('当前设备不支持手动对焦');
+  });
+
+  it('calls showToast callback with error message when focusDepth throws', () => {
+    const showToastMock = jest.fn();
+    const cam = {
+      zoom: 1.0,
+      focusDepth: jest.fn().mockImplementation(() => {
+        throw new Error('focusDepth failed');
+      }),
+    };
+    const ref = { current: cam };
+
+    render(<FocusGuideOverlay visible={true} cameraRef={ref} showToast={showToastMock} />);
+
+    fireEvent.press(screen.getByText('远景'));
+    expect(showToastMock).toHaveBeenCalledWith('对焦失败，请重试');
+  });
+
+  it('calls mediumImpact when focusDepth succeeds', () => {
+    const cam = { zoom: 1.0, focusDepth: jest.fn() };
+    const ref = { current: cam };
+
+    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
+
+    fireEvent.press(screen.getByText('标准'));
+    expect(cam.focusDepth).toHaveBeenCalledWith(0.5);
+    expect(mockMediumImpact).toHaveBeenCalled();
+  });
+
+  it('calls errorNotification when focusDepth throws', () => {
+    const cam = {
+      zoom: 1.0,
+      focusDepth: jest.fn().mockImplementation(() => {
+        throw new Error('focusDepth failed');
+      }),
+    };
+    const ref = { current: cam };
+
+    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
+
+    fireEvent.press(screen.getByText('远景'));
+    expect(mockErrorNotification).toHaveBeenCalled();
+  });
+
+  it('calls warningNotification when device does not support focusDepth', () => {
+    const cam = { zoom: 1.0 }; // no focusDepth
+    const ref = { current: cam };
+
+    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
+
+    fireEvent.press(screen.getByText('标准'));
+    expect(mockWarningNotification).toHaveBeenCalled();
   });
 
   it('does NOT call focusDepth on tap (tap triggers visual feedback only)', () => {

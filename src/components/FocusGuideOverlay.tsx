@@ -1,13 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
+import { useHaptics } from '../hooks/useHaptics';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Platform,
-  ToastAndroid,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -74,7 +73,7 @@ function FocusRing({ x, y, onComplete }: FocusRingProps) {
   );
 }
 
-export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps) {
+export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideOverlayProps) {
   // Zoom level is tracked from periodic polling since CameraView.zoom is read-only
   // Read initial zoom synchronously from cameraRef (safe: ref is always current)
   const initialZoom = cameraRef.current
@@ -105,6 +104,8 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
     enabled: visible,
   });
 
+  const { mediumImpact, errorNotification, warningNotification } = useHaptics();
+
   const handleFocusZonePress = useCallback(
     (zone: (typeof FOCUS_ZONES)[number]) => {
       if (!cameraRef.current) return;
@@ -113,14 +114,17 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
       if (typeof cam.focusDepth === 'function') {
         try {
           cam.focusDepth(zone.depth);
+          mediumImpact();
         } catch {
-          showToast('对焦失败，请重试');
+          showToast?.('对焦失败，请重试');
+          errorNotification();
         }
       } else {
-        showToast('当前设备不支持手动对焦');
+        showToast?.('当前设备不支持手动对焦');
+        warningNotification();
       }
     },
-    [cameraRef]
+    [cameraRef, mediumImpact, errorNotification, warningNotification]
   );
 
   const handleTapToFocus = useCallback(
@@ -136,13 +140,6 @@ export function FocusGuideOverlay({ visible, cameraRef }: FocusGuideOverlayProps
     setFocusRings(prev => prev.filter(r => r.id !== id));
   }, []);
 
-  const showToast = (message: string) => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    }
-    // On iOS or other platforms, skip toast silently since we don't have a toast library wired up
-    // The buttons themselves provide feedback
-  };
 
   if (!visible) return null;
 
