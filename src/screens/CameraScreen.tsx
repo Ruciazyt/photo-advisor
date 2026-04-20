@@ -267,6 +267,7 @@ export function CameraScreen() {
           showLevel={showLevel} showHistogram={showHistogram} histogramData={histogramData}
           showFocusGuide={showFocusGuide} cameraRef={cameraRef} peakPoints={peakPoints}
           screenWidth={screenWidth} screenHeight={screenHeight} showSunOverlay={showSunOverlay}
+          showToast={showToast}
           showBurstSuggestion={showBurstSuggestion} burstSuggestionText={burstSuggestionText.current}
           onBurstSuggestionAccept={() => { setShowBurstSuggestion(false); startBurst(doCapture); }}
           onBurstSuggestionDismiss={() => setShowBurstSuggestion(false)} burstActive={burstActive}

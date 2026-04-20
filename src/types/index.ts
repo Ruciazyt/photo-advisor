@@ -572,6 +572,7 @@ export interface FocusRingProps {
 export interface FocusGuideOverlayProps {
   visible: boolean;
   cameraRef: React.RefObject<any>;
+  showToast?: (message: string) => void;
 }
 
 export interface BurstSuggestionOverlayProps {

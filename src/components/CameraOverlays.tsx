@@ -40,6 +40,7 @@ export interface CameraOverlaysProps {
   peakPoints: PeakPoint[];
   screenWidth: number;
   screenHeight: number;
+  showToast?: (message: string) => void;
   // Sun
   showSunOverlay: boolean;
   // Burst
@@ -87,6 +88,7 @@ export function CameraOverlays({
   peakPoints,
   screenWidth,
   screenHeight,
+  showToast,
   showSunOverlay,
   showBurstSuggestion,
   burstSuggestionText,
@@ -127,7 +129,7 @@ export function CameraOverlays({
 
       {showLevel && <LevelIndicator />}
       <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
-      <FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} />
+      <FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} showToast={showToast} />
       <FocusPeakingOverlay
         visible={showFocusGuide}
         peaks={peakPoints}
