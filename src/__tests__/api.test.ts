@@ -327,7 +327,7 @@ describe('streamChatCompletion', () => {
         };
       },
     };
-    mockFetch.mockResolvedValue(new Response(mockBody as unknown as Body, { status: 200 }));
+    mockFetch.mockResolvedValue(new Response(mockBody as any, { status: 200 }));
 
     await streamChatCompletion('sk-test', 'https://api.example.com', 'gpt-4', 'abc123', onChunk);
 
@@ -351,7 +351,7 @@ describe('streamChatCompletion', () => {
   });
 
   it('throws APIError when response body is null', async () => {
-    mockFetch.mockResolvedValue(new Response(null as unknown as Body, { status: 200 }));
+    mockFetch.mockResolvedValue(new Response(null as any, { status: 200 }));
     await expect(
       streamChatCompletion('sk-test', 'https://api.example.com', 'gpt-4', 'abc123', jest.fn())
     ).rejects.toThrow('响应体为空');
@@ -380,7 +380,7 @@ describe('streamChatCompletion', () => {
         };
       },
     };
-    mockFetch.mockResolvedValue(new Response(mockBody as unknown as Body, { status: 200 }));
+    mockFetch.mockResolvedValue(new Response(mockBody as any, { status: 200 }));
 
     await streamChatCompletion('sk-test', 'https://api.example.com', 'gpt-4', 'abc123', onChunk);
 
@@ -397,7 +397,7 @@ describe('streamChatCompletion', () => {
             read: async () => ({ done: true, value: undefined }),
             releaseLock: () => {},
           }),
-        } as unknown as Body,
+        } as any,
         { status: 200 }
       );
     });
@@ -420,7 +420,7 @@ describe('streamChatCompletion', () => {
             read: async () => ({ done: true, value: undefined }),
             releaseLock: () => {},
           }),
-        } as unknown as Body,
+        } as any,
         { status: 200 }
       )
     );

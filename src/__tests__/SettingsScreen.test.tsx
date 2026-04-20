@@ -1,6 +1,15 @@
 import React from 'react';
-import { render, fireEvent, waitFor, RenderResult } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import { Alert } from 'react-native';
+
+// Suppress act() warnings from @expo/vector-icons Icon component (async state updates in third-party code)
+const originalError = console.error.bind(console);
+console.error = (...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('An update to Icon inside a test was not wrapped in act')) {
+    return;
+  }
+  originalError(...args);
+};
 import { SettingsScreen } from '../screens/SettingsScreen';
 import {
   loadApiConfig,
@@ -282,11 +291,26 @@ describe('SettingsScreen', () => {
   // 19. toggling theme calls toggleTheme
   it('theme toggle button calls toggleTheme', () => {
     const ThemeContext = require('../contexts/ThemeContext');
-    const { getByText } = render(<SettingsScreen />);
-    expect(getByText('深色/浅色主题')).toBeTruthy();
-    const { toggleTheme } = ThemeContext.useTheme();
-    toggleTheme();
-    expect(toggleTheme).toHaveBeenCalled();
+    const useThemeSpy = jest.spyOn(ThemeContext, 'useTheme');
+    let capturedToggleTheme: jest.Mock | null = null;
+    useThemeSpy.mockImplementation(() => {
+      const toggleTheme = jest.fn();
+      capturedToggleTheme = toggleTheme;
+      return {
+        theme: 'dark',
+        colors: { primary: '#000', accent: '#e8d5b7', text: '#fff', textSecondary: '#aaa', cardBg: '#111', border: '#333' },
+        toggleTheme,
+      };
+    });
+    render(<SettingsScreen />);
+    expect(capturedToggleTheme).not.toBeNull();
+    // Find the theme toggle TouchableOpacity via UNSAFE_getAllByType
+    const touchables = screen.UNSAFE_getAllByType(require('react-native').TouchableOpacity);
+    const themeToggle = touchables.find((t) => t.props.onPress === capturedToggleTheme);
+    expect(themeToggle).toBeDefined();
+    fireEvent.press(themeToggle);
+    expect(capturedToggleTheme!.mock.calls.length).toBe(1);
+    useThemeSpy.mockRestore();
   });
 
   // 20. validation when fetching models without API key
