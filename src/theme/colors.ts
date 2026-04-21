@@ -25,6 +25,9 @@ export const DarkColors = {
   scoreCardBorder: 'rgba(255,255,255,0.1)',
   scoreLabelText: 'rgba(255,255,255,0.6)',
   scoreBarBg: 'rgba(255,255,255,0.1)',
+  // ModeSelector
+  modeSelectorBg: 'rgba(0,0,0,0.4)',
+  modeSelectorUnselected: 'rgba(255,255,255,0.7)',
 };
 
 export const LightColors = {
@@ -54,6 +57,9 @@ export const LightColors = {
   scoreCardBorder: 'rgba(0,0,0,0.1)',
   scoreLabelText: 'rgba(0,0,0,0.55)',
   scoreBarBg: 'rgba(0,0,0,0.08)',
+  // ModeSelector
+  modeSelectorBg: 'rgba(0,0,0,0.15)',
+  modeSelectorUnselected: 'rgba(0,0,0,0.6)',
 };
 
 export type ColorPalette = typeof DarkColors;

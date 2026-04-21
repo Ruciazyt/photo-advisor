@@ -20,9 +20,10 @@ interface ModeButtonProps {
   onPress: () => void;
   activeBtnStyle: object[];
   activeTextStyle: object[];
+  unselectedTextStyle: object[];
 }
 
-function ModeButton({ mode, isSelected, onPress, activeBtnStyle, activeTextStyle }: ModeButtonProps) {
+function ModeButton({ mode, isSelected, onPress, activeBtnStyle, activeTextStyle, unselectedTextStyle }: ModeButtonProps) {
   const { colors } = useTheme();
   const a11y = useAccessibilityButton({
     label: `${modeLabels[mode]}模式`,
@@ -38,7 +39,7 @@ function ModeButton({ mode, isSelected, onPress, activeBtnStyle, activeTextStyle
       {...a11y}
       accessibilityState={{ selected: isSelected }}
     >
-      <Text style={[staticStyles.modeBtnText, isSelected && activeTextStyle]}>
+      <Text style={[staticStyles.modeBtnText, isSelected ? activeTextStyle : unselectedTextStyle]}>
         {modeLabels[mode]}
       </Text>
     </TouchableOpacity>
@@ -53,7 +54,6 @@ const staticStyles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     gap: 4,
   },
   modeBtn: {
@@ -63,7 +63,6 @@ const staticStyles = StyleSheet.create({
     marginHorizontal: 4,
   },
   modeBtnText: {
-    color: 'rgba(255,255,255,0.7)',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -80,9 +79,13 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
     staticStyles.modeBtnText,
     { color: colors.primary },
   ], [colors.primary]);
+  const unselectedTextStyle = useMemo(() => [
+    staticStyles.modeBtnText,
+    { color: colors.modeSelectorUnselected },
+  ], [colors.modeSelectorUnselected]);
 
   return (
-    <View style={staticStyles.modeSelector}>
+    <View style={[staticStyles.modeSelector, { backgroundColor: colors.modeSelectorBg }]}>
       {(['photo', 'scan', 'video', 'portrait'] as CameraMode[]).map((mode) => (
         <ModeButton
           key={mode}
@@ -91,6 +94,7 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
           onPress={() => onModeChange(mode)}
           activeBtnStyle={activeBtnStyle}
           activeTextStyle={activeTextStyle}
+          unselectedTextStyle={unselectedTextStyle}
         />
       ))}
     </View>
