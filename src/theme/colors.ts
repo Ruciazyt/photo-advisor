@@ -28,6 +28,32 @@ export const DarkColors = {
   // ModeSelector
   modeSelectorBg: 'rgba(0,0,0,0.4)',
   modeSelectorUnselected: 'rgba(255,255,255,0.7)',
+  // CameraTopBar overlay
+  overlayBg: 'rgba(0,0,0,0.55)',
+  // CameraTopBar selectors
+  topBarBg: 'rgba(0,0,0,0.55)',
+  topBarText: '#FFFFFF',
+  topBarTextSecondary: 'rgba(255,255,255,0.6)',
+  topBarBorderInactive: 'rgba(255,255,255,0.15)',
+  topBarBorderActive: 'rgba(255,255,255,0.3)',
+  topBarSelectorBgActive: 'rgba(232,213,183,0.35)',
+  topBarSelectorBorderActive: 'rgba(232,213,183,0.6)',
+  timerActiveBg: 'rgba(255,82,82,0.6)',
+  timerActiveBorder: 'rgba(255,255,255,0.3)',
+  challengeActiveBg: 'rgba(255,215,0,0.15)',
+  challengeActiveBorder: 'rgba(255,215,0,0.6)',
+  challengeActiveText: '#FFD700',
+  rawActiveBg: 'rgba(0,200,100,0.2)',
+  rawActiveBorder: 'rgba(0,200,100,0.6)',
+  rawActiveText: '#00C864',
+  focusGuideActiveBg: 'rgba(255,220,0,0.15)',
+  focusGuideActiveBorder: 'rgba(255,220,0,0.5)',
+  focusGuideActiveText: '#FFDC00',
+  voiceActiveBg: 'rgba(232,213,183,0.2)',
+  burstIndicatorBg: 'rgba(255,215,0,0.85)',
+  burstIndicatorText: '#000000',
+  toastBg: 'rgba(255,107,138,0.9)',
+  favoriteIcon: '#FF6B8A',
 };
 
 export const LightColors = {
@@ -60,6 +86,32 @@ export const LightColors = {
   // ModeSelector
   modeSelectorBg: 'rgba(0,0,0,0.15)',
   modeSelectorUnselected: 'rgba(0,0,0,0.6)',
+  // CameraTopBar overlay
+  overlayBg: 'rgba(0,0,0,0.55)',
+  // CameraTopBar selectors
+  topBarBg: 'rgba(0,0,0,0.35)',
+  topBarText: '#1A1A1A',
+  topBarTextSecondary: 'rgba(0,0,0,0.6)',
+  topBarBorderInactive: 'rgba(0,0,0,0.15)',
+  topBarBorderActive: 'rgba(0,0,0,0.3)',
+  topBarSelectorBgActive: 'rgba(196,163,90,0.35)',
+  topBarSelectorBorderActive: 'rgba(196,163,90,0.6)',
+  timerActiveBg: 'rgba(255,82,82,0.6)',
+  timerActiveBorder: 'rgba(0,0,0,0.3)',
+  challengeActiveBg: 'rgba(255,215,0,0.15)',
+  challengeActiveBorder: 'rgba(255,215,0,0.6)',
+  challengeActiveText: '#E5A500',
+  rawActiveBg: 'rgba(0,200,100,0.2)',
+  rawActiveBorder: 'rgba(0,200,100,0.6)',
+  rawActiveText: '#00A050',
+  focusGuideActiveBg: 'rgba(255,220,0,0.15)',
+  focusGuideActiveBorder: 'rgba(255,220,0,0.5)',
+  focusGuideActiveText: '#D4A500',
+  voiceActiveBg: 'rgba(196,163,90,0.2)',
+  burstIndicatorBg: 'rgba(255,215,0,0.85)',
+  burstIndicatorText: '#000000',
+  toastBg: 'rgba(255,107,138,0.9)',
+  favoriteIcon: '#E85A7A',
 };
 
 export type ColorPalette = typeof DarkColors;
