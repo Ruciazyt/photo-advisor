@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
 import { Keypoint } from '../components/KeypointOverlay';
 import { BubbleItem } from '../components/BubbleOverlay';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
 // Mock Animated to avoid timer issues
 jest.mock('react-native', () => {
@@ -152,5 +153,45 @@ describe('ComparisonOverlay', () => {
     rerender(<ComparisonOverlay {...defaultProps} visible={true} />);
 
     expect(getByText('✨ AI 标注')).toBeTruthy();
+  });
+
+  it('renders correctly under ThemeProvider with dark theme', () => {
+    const { getByText, toJSON } = render(
+      <ThemeProvider initialTheme="dark">
+        <ComparisonOverlay {...defaultProps} visible={true} score={88} scoreReason="构图均衡" />
+      </ThemeProvider>
+    );
+    expect(getByText('88分')).toBeTruthy();
+    expect(getByText('构图均衡')).toBeTruthy();
+    expect(getByText('★★★★☆')).toBeTruthy();
+    expect(toJSON()).not.toBeNull();
+  });
+
+  it('renders correctly under ThemeProvider with light theme', () => {
+    const { getByText, toJSON } = render(
+      <ThemeProvider initialTheme="light">
+        <ComparisonOverlay {...defaultProps} visible={true} score={72} />
+      </ThemeProvider>
+    );
+    expect(getByText('72分')).toBeTruthy();
+    expect(getByText('★★★☆☆')).toBeTruthy();
+    expect(toJSON()).not.toBeNull();
+  });
+
+  it('uses theme colors (no hardcoded background colors)', () => {
+    const { toJSON } = render(
+      <ThemeProvider initialTheme="dark">
+        <ComparisonOverlay {...defaultProps} visible={true} />
+      </ThemeProvider>
+    );
+    const json = toJSON();
+    expect(json).not.toBeNull();
+    // Verify all background colors come from theme palette
+    // In dark mode: primary=#000000, cardBg=#1A1A1A
+    // After theme migration, all bg colors should be from DarkColors values
+    const jsonStr = JSON.stringify(json);
+    // Should NOT have any unexpected hardcoded rgba values outside theme
+    // (theme uses hex + alpha hex suffixes like '8F', '99', '33')
+    expect(jsonStr).not.toMatch(/"backgroundColor":"rgba\(\d+,\d+,\d+,[^'"]+\)"/);
   });
 });

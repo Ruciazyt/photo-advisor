@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Image,
@@ -25,7 +25,6 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const staticStyles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
     zIndex: 100,
   },
   imageContainer: {
@@ -49,14 +48,11 @@ const staticStyles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   closeBtnText: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -73,12 +69,9 @@ const staticStyles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   toggleText: {
-    color: 'rgba(255,255,255,0.7)',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -92,25 +85,13 @@ const staticStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0,0,0,0.55)',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
   },
   starsText: {
     fontSize: 16,
-  },
-  scoreBadge: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  scoreReasonSmall: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 11,
-    maxWidth: 120,
   },
 });
 
@@ -126,6 +107,82 @@ export function ComparisonOverlay({
   const { colors } = useTheme();
   const [showAnnotated, setShowAnnotated] = useState(true);
   const fadeAnim = useSharedValue(1);
+
+  // Build theme-aware styles
+  const dynamicStyles = useMemo(() => {
+    const c = colors;
+    return StyleSheet.create({
+      container: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: c.primary,
+        zIndex: 100,
+      },
+      closeBtn: {
+        backgroundColor: c.cardBg + '8F',
+        borderColor: c.border + '33',
+      },
+      closeBtnText: {
+        color: c.text,
+      },
+      toggleContainer: {
+        position: 'absolute',
+        bottom: 50,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 16,
+      },
+      toggleBtn: {
+        backgroundColor: c.cardBg + '99',
+        borderColor: c.border + '33',
+      },
+      toggleText: {
+        color: c.textSecondary,
+      },
+      scoreContainer: {
+        position: 'absolute',
+        top: 60,
+        left: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: c.cardBg + '8F',
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderWidth: 1,
+        borderColor: c.border + '26',
+      },
+      imageContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      image: {
+        width: SCREEN_W,
+        height: SCREEN_H * 0.75,
+      },
+      controls: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'space-between',
+        pointerEvents: 'box-none',
+      },
+      toggleTextActive: {
+        color: c.primary === '#000000' ? '#000' : c.primary,
+      },
+      scoreBadge: {
+        color: c.text,
+        fontSize: 14,
+        fontWeight: '700',
+      },
+      scoreReasonSmall: {
+        color: c.textSecondary,
+        fontSize: 11,
+        maxWidth: 120,
+      },
+    });
+  }, [colors]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: fadeAnim.value }));
 
@@ -145,10 +202,10 @@ export function ComparisonOverlay({
   const noopAll = () => {};
 
   return (
-    <View style={staticStyles.container}>
+    <View style={dynamicStyles.container}>
       {/* Image */}
-      <Animated.View style={[staticStyles.imageContainer, animatedStyle]}>
-        <Image source={{ uri: imageUri }} style={staticStyles.image} resizeMode="contain" />
+      <Animated.View style={[dynamicStyles.imageContainer, animatedStyle]}>
+        <Image source={{ uri: imageUri }} style={dynamicStyles.image} resizeMode="contain" />
         {showAnnotated && (
           <>
             <KeypointOverlay keypoints={keypoints} visible={true} />
@@ -163,41 +220,41 @@ export function ComparisonOverlay({
       </Animated.View>
 
       {/* Controls overlay */}
-      <View style={staticStyles.controls} pointerEvents="box-none">
+      <View style={dynamicStyles.controls} pointerEvents="box-none">
         {/* Close button */}
-        <TouchableOpacity style={staticStyles.closeBtn} onPress={onClose} activeOpacity={0.8}>
-          <Text style={staticStyles.closeBtnText}>✕</Text>
+        <TouchableOpacity style={dynamicStyles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+          <Text style={dynamicStyles.closeBtnText}>✕</Text>
         </TouchableOpacity>
 
         {/* Top score display */}
         {score !== undefined && (
-          <View style={staticStyles.scoreContainer}>
+          <View style={dynamicStyles.scoreContainer}>
             <Text style={[staticStyles.starsText, { color: colors.accent }]}>
               {'★'.repeat(score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 40 ? 2 : 1)}
               {'☆'.repeat(score >= 90 ? 0 : score >= 75 ? 1 : score >= 60 ? 2 : score >= 40 ? 3 : 4)}
             </Text>
-            <Text style={staticStyles.scoreBadge}>{score}分</Text>
-            {scoreReason ? <Text style={staticStyles.scoreReasonSmall}>{scoreReason}</Text> : null}
+            <Text style={dynamicStyles.scoreBadge}>{score}分</Text>
+            {scoreReason ? <Text style={dynamicStyles.scoreReasonSmall}>{scoreReason}</Text> : null}
           </View>
         )}
 
         {/* Bottom toggle */}
-        <View style={staticStyles.toggleContainer}>
+        <View style={dynamicStyles.toggleContainer}>
           <TouchableOpacity
-            style={[staticStyles.toggleBtn, !showAnnotated && { backgroundColor: colors.accent, borderColor: colors.accent }]}
+            style={[dynamicStyles.toggleBtn, !showAnnotated && { backgroundColor: colors.accent, borderColor: colors.accent }]}
             onPress={() => toggleView(false)}
             activeOpacity={0.8}
           >
-            <Text style={[staticStyles.toggleText, !showAnnotated && staticStyles.toggleTextActive]}>
+            <Text style={[dynamicStyles.toggleText, !showAnnotated && dynamicStyles.toggleTextActive]}>
               📷 原图
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[staticStyles.toggleBtn, showAnnotated && { backgroundColor: colors.accent, borderColor: colors.accent }]}
+            style={[dynamicStyles.toggleBtn, showAnnotated && { backgroundColor: colors.accent, borderColor: colors.accent }]}
             onPress={() => toggleView(true)}
             activeOpacity={0.8}
           >
-            <Text style={[staticStyles.toggleText, showAnnotated && staticStyles.toggleTextActive]}>
+            <Text style={[dynamicStyles.toggleText, showAnnotated && dynamicStyles.toggleTextActive]}>
               ✨ AI 标注
             </Text>
           </TouchableOpacity>
