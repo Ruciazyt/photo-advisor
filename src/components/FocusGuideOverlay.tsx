@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
 import { useHaptics } from '../hooks/useHaptics';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -31,10 +32,12 @@ const ZOOM_POLL_INTERVAL_MS = 300;
 interface FocusRingProps {
   x: number;
   y: number;
+  borderColor: string;
+  innerBorderColor: string;
   onComplete: () => void;
 }
 
-function FocusRing({ x, y, onComplete }: FocusRingProps) {
+function FocusRing({ x, y, borderColor, innerBorderColor, onComplete }: FocusRingProps) {
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(1);
 
@@ -63,17 +66,118 @@ function FocusRing({ x, y, onComplete }: FocusRingProps) {
         {
           left: x - 30,
           top: y - 30,
+          borderColor,
         },
         animatedStyle,
       ]}
       pointerEvents="none"
     >
-      <View style={styles.focusRingInner} />
+      <View style={[styles.focusRingInner, { borderColor: innerBorderColor }]} />
     </Animated.View>
   );
 }
 
 export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideOverlayProps) {
+  const { colors } = useTheme();
+
+  // Build theme-aware styles — recomputed when colors change (e.g. light/dark switch)
+  const dynamicStyles = useMemo(() => {
+    const c = colors;
+    return StyleSheet.create({
+      container: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 15,
+      },
+      zoomIndicator: {
+        position: 'absolute',
+        top: 60,
+        right: 16,
+        backgroundColor: c.cardBg,
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: c.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+      },
+      zoomLabel: {
+        color: c.textSecondary,
+        fontSize: 11,
+        fontWeight: '600',
+      },
+      zoomValue: {
+        color: c.text,
+        fontSize: 13,
+        fontWeight: '800',
+      },
+      dofWarning: {
+        position: 'absolute',
+        top: 60,
+        left: '50%',
+        marginLeft: -50,
+        backgroundColor: c.warning + 'BF',
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: c.warning + '80',
+      },
+      dofWarningText: {
+        color: c.text,
+        fontSize: 12,
+        fontWeight: '700',
+      },
+      zoneButtonsContainer: {
+        position: 'absolute',
+        bottom: 120,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 12,
+      },
+      zoneButton: {
+        backgroundColor: c.cardBg,
+        borderRadius: 24,
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderWidth: 1,
+        borderColor: c.border,
+        alignItems: 'center',
+        minWidth: 80,
+      },
+      zoneButtonLabel: {
+        color: c.text,
+        fontSize: 14,
+        fontWeight: '700',
+      },
+      zoneButtonSub: {
+        color: c.textSecondary,
+        fontSize: 10,
+        fontWeight: '500',
+        marginTop: 1,
+      },
+      focusRing: {
+        position: 'absolute',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderWidth: 2,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      focusRingInner: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        borderWidth: 1,
+      },
+    });
+  }, [colors]);
+
   // Zoom level is tracked from periodic polling since CameraView.zoom is read-only
   // Read initial zoom synchronously from cameraRef (safe: ref is always current)
   const initialZoom = cameraRef.current
@@ -140,36 +244,38 @@ export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideO
     setFocusRings(prev => prev.filter(r => r.id !== id));
   }, []);
 
+  const ringBorderColor = colors.sunColor + 'E6';
+  const ringInnerBorderColor = colors.sunColor + '99';
 
   if (!visible) return null;
 
   return (
     <TouchableWithoutFeedback onPress={handleTapToFocus}>
-      <View style={styles.container} pointerEvents="box-none">
+      <View style={dynamicStyles.container} pointerEvents="box-none">
         {/* Zoom indicator — top right */}
-        <View style={styles.zoomIndicator}>
-          <Text style={styles.zoomLabel}>变焦</Text>
-          <Text style={styles.zoomValue}>{zoomLevel.toFixed(1)}x</Text>
+        <View style={dynamicStyles.zoomIndicator}>
+          <Text style={dynamicStyles.zoomLabel}>变焦</Text>
+          <Text style={dynamicStyles.zoomValue}>{zoomLevel.toFixed(1)}x</Text>
         </View>
 
         {/* DOF warning — shown when zoom >= 2x */}
         {zoomLevel >= DOF_WARNING_ZOOM && (
-          <View style={styles.dofWarning}>
-            <Text style={styles.dofWarningText}>⚠️ DOF变浅</Text>
+          <View style={dynamicStyles.dofWarning}>
+            <Text style={dynamicStyles.dofWarningText}>⚠️ DOF变浅</Text>
           </View>
         )}
 
         {/* Focus zone buttons — bottom area */}
-        <View style={styles.zoneButtonsContainer}>
+        <View style={dynamicStyles.zoneButtonsContainer}>
           {FOCUS_ZONES.map(zone => (
             <TouchableOpacity
               key={zone.label}
-              style={styles.zoneButton}
+              style={dynamicStyles.zoneButton}
               onPress={() => handleFocusZonePress(zone)}
               activeOpacity={0.7}
             >
-              <Text style={styles.zoneButtonLabel}>{zone.label}</Text>
-              <Text style={styles.zoneButtonSub}>{zone.sub}</Text>
+              <Text style={dynamicStyles.zoneButtonLabel}>{zone.label}</Text>
+              <Text style={dynamicStyles.zoneButtonSub}>{zone.sub}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -180,6 +286,8 @@ export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideO
             key={ring.id}
             x={ring.x}
             y={ring.y}
+            borderColor={ringBorderColor}
+            innerBorderColor={ringInnerBorderColor}
             onComplete={() => removeRing(ring.id)}
           />
         ))}
@@ -188,89 +296,14 @@ export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideO
   );
 }
 
+// Static styles (no theme dependency — used by FocusRing which receives colors as props)
 const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 15,
-  },
-  zoomIndicator: {
-    position: 'absolute',
-    top: 60,
-    right: 16,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  zoomLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  zoomValue: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  dofWarning: {
-    position: 'absolute',
-    top: 60,
-    left: '50%',
-    marginLeft: -50,
-    backgroundColor: 'rgba(255,100,0,0.75)',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,150,0,0.5)',
-  },
-  dofWarningText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  zoneButtonsContainer: {
-    position: 'absolute',
-    bottom: 120,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  zoneButton: {
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  zoneButtonLabel: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  zoneButtonSub: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 10,
-    fontWeight: '500',
-    marginTop: 1,
-  },
   focusRing: {
     position: 'absolute',
     width: 60,
     height: 60,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: 'rgba(255,220,0,0.9)',
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
@@ -280,6 +313,5 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,220,0,0.6)',
   },
 });
