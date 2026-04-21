@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -26,14 +26,6 @@ const SPARKLE_DURATION_MS = 600;     // 36 frames — snappier sparkle trail
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const GRADE_COLORS: Record<CompositionGrade, string> = {
-  S: '#FFD700', // gold
-  A: '#C0C0C0', // silver
-  B: '#CD7F32', // bronze
-  C: '#8B7355', // muted brown
-  D: '#555555', // dark gray
-};
-
 const GRADE_LABELS: Record<CompositionGrade, string> = {
   S: '★★★★★',
   A: '★★★★',
@@ -42,120 +34,8 @@ const GRADE_LABELS: Record<CompositionGrade, string> = {
   D: '★',
 };
 
-// Module-level static styles
-const overlayStyles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  hintContainer: {
-    position: 'absolute',
-    top: 60,
-    alignSelf: 'center',
-  },
-  hintText: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-  },
-  card: {
-    backgroundColor: 'rgba(28,28,28,0.95)',
-    borderRadius: 20,
-    padding: 24,
-    width: SCREEN_WIDTH * 0.8,
-    maxWidth: 340,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-  },
-  scoreRow: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  scoreLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  scoreValue: {
-    fontSize: 72,
-    fontWeight: '900',
-    lineHeight: 80,
-  },
-  gradeBadge: {
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-    alignSelf: 'center',
-  },
-  gradeText: {
-    color: '#000',
-    fontSize: 24,
-    fontWeight: '900',
-  },
-  gradeStars: {
-    color: '#000',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  breakdownContainer: {
-    width: '100%',
-    gap: 8,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  breakdownLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    width: 64,
-  },
-  barContainer: {
-    flex: 1,
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  breakdownValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    width: 28,
-    textAlign: 'right',
-  },
-  sessionContainer: {
-    marginTop: 16,
-    width: '100%',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingTop: 12,
-  },
-  sessionTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  sessionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  sessionLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 12,
-  },
-  sessionValue: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
+// Module-level static styles (no theme dependency)
+const staticStyles = StyleSheet.create({
   sparkle: {
     position: 'absolute',
     width: 12,
@@ -209,7 +89,7 @@ function SparkleView({ originX, originY, targetX, targetY, color }: Omit<Sparkle
 
   return (
     <Animated.View
-      style={[overlayStyles.sparkle, { backgroundColor: color }, animatedStyle]}
+      style={[staticStyles.sparkle, { backgroundColor: color }, animatedStyle]}
     />
   );
 }
@@ -237,7 +117,136 @@ export function CompositionScoreOverlay({
   const [sparkleItems, setSparkleItems] = useState<SparkleItem[]>([]);
 
   const isHighRank = grade === 'S' || grade === 'A';
-  const gradeColor = GRADE_COLORS[grade];
+
+  // Theme-aware grade color
+  const gradeColor = useMemo(() => {
+    switch (grade) {
+      case 'S': return colors.scoreS;
+      case 'A': return colors.scoreA;
+      case 'B': return colors.scoreB;
+      case 'C': return colors.scoreC;
+      case 'D': return colors.scoreD;
+    }
+  }, [grade, colors.scoreS, colors.scoreA, colors.scoreB, colors.scoreC, colors.scoreD]);
+
+  // Build theme-aware dynamic styles
+  const s = useMemo(() => {
+    const c = colors;
+    return StyleSheet.create({
+      overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: c.scoreOverlayBg,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+      },
+      hintContainer: {
+        position: 'absolute',
+        top: 60,
+        alignSelf: 'center',
+      },
+      hintText: {
+        color: c.scoreHintText,
+        fontSize: 12,
+      },
+      card: {
+        backgroundColor: c.scoreCardBg,
+        borderRadius: 20,
+        padding: 24,
+        width: SCREEN_WIDTH * 0.8,
+        maxWidth: 340,
+        borderWidth: 1,
+        borderColor: c.scoreCardBorder,
+        alignItems: 'center',
+      },
+      scoreRow: {
+        alignItems: 'center',
+        marginBottom: 16,
+      },
+      scoreLabel: {
+        color: c.scoreLabelText,
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 4,
+      },
+      scoreValue: {
+        fontSize: 72,
+        fontWeight: '900',
+        lineHeight: 80,
+      },
+      gradeBadge: {
+        borderRadius: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        alignItems: 'center',
+        marginBottom: 16,
+        alignSelf: 'center',
+      },
+      gradeText: {
+        color: c.primary === '#000000' ? '#000000' : '#FFFFFF',
+        fontSize: 24,
+        fontWeight: '900',
+      },
+      gradeStars: {
+        color: c.primary === '#000000' ? '#000000' : '#FFFFFF',
+        fontSize: 12,
+        marginTop: 2,
+      },
+      breakdownContainer: {
+        width: '100%',
+        gap: 8,
+      },
+      breakdownRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+      },
+      breakdownLabel: {
+        color: c.text + 'B3', // 70% opacity
+        fontSize: 12,
+        width: 64,
+      },
+      barContainer: {
+        flex: 1,
+        height: 6,
+        backgroundColor: c.scoreBarBg,
+        borderRadius: 3,
+        overflow: 'hidden',
+      },
+      breakdownValue: {
+        fontSize: 12,
+        fontWeight: '700',
+        width: 28,
+        textAlign: 'right',
+      },
+      sessionContainer: {
+        marginTop: 16,
+        width: '100%',
+        borderTopWidth: 1,
+        borderTopColor: c.scoreCardBorder,
+        paddingTop: 12,
+      },
+      sessionTitle: {
+        fontSize: 13,
+        fontWeight: '800',
+        marginBottom: 8,
+      },
+      sessionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+      },
+      sessionLabel: {
+        color: c.scoreLabelText,
+        fontSize: 12,
+      },
+      sessionValue: {
+        fontSize: 14,
+        fontWeight: '700',
+      },
+    });
+  }, [colors]);
 
   // ---- Reset + set up all animations on component mount ----
   useEffect(() => {
@@ -249,7 +258,7 @@ export function CompositionScoreOverlay({
     gradePopScale.value = 0;
 
     if (isHighRank) {
-      const sparkleColors = ['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98'];
+      const sparkleColors = [colors.scoreS, colors.scoreA, '#FF69B4', '#87CEEB', '#98FB98'];
       const angle = (i: number) => (i / 6) * Math.PI * 2;
       const newItems: SparkleItem[] = Array.from({ length: 6 }, (_, i) => ({
         id: i,
@@ -279,7 +288,7 @@ export function CompositionScoreOverlay({
       OVERLAY_AUTO_DISMISS_MS,
       withTiming(0, { duration: OVERLAY_FADE_OUT_MS, easing: Easing.linear }),
     );
-  }, [score, grade]);
+  }, [score, grade, isHighRank, colors.scoreS, colors.scoreA]);
 
   // ---- Trigger grade + score display + announcement when GRADE_DELAY_MS has elapsed ----
   // Uses useAnimatedReaction to detect gradePopScale crossing 0→non-zero
@@ -321,74 +330,84 @@ export function CompositionScoreOverlay({
   const gradeAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: gradePopScale.value }] }));
 
   return (
-    <Animated.View style={[overlayStyles.overlay, overlayAnimatedStyle]} pointerEvents="box-none">
+    <Animated.View style={[s.overlay, overlayAnimatedStyle]} pointerEvents="box-none">
       {/* Sparkles for S/A rank */}
-      {isHighRank && sparkleItems.map(s => (
+      {isHighRank && sparkleItems.map(sp => (
         <SparkleView
-          key={s.id}
-          originX={s.originX}
-          originY={s.originY}
-          targetX={s.targetX}
-          targetY={s.targetY}
-          color={s.color}
+          key={sp.id}
+          originX={sp.originX}
+          originY={sp.originY}
+          targetX={sp.targetX}
+          targetY={sp.targetY}
+          color={sp.color}
         />
       ))}
 
       {/* Tap to dismiss hint */}
-      <View style={overlayStyles.hintContainer}>
-        <Text style={overlayStyles.hintText}>轻触关闭</Text>
+      <View style={s.hintContainer}>
+        <Text style={s.hintText}>轻触关闭</Text>
       </View>
 
       {/* Main card */}
-      <Animated.View style={overlayStyles.card} pointerEvents="box-none">
+      <Animated.View style={s.card} pointerEvents="box-none">
         <TouchableWithoutFeedback onPress={handleTap}>
           <View>
             {/* Score */}
-            <View style={overlayStyles.scoreRow}>
-              <Text style={overlayStyles.scoreLabel}>构图评分</Text>
-              <Text style={[overlayStyles.scoreValue, { color: gradeColor }]}>{displayScore}</Text>
+            <View style={s.scoreRow}>
+              <Text style={s.scoreLabel}>构图评分</Text>
+              <Text style={[s.scoreValue, { color: gradeColor }]}>{displayScore}</Text>
             </View>
 
             {/* Grade badge */}
             {showGrade && (
               <Animated.View
                 style={[
-                  overlayStyles.gradeBadge,
+                  s.gradeBadge,
                   { backgroundColor: gradeColor },
                   gradeAnimatedStyle,
                 ]}
               >
-                <Text style={overlayStyles.gradeText}>{grade}</Text>
-                <Text style={overlayStyles.gradeStars}>{GRADE_LABELS[grade]}</Text>
+                <Text style={s.gradeText}>{grade}</Text>
+                <Text style={s.gradeStars}>{GRADE_LABELS[grade]}</Text>
               </Animated.View>
             )}
 
             {/* Breakdown */}
-            <View style={overlayStyles.breakdownContainer}>
-              <BreakdownRow label="构图对齐" value={breakdown.alignment} accentColor={colors.accent} />
-              <BreakdownRow label="左右平衡" value={breakdown.balance} accentColor={colors.accent} />
-              <BreakdownRow label="中心位置" value={breakdown.centrality} accentColor={colors.accent} />
+            <View style={s.breakdownContainer}>
+              <BreakdownRow label="构图对齐" value={breakdown.alignment} accentColor={colors.accent} s={s} />
+              <BreakdownRow label="左右平衡" value={breakdown.balance} accentColor={colors.accent} s={s} />
+              <BreakdownRow label="中心位置" value={breakdown.centrality} accentColor={colors.accent} s={s} />
             </View>
 
             {/* Challenge session stats */}
             {challengeMode && session.count > 0 && (
-              <View style={overlayStyles.sessionContainer}>
-                <Text style={[overlayStyles.sessionTitle, { color: colors.warning }]}>🎮 挑战模式</Text>
-                <View style={overlayStyles.sessionRow}>
-                  <Text style={overlayStyles.sessionLabel}>本轮最高</Text>
-                  <Text style={[overlayStyles.sessionValue, { color: GRADE_COLORS[gradeFromScore(session.bestScore)]}]}>
+              <View style={s.sessionContainer}>
+                <Text style={[s.sessionTitle, { color: colors.warning }]}>🎮 挑战模式</Text>
+                <View style={s.sessionRow}>
+                  <Text style={s.sessionLabel}>本轮最高</Text>
+                  <Text style={[s.sessionValue, {
+                    color: (() => {
+                      switch (gradeFromScore(session.bestScore)) {
+                        case 'S': return colors.scoreS;
+                        case 'A': return colors.scoreA;
+                        case 'B': return colors.scoreB;
+                        case 'C': return colors.scoreC;
+                        case 'D': return colors.scoreD;
+                      }
+                    })(),
+                  }]}>
                     {session.bestScore}
                   </Text>
                 </View>
-                <View style={overlayStyles.sessionRow}>
-                  <Text style={overlayStyles.sessionLabel}>累计平均</Text>
-                  <Text style={[overlayStyles.sessionValue, { color: colors.accent }]}>
+                <View style={s.sessionRow}>
+                  <Text style={s.sessionLabel}>累计平均</Text>
+                  <Text style={[s.sessionValue, { color: colors.accent }]}>
                     {session.count > 0 ? Math.round(session.cumulative / session.count) : 0}
                   </Text>
                 </View>
-                <View style={overlayStyles.sessionRow}>
-                  <Text style={overlayStyles.sessionLabel}>已拍张数</Text>
-                  <Text style={[overlayStyles.sessionValue, { color: colors.accent }]}>{session.count}</Text>
+                <View style={s.sessionRow}>
+                  <Text style={s.sessionLabel}>已拍张数</Text>
+                  <Text style={[s.sessionValue, { color: colors.accent }]}>{session.count}</Text>
                 </View>
               </View>
             )}
@@ -399,15 +418,15 @@ export function CompositionScoreOverlay({
   );
 }
 
-function BreakdownRow({ label, value, accentColor }: { label: string; value: number; accentColor: string }) {
+function BreakdownRow({ label, value, accentColor, s }: { label: string; value: number; accentColor: string; s: ReturnType<typeof StyleSheet.create> }) {
   const barWidth = (value / 100) * 100;
   return (
-    <View style={overlayStyles.breakdownRow}>
-      <Text style={overlayStyles.breakdownLabel}>{label}</Text>
-      <View style={overlayStyles.barContainer}>
+    <View style={s.breakdownRow}>
+      <Text style={s.breakdownLabel}>{label}</Text>
+      <View style={s.barContainer}>
         <View style={{ height: '100%', width: `${barWidth}%`, backgroundColor: accentColor, borderRadius: 3 }} />
       </View>
-      <Text style={[overlayStyles.breakdownValue, { color: accentColor }]}>{value}</Text>
+      <Text style={[s.breakdownValue, { color: accentColor }]}>{value}</Text>
     </View>
   );
 }
