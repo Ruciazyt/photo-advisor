@@ -31,9 +31,9 @@ function formatTime(iso: string): string {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function getScoreColor(score: number, colors: { success: string; error: string }): string {
+function getScoreColor(score: number, colors: { success: string; warning: string; error: string }): string {
   if (score >= 75) return colors.success;
-  if (score >= 60) return '#FFC107';
+  if (score >= 60) return colors.warning;
   return colors.error;
 }
 
