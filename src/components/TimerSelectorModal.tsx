@@ -20,13 +20,22 @@ import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { TimerSelectorModalProps } from '../types';
 export type { TimerSelectorModalProps };
 
-// ---- Timer card preview ----
-
-interface TimerCardProps {
-  opt: { value: TimerDuration; label: string };
-  isSelected: boolean;
-  onSelect: (v: TimerDuration) => void;
-}
+// Static styles (no theme colors)
+const timerCardStaticStyles = StyleSheet.create({
+  card: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    borderWidth: 2,
+    minWidth: 90,
+  },
+  cardLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+});
 
 function TimerCard({ opt, isSelected, onSelect }: TimerCardProps) {
   const { colors } = useTheme();
@@ -38,11 +47,13 @@ function TimerCard({ opt, isSelected, onSelect }: TimerCardProps) {
 
   const cardStyle = [
     timerCardStaticStyles.card,
-    isSelected && { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
+    isSelected
+      ? { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' }
+      : { borderColor: 'transparent', backgroundColor: 'rgba(255,255,255,0.05)' },
   ];
   const labelStyle = [
     timerCardStaticStyles.cardLabel,
-    isSelected && { color: colors.accent },
+    isSelected ? { color: colors.accent } : { color: colors.textSecondary },
   ];
 
   return (
@@ -59,123 +70,29 @@ function TimerCard({ opt, isSelected, onSelect }: TimerCardProps) {
   );
 }
 
-// TimerPreview static styles
-const timerCardStaticStyles = StyleSheet.create({
-  card: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    minWidth: 90,
-  },
-  cardLabel: {
-    color: '#AAAAAA',
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-});
-
 function TimerPreview({ seconds }: { seconds: number }) {
   const { colors } = useTheme();
 
   return (
-    <View style={timerPreviewStaticStyles.container}>
-      <Text style={[timerPreviewStaticStyles.number, { color: colors.countdownText }]}>{seconds}</Text>
-      <Text style={timerPreviewStaticStyles.unit}>秒</Text>
+    <View style={{
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: colors.timerPreviewBg,
+      borderWidth: 3,
+      borderColor: colors.timerBorder,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Text style={{ fontSize: 40, fontWeight: '800', color: colors.countdownText }}>{seconds}</Text>
+      <Text style={{ fontSize: 12, fontWeight: '600', color: colors.timerUnitText, marginTop: 2 }}>秒</Text>
     </View>
   );
 }
 
-const timerPreviewStaticStyles = StyleSheet.create({
-  container: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  number: {
-    fontSize: 40,
-    fontWeight: '800',
-  },
-  unit: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 2,
-  },
-});
-
 // ---- Main Modal ----
 
 const SHEET_HEIGHT = 340;
-
-const modalStaticStyles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  sheet: {
-    backgroundColor: 'rgba(20,20,20,0.97)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    paddingTop: 12,
-    minHeight: SHEET_HEIGHT,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    position: 'relative',
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  closeBtn: {
-    position: 'absolute',
-    right: 0,
-    top: -4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  grid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  hintRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-    gap: 6,
-  },
-  hintText: {
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: 12,
-  },
-});
 
 export function TimerSelectorModal({
   visible,
@@ -183,6 +100,7 @@ export function TimerSelectorModal({
   onSelect,
   onClose,
 }: TimerSelectorModalProps) {
+  const { colors } = useTheme();
   const translateY = useSharedValue(SHEET_HEIGHT);
   const opacity = useSharedValue(0);
   const [isShown, setIsShown] = useState(false);
@@ -206,18 +124,18 @@ export function TimerSelectorModal({
   if (!isShown) return null;
 
   return (
-    <View style={modalStaticStyles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
+    <View style={styles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[modalStaticStyles.backdrop, backdropStyle]} />
+        <Animated.View style={[{ ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlayBg }, backdropStyle]} />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[modalStaticStyles.sheet, sheetStyle]}>
+      <Animated.View style={[{ backgroundColor: colors.cardBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingBottom: 40, paddingTop: 12, minHeight: SHEET_HEIGHT }, sheetStyle]}>
         {/* Header */}
-        <View style={modalStaticStyles.header}>
-          <Text style={modalStaticStyles.title}>定时拍摄</Text>
+        <View style={styles.header}>
+          <Text style={{ color: colors.text, fontSize: 17, fontWeight: '700' }}>定时拍摄</Text>
           <TouchableOpacity
             onPress={onClose}
-            style={modalStaticStyles.closeBtn}
+            style={{ position: 'absolute', right: 0, top: -4, width: 32, height: 32, borderRadius: 16, backgroundColor: colors.topBarBg, justifyContent: 'center', alignItems: 'center' }}
             hitSlop={8}
             {...useAccessibilityButton({
               label: '关闭',
@@ -225,12 +143,12 @@ export function TimerSelectorModal({
               role: 'button',
             })}
           >
-            <Ionicons name="close" size={22} color="#fff" />
+            <Ionicons name="close" size={22} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         {/* Timer option cards */}
-        <View style={modalStaticStyles.grid}>
+        <View style={styles.grid}>
           {TIMER_OPTIONS.map((opt) => (
             <TimerCard
               key={opt.value}
@@ -242,9 +160,9 @@ export function TimerSelectorModal({
         </View>
 
         {/* Hint */}
-        <View style={modalStaticStyles.hintRow}>
-          <Ionicons name="information-circle-outline" size={13} color="rgba(255,255,255,0.35)" />
-          <Text style={modalStaticStyles.hintText}>
+        <View style={styles.hintRow}>
+          <Ionicons name="information-circle-outline" size={13} color={colors.scoreHintText} />
+          <Text style={{ color: colors.scoreHintText, fontSize: 12 }}>
             {selectedDuration > 3 ? '建议使用支架或稳定表面' : '适合手持自拍'}
           </Text>
         </View>
@@ -252,3 +170,30 @@ export function TimerSelectorModal({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    justifyContent: 'flex-end',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  grid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  hintRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+});

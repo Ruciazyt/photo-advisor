@@ -30,6 +30,7 @@ interface BubbleDotProps {
 }
 
 function BubbleDot({ animPitch, animRoll, color }: BubbleDotProps) {
+  const { colors } = useTheme();
   const animatedStyle = useAnimatedStyle(() => {
     const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, animPitch.value));
     const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, animRoll.value));
@@ -43,10 +44,10 @@ function BubbleDot({ animPitch, animRoll, color }: BubbleDotProps) {
   return (
     <View style={styles.bubbleContainer} pointerEvents="none">
       {/* Outer ring */}
-      <View style={[styles.outerRing, { borderColor: color }]}>
+      <View style={[styles.outerRing, { borderColor: color, backgroundColor: colors.bubbleBg }]}>
         {/* Cross hairs */}
-        <View style={styles.crossH} />
-        <View style={styles.crossV} />
+        <View style={[styles.crossH, { backgroundColor: colors.topBarBorderInactive }]} />
+        <View style={[styles.crossV, { backgroundColor: colors.topBarBorderInactive }]} />
         {/* Center target */}
         <View style={[styles.centerTarget, { borderColor: color }]} />
         {/* Bubble dot — animated on UI thread */}
@@ -124,16 +125,16 @@ export function LevelIndicator() {
       : 'close-circle';
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { backgroundColor: colors.overlayBg, borderColor: colors.topBarBorderInactive }]} pointerEvents="none">
       <View style={styles.indicatorRow}>
         <BubbleDot animPitch={animPitch} animRoll={animRoll} color={color} />
         <View style={styles.infoPanel}>
           <Ionicons name={statusIcon} size={18} color={color} />
           <Text style={[styles.statusText, { color }]}>{statusText}</Text>
-          <Text style={styles.tiltLabel}>
+          <Text style={[styles.tiltLabel, { color: colors.topBarTextSecondary }]}>
             俯仰 {orientation.pitch.toFixed(1)}°
           </Text>
-          <Text style={styles.tiltLabel}>
+          <Text style={[styles.tiltLabel, { color: colors.topBarTextSecondary }]}>
             横滚 {orientation.roll.toFixed(1)}°
           </Text>
         </View>
@@ -148,11 +149,8 @@ const styles = StyleSheet.create({
     top: 60,
     right: 16,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.55)',
     borderRadius: 12,
     padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   indicatorRow: {
     flexDirection: 'row',
@@ -170,7 +168,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   crossH: {
     position: 'absolute',
@@ -178,7 +175,6 @@ const styles = StyleSheet.create({
     right: 8,
     top: '50%',
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     marginTop: -0.5,
   },
   crossV: {
@@ -187,7 +183,6 @@ const styles = StyleSheet.create({
     bottom: 8,
     left: '50%',
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     marginLeft: -0.5,
   },
   centerTarget: {
@@ -214,7 +209,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   tiltLabel: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: 10,
     fontWeight: '400',
   },

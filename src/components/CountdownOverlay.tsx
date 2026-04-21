@@ -67,12 +67,13 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
   }));
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { backgroundColor: colors.overlayBg }]} pointerEvents="none">
       <Animated.View
         style={[
           styles.bubble,
           {
             backgroundColor: colors.countdownBg,
+            borderColor: colors.countdownBorder,
           },
           animatedStyle,
         ]}
@@ -89,7 +90,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 20,
-    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   bubble: {
     width: 120,
@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.4)',
   },
   number: {
     fontSize: 64,
