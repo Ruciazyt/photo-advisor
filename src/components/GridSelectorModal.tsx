@@ -17,6 +17,7 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { useHaptics } from '../hooks/useHaptics';
 import type { GridVariant, GridSelectorModalProps } from '../types';
 export type { GridSelectorModalProps };
 
@@ -207,6 +208,7 @@ interface GridCardProps {
 
 function GridCard({ variant, isSelected, onSelect }: GridCardProps) {
   const { colors } = useTheme();
+  const { lightImpact } = useHaptics();
   const a11y = useAccessibilityButton({
     label: variant.label,
     hint: `选择${variant.label}网格`,
@@ -222,10 +224,15 @@ function GridCard({ variant, isSelected, onSelect }: GridCardProps) {
     isSelected && { color: colors.accent },
   ];
 
+  const handleSelect = () => {
+    try { lightImpact?.(); } catch (_) {}
+    onSelect(variant.key);
+  };
+
   return (
     <TouchableOpacity
       style={cardStyle}
-      onPress={() => onSelect(variant.key)}
+      onPress={handleSelect}
       activeOpacity={0.75}
       {...a11y}
       accessibilityState={{ selected: isSelected }}
@@ -344,6 +351,7 @@ export function GridSelectorModal({
   onClose,
 }: GridSelectorModalProps) {
   const { colors } = useTheme();
+  const { lightImpact } = useHaptics();
 
   const translateY = useSharedValue(SHEET_HEIGHT);
   const opacity = useSharedValue(0);
@@ -431,7 +439,10 @@ export function GridSelectorModal({
             modalStaticStyles.closeCard,
             selectedVariant === 'none' && { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
           ]}
-          onPress={() => onSelect('none')}
+          onPress={() => {
+            try { lightImpact?.(); } catch (_) {}
+            onSelect('none');
+          }}
           activeOpacity={0.75}
           {...useAccessibilityButton({
             label: '关闭网格',
