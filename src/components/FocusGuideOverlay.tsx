@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
 import { useHaptics } from '../hooks/useHaptics';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 import {
   View,
   Text,
@@ -273,6 +274,17 @@ export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideO
               style={dynamicStyles.zoneButton}
               onPress={() => handleFocusZonePress(zone)}
               activeOpacity={0.7}
+              {...useAccessibilityButton({
+                label: `对焦区域：${zone.label}`,
+                hint:
+                  zone.label === '远景'
+                    ? '切换到远景对焦（无穷远），适合风景和建筑'
+                    : zone.label === '标准'
+                    ? '切换到标准对焦（约3米），适合人文和抓拍'
+                    : '切换到近拍对焦（约0.5米），适合微距和特写',
+                role: 'button',
+                enabled: true,
+              })}
             >
               <Text style={dynamicStyles.zoneButtonLabel}>{zone.label}</Text>
               <Text style={dynamicStyles.zoneButtonSub}>{zone.sub}</Text>
