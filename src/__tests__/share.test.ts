@@ -217,8 +217,13 @@ describe('sharePhoto', () => {
     );
     expect(mockSharing.shareAsync).toHaveBeenCalledWith(
       'file:///cache/reshared.jpg',
-      { mimeType: 'image/jpeg', dialogTitle: '分享构图分析' }
+      { mimeType: 'image/jpeg', dialogTitle: '分享构图分析', text: expect.any(String) }
     );
+    // Verify the text includes key share metadata
+    const call = mockSharing.shareAsync.mock.calls[0][1];
+    expect(call.text).toContain('拍摄参谋');
+    expect(call.text).toContain('三分法');
+    expect(call.text).toContain('★');
   });
 
   it('cleans up the temp file after sharing', async () => {
@@ -262,5 +267,14 @@ describe('sharePhoto', () => {
     const result = await sharePhoto(opts);
 
     expect(result.success).toBe(true);
+  });
+
+  it('includes AI suggestions text in shareAsync call', async () => {
+    const result = await sharePhoto(baseOptions);
+    expect(result.success).toBe(true);
+    expect(mockSharing.shareAsync).toHaveBeenCalledWith(
+      'file:///cache/reshared.jpg',
+      expect.objectContaining({ text: expect.stringContaining('💡 AI 建议') })
+    );
   });
 });

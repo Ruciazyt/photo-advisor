@@ -349,6 +349,8 @@ export interface ShareOptions {
   gridType: string;
   score?: number;
   gridVariant?: string;
+  /** Pre-built share text (AI suggestions + metadata). Falls back to system Share API's message field. */
+  text?: string;
 }
 
 // ============================================================

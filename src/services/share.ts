@@ -74,6 +74,7 @@ export async function sharePhoto(opts: ShareOptions): Promise<{ success: boolean
     await Sharing.shareAsync(imageUri, {
       mimeType: 'image/jpeg',
       dialogTitle: '分享构图分析',
+      ...(text ? { text } : {}),
     });
 
     // Clean up cache file after sharing
