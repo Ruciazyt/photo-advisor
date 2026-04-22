@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import type { GridVariant } from '../types';
 
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -50,6 +51,12 @@ export function SettingsScreen({ onSaved }: Props) {
   const [testing, setTesting] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [defaultGridVariant, setDefaultGridVariant] = useState<GridVariant>('thirds');
+  const [showHistogram, setShowHistogram] = useState(false);
+  const [showLevel, setShowLevel] = useState(true);
+  const [showFocusPeaking, setShowFocusPeaking] = useState(false);
+  const [showSunPosition, setShowSunPosition] = useState(false);
+  const [showFocusGuide, setShowFocusGuide] = useState(true);
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -62,6 +69,12 @@ export function SettingsScreen({ onSaved }: Props) {
     });
     loadAppSettings().then((settings) => {
       setVoiceEnabled(settings.voiceEnabled);
+      setDefaultGridVariant(settings.defaultGridVariant);
+      setShowHistogram(settings.showHistogram);
+      setShowLevel(settings.showLevel);
+      setShowFocusPeaking(settings.showFocusPeaking);
+      setShowSunPosition(settings.showSunPosition);
+      setShowFocusGuide(settings.showFocusGuide);
     });
   }, []);
 
@@ -447,6 +460,73 @@ export function SettingsScreen({ onSaved }: Props) {
           </View>
         </View>
 
+        <View style={[styles.cameraPrefsSection, { borderTopColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>相机偏好</Text>
+
+          {/* Default Grid */}
+          <View style={styles.prefRow}>
+            <View style={styles.prefInfo}>
+              <Text style={[styles.prefTitle, { color: colors.text }]}>默认网格</Text>
+              <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>相机启动时的默认网格样式</Text>
+            </View>
+            <View style={styles.gridSelectorRow}>
+              {(['thirds', 'golden', 'diagonal', 'spiral'] as GridVariant[]).map((v) => {
+                const labels: Record<GridVariant, string> = { thirds: '三分', golden: '黄金', diagonal: '对角', spiral: '螺旋', none: '关' };
+                return (
+                  <TouchableOpacity
+                    key={v}
+                    style={[
+                      styles.gridOption,
+                      { backgroundColor: colors.cardBg, borderColor: defaultGridVariant === v ? colors.accent : colors.border },
+                      defaultGridVariant === v && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
+                    ]}
+                    onPress={async () => {
+                      setDefaultGridVariant(v);
+                      await saveAppSettings({ defaultGridVariant: v });
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.gridOptionText, { color: defaultGridVariant === v ? colors.accent : colors.textSecondary }]}>
+                      {labels[v]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Toggles */}
+          {[
+            { label: '直方图', desc: '显示实时直方图', state: showHistogram, setter: setShowHistogram, saveKey: 'showHistogram' },
+            { label: '水平仪', desc: '显示相机水平状态', state: showLevel, setter: setShowLevel, saveKey: 'showLevel' },
+            { label: '对焦峰值', desc: '高亮显示对焦边缘', state: showFocusPeaking, setter: setShowFocusPeaking, saveKey: 'showFocusPeaking' },
+            { label: '太阳位置', desc: '显示太阳方向与黄金时段', state: showSunPosition, setter: setShowSunPosition, saveKey: 'showSunPosition' },
+            { label: '对焦辅助', desc: '显示对焦引导框', state: showFocusGuide, setter: setShowFocusGuide, saveKey: 'showFocusGuide' },
+          ].map(({ label, desc, state, setter, saveKey }) => (
+            <View key={saveKey} style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+              <View style={styles.prefInfo}>
+                <Text style={[styles.prefTitle, { color: colors.text }]}>{label}</Text>
+                <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>{desc}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.toggle, { backgroundColor: colors.cardBg, borderColor: state ? colors.accent : colors.border }, state && { borderColor: colors.accent }]}
+                onPress={async () => {
+                  const next = !state;
+                  setter(next);
+                  await saveAppSettings({ [saveKey]: next });
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={state ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={20}
+                  color={state ? colors.accent : colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+
         <View style={[styles.versionSection, { borderTopColor: colors.border }]}>
           <View style={styles.versionRow}>
             <Text style={[styles.versionLabel, { color: colors.textSecondary }]}>当前版本</Text>
@@ -685,6 +765,61 @@ themeSection: {
   themeToggleText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+cameraPrefsSection: {
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    gap: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  prefRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  prefInfo: {
+    flex: 1,
+  },
+  prefTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  prefDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  gridSelectorRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  gridOption: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  gridOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  toggle: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
   },
 versionSection: {
     marginTop: 32,

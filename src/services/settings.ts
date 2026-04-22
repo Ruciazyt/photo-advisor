@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppSettings } from '../types';
+import type { AppSettings, GridVariant } from '../types';
 
 const STORAGE_KEY = '@photo_advisor_settings';
 
@@ -7,6 +7,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   voiceEnabled: false,
   theme: 'dark',
   timerDuration: 3,
+  defaultGridVariant: 'thirds',
+  showHistogram: false,
+  showLevel: true,
+  showFocusPeaking: false,
+  showSunPosition: false,
+  showFocusGuide: true,
 };
 
 export async function loadAppSettings(): Promise<AppSettings> {

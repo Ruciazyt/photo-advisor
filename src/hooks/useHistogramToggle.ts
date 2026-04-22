@@ -2,10 +2,13 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { CameraView } from 'expo-camera';
 import { useHistogram } from './useHistogram';
 
-export function useHistogramToggle(cameraRef: React.RefObject<CameraView | null>) {
+export function useHistogramToggle(
+  cameraRef: React.RefObject<CameraView | null>,
+  initialShowHistogram = false,
+) {
   const { histogramData, capture: captureHistogram } = useHistogram();
   const histogramTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showHistogram, setShowHistogram] = useState(false);
+  const [showHistogram, setShowHistogram] = useState(initialShowHistogram);
 
   const handleHistogramToggle = useCallback(async () => {
     if (showHistogram) {

@@ -9,7 +9,17 @@ import { loadAppSettings, saveAppSettings } from '../services/settings';
 
 const STORAGE_KEY = '@photo_advisor_settings';
 
-const DEFAULT_SETTINGS = { voiceEnabled: false, theme: 'dark', timerDuration: 3 };
+const DEFAULT_SETTINGS = {
+  voiceEnabled: false,
+  theme: 'dark',
+  timerDuration: 3,
+  defaultGridVariant: 'thirds',
+  showHistogram: false,
+  showLevel: true,
+  showFocusPeaking: false,
+  showSunPosition: false,
+  showFocusGuide: true,
+};
 
 describe('settings service', () => {
   beforeEach(async () => {

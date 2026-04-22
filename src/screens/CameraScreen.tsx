@@ -228,6 +228,10 @@ export function CameraScreen() {
     loadAppSettings().then((settings) => {
       setVoiceEnabled(settings.voiceEnabled);
       setTimerDuration(settings.timerDuration);
+      setGridVariant(settings.defaultGridVariant);
+      setShowLevel(settings.showLevel);
+      setShowFocusGuide(settings.showFocusGuide);
+      setShowSunOverlay(settings.showSunPosition);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);

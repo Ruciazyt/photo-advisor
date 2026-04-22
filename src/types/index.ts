@@ -331,6 +331,12 @@ export interface AppSettings {
   voiceEnabled: boolean;
   theme: 'dark' | 'light';
   timerDuration: TimerDuration;
+  defaultGridVariant: GridVariant;
+  showHistogram: boolean;
+  showLevel: boolean;
+  showFocusPeaking: boolean;
+  showSunPosition: boolean;
+  showFocusGuide: boolean;
 }
 
 // ============================================================
