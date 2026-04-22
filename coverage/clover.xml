@@ -1,57 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1776745585209" clover="3.2.0">
-  <project timestamp="1776745585209" name="All files">
-    <metrics statements="2179" coveredstatements="1875" conditionals="1257" coveredconditionals="958" methods="513" coveredmethods="428" elements="3949" coveredelements="3261" complexity="0" loc="2179" ncloc="2179" packages="7" files="62" classes="62"/>
+<coverage generated="1776860733386" clover="3.2.0">
+  <project timestamp="1776860733386" name="All files">
+    <metrics statements="2207" coveredstatements="1911" conditionals="1275" coveredconditionals="974" methods="522" coveredmethods="442" elements="4004" coveredelements="3327" complexity="0" loc="2207" ncloc="2207" packages="7" files="62" classes="62"/>
     <package name="components">
-      <metrics statements="620" coveredstatements="566" conditionals="416" coveredconditionals="325" methods="168" coveredmethods="141"/>
+      <metrics statements="648" coveredstatements="590" conditionals="434" coveredconditionals="337" methods="177" coveredmethods="150"/>
       <file name="BubbleOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/BubbleOverlay.tsx">
-        <metrics statements="19" coveredstatements="18" conditionals="9" coveredconditionals="9" methods="9" coveredmethods="8"/>
-        <line num="24" count="2" type="stmt"/>
-        <line num="33" count="2" type="stmt"/>
-        <line num="64" count="2" type="stmt"/>
-        <line num="94" count="14" type="stmt"/>
-        <line num="95" count="14" type="stmt"/>
+        <metrics statements="20" coveredstatements="19" conditionals="9" coveredconditionals="9" methods="10" coveredmethods="9"/>
+        <line num="25" count="2" type="stmt"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="64" count="14" type="stmt"/>
+        <line num="65" count="14" type="stmt"/>
+        <line num="67" count="14" type="stmt"/>
         <line num="97" count="14" type="stmt"/>
         <line num="102" count="14" type="stmt"/>
         <line num="105" count="14" type="stmt"/>
         <line num="106" count="14" type="stmt"/>
         <line num="112" count="14" type="stmt"/>
         <line num="114" count="14" type="stmt"/>
-        <line num="134" count="26" type="stmt"/>
-        <line num="136" count="26" type="stmt"/>
-        <line num="140" count="26" type="stmt"/>
-        <line num="145" count="26" type="cond" truecount="4" falsecount="0"/>
-        <line num="146" count="17" type="stmt"/>
-        <line num="149" count="9" type="stmt"/>
-        <line num="157" count="14" type="stmt"/>
-        <line num="160" count="0" type="stmt"/>
+        <line num="119" count="14" type="stmt"/>
+        <line num="144" count="29" type="stmt"/>
+        <line num="146" count="29" type="stmt"/>
+        <line num="150" count="29" type="stmt"/>
+        <line num="155" count="29" type="cond" truecount="4" falsecount="0"/>
+        <line num="156" count="20" type="stmt"/>
+        <line num="159" count="9" type="stmt"/>
+        <line num="167" count="14" type="stmt"/>
+        <line num="170" count="0" type="stmt"/>
       </file>
       <file name="BurstSuggestionOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/BurstSuggestionOverlay.tsx">
         <metrics statements="24" coveredstatements="24" conditionals="10" coveredconditionals="10" methods="6" coveredmethods="6"/>
-        <line num="14" count="1" type="stmt"/>
-        <line num="81" count="1" type="stmt"/>
-        <line num="96" count="16" type="cond" truecount="2" falsecount="0"/>
-        <line num="97" count="15" type="stmt"/>
-        <line num="98" count="300" type="stmt"/>
-        <line num="99" count="15" type="stmt"/>
-        <line num="108" count="18" type="stmt"/>
-        <line num="109" count="18" type="stmt"/>
-        <line num="110" count="18" type="stmt"/>
-        <line num="111" count="18" type="stmt"/>
-        <line num="112" count="18" type="stmt"/>
-        <line num="114" count="18" type="stmt"/>
-        <line num="115" count="18" type="cond" truecount="2" falsecount="0"/>
-        <line num="116" count="16" type="cond" truecount="2" falsecount="0"/>
-        <line num="117" count="14" type="stmt"/>
-        <line num="118" count="14" type="stmt"/>
-        <line num="120" count="16" type="stmt"/>
-        <line num="121" count="16" type="stmt"/>
-        <line num="123" count="2" type="stmt"/>
-        <line num="124" count="2" type="stmt"/>
-        <line num="128" count="18" type="stmt"/>
-        <line num="129" count="18" type="stmt"/>
-        <line num="131" count="18" type="cond" truecount="2" falsecount="0"/>
-        <line num="133" count="16" type="stmt"/>
+        <line num="21" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="15" type="stmt"/>
+        <line num="23" count="300" type="stmt"/>
+        <line num="24" count="15" type="stmt"/>
+        <line num="33" count="18" type="stmt"/>
+        <line num="34" count="18" type="stmt"/>
+        <line num="35" count="18" type="stmt"/>
+        <line num="36" count="18" type="stmt"/>
+        <line num="37" count="18" type="stmt"/>
+        <line num="39" count="18" type="stmt"/>
+        <line num="40" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="14" type="stmt"/>
+        <line num="43" count="14" type="stmt"/>
+        <line num="45" count="16" type="stmt"/>
+        <line num="46" count="16" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="49" count="2" type="stmt"/>
+        <line num="53" count="18" type="stmt"/>
+        <line num="54" count="18" type="stmt"/>
+        <line num="56" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="58" count="16" type="stmt"/>
+        <line num="106" count="1" type="stmt"/>
+        <line num="167" count="1" type="stmt"/>
       </file>
       <file name="CameraControls.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CameraControls.tsx">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
@@ -74,34 +75,37 @@
       <file name="CameraTopBar.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CameraTopBar.tsx">
         <metrics statements="6" coveredstatements="6" conditionals="61" coveredconditionals="42" methods="2" coveredmethods="2"/>
         <line num="13" count="1" type="stmt"/>
-        <line num="75" count="1" type="stmt"/>
-        <line num="369" count="17" type="stmt"/>
-        <line num="371" count="17" type="stmt"/>
-        <line num="377" count="17" type="stmt"/>
+        <line num="108" count="17" type="stmt"/>
+        <line num="110" count="17" type="stmt"/>
+        <line num="116" count="17" type="stmt"/>
+        <line num="121" count="17" type="stmt"/>
         <line num="381" count="17" type="stmt"/>
       </file>
       <file name="ComparisonOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/ComparisonOverlay.tsx">
-        <metrics statements="17" coveredstatements="14" conditionals="36" coveredconditionals="31" methods="8" coveredmethods="5"/>
+        <metrics statements="20" coveredstatements="17" conditionals="36" coveredconditionals="31" methods="9" coveredmethods="6"/>
         <line num="22" count="1" type="stmt"/>
         <line num="25" count="1" type="stmt"/>
-        <line num="126" count="19" type="stmt"/>
-        <line num="127" count="19" type="stmt"/>
-        <line num="128" count="19" type="stmt"/>
-        <line num="130" count="19" type="stmt"/>
-        <line num="132" count="19" type="stmt"/>
-        <line num="133" count="2" type="stmt"/>
-        <line num="134" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="135" count="0" type="stmt"/>
-        <line num="136" count="0" type="stmt"/>
-        <line num="141" count="19" type="cond" truecount="2" falsecount="0"/>
-        <line num="144" count="17" type="stmt"/>
-        <line num="145" count="17" type="stmt"/>
-        <line num="147" count="17" type="stmt"/>
-        <line num="188" count="1" type="stmt"/>
-        <line num="197" count="1" type="stmt"/>
+        <line num="107" count="22" type="stmt"/>
+        <line num="108" count="22" type="stmt"/>
+        <line num="109" count="22" type="stmt"/>
+        <line num="112" count="22" type="stmt"/>
+        <line num="113" count="20" type="stmt"/>
+        <line num="114" count="20" type="stmt"/>
+        <line num="187" count="22" type="stmt"/>
+        <line num="189" count="22" type="stmt"/>
+        <line num="190" count="2" type="stmt"/>
+        <line num="191" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="192" count="0" type="stmt"/>
+        <line num="193" count="0" type="stmt"/>
+        <line num="198" count="22" type="cond" truecount="2" falsecount="0"/>
+        <line num="201" count="20" type="stmt"/>
+        <line num="202" count="20" type="stmt"/>
+        <line num="204" count="20" type="stmt"/>
+        <line num="245" count="1" type="stmt"/>
+        <line num="254" count="1" type="stmt"/>
       </file>
       <file name="CompositionScoreOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CompositionScoreOverlay.tsx">
-        <metrics statements="73" coveredstatements="61" conditionals="31" coveredconditionals="13" methods="16" coveredmethods="14"/>
+        <metrics statements="87" coveredstatements="71" conditionals="45" coveredconditionals="21" methods="19" coveredmethods="17"/>
         <line num="20" count="1" type="stmt"/>
         <line num="21" count="1" type="stmt"/>
         <line num="22" count="1" type="stmt"/>
@@ -110,71 +114,85 @@
         <line num="25" count="1" type="stmt"/>
         <line num="27" count="1" type="stmt"/>
         <line num="29" count="1" type="stmt"/>
-        <line num="37" count="1" type="stmt"/>
-        <line num="46" count="1" type="stmt"/>
-        <line num="168" count="2" type="cond" truecount="1" falsecount="1"/>
-        <line num="169" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="170" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="171" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="172" count="0" type="stmt"/>
-        <line num="187" count="60" type="stmt"/>
-        <line num="188" count="60" type="stmt"/>
-        <line num="189" count="60" type="stmt"/>
-        <line num="190" count="60" type="stmt"/>
-        <line num="191" count="60" type="stmt"/>
-        <line num="194" count="60" type="stmt"/>
-        <line num="195" count="60" type="stmt"/>
-        <line num="196" count="60" type="stmt"/>
-        <line num="197" count="60" type="stmt"/>
-        <line num="198" count="60" type="stmt"/>
-        <line num="200" count="60" type="stmt"/>
-        <line num="210" count="60" type="stmt"/>
-        <line num="223" count="28" type="stmt"/>
-        <line num="224" count="28" type="stmt"/>
-        <line num="225" count="28" type="stmt"/>
-        <line num="227" count="28" type="stmt"/>
-        <line num="228" count="28" type="stmt"/>
-        <line num="231" count="28" type="stmt"/>
-        <line num="232" count="28" type="stmt"/>
-        <line num="234" count="28" type="stmt"/>
-        <line num="237" count="28" type="stmt"/>
-        <line num="239" count="28" type="cond" truecount="2" falsecount="0"/>
-        <line num="240" count="28" type="stmt"/>
-        <line num="243" count="28" type="stmt"/>
-        <line num="245" count="14" type="stmt"/>
-        <line num="246" count="14" type="stmt"/>
-        <line num="247" count="14" type="stmt"/>
-        <line num="248" count="14" type="stmt"/>
-        <line num="249" count="14" type="stmt"/>
-        <line num="251" count="14" type="cond" truecount="2" falsecount="0"/>
-        <line num="252" count="10" type="stmt"/>
-        <line num="253" count="120" type="stmt"/>
-        <line num="254" count="60" type="stmt"/>
-        <line num="262" count="10" type="stmt"/>
-        <line num="264" count="4" type="stmt"/>
-        <line num="268" count="14" type="stmt"/>
-        <line num="272" count="14" type="stmt"/>
-        <line num="278" count="14" type="stmt"/>
-        <line num="288" count="28" type="stmt"/>
-        <line num="289" count="28" type="cond" truecount="1" falsecount="1"/>
-        <line num="291" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="292" count="0" type="stmt"/>
-        <line num="293" count="0" type="stmt"/>
-        <line num="294" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="295" count="0" type="stmt"/>
-        <line num="296" count="0" type="stmt"/>
-        <line num="305" count="28" type="stmt"/>
-        <line num="306" count="28" type="stmt"/>
-        <line num="308" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="309" count="0" type="stmt"/>
-        <line num="316" count="28" type="stmt"/>
-        <line num="317" count="1" type="stmt"/>
-        <line num="320" count="28" type="stmt"/>
-        <line num="321" count="28" type="stmt"/>
-        <line num="323" count="28" type="stmt"/>
-        <line num="327" count="60" type="stmt"/>
-        <line num="403" count="84" type="stmt"/>
-        <line num="404" count="84" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="48" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="49" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="50" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="51" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="67" count="60" type="stmt"/>
+        <line num="68" count="60" type="stmt"/>
+        <line num="69" count="60" type="stmt"/>
+        <line num="70" count="60" type="stmt"/>
+        <line num="71" count="60" type="stmt"/>
+        <line num="74" count="60" type="stmt"/>
+        <line num="75" count="60" type="stmt"/>
+        <line num="76" count="60" type="stmt"/>
+        <line num="77" count="60" type="stmt"/>
+        <line num="78" count="60" type="stmt"/>
+        <line num="80" count="60" type="stmt"/>
+        <line num="90" count="60" type="stmt"/>
+        <line num="103" count="28" type="stmt"/>
+        <line num="104" count="28" type="stmt"/>
+        <line num="105" count="28" type="stmt"/>
+        <line num="107" count="28" type="stmt"/>
+        <line num="108" count="28" type="stmt"/>
+        <line num="111" count="28" type="stmt"/>
+        <line num="112" count="28" type="stmt"/>
+        <line num="114" count="28" type="stmt"/>
+        <line num="117" count="28" type="stmt"/>
+        <line num="119" count="28" type="cond" truecount="2" falsecount="0"/>
+        <line num="122" count="28" type="stmt"/>
+        <line num="123" count="14" type="cond" truecount="5" falsecount="0"/>
+        <line num="124" count="2" type="stmt"/>
+        <line num="125" count="8" type="stmt"/>
+        <line num="126" count="1" type="stmt"/>
+        <line num="127" count="1" type="stmt"/>
+        <line num="128" count="2" type="stmt"/>
+        <line num="133" count="28" type="stmt"/>
+        <line num="134" count="28" type="stmt"/>
+        <line num="135" count="28" type="stmt"/>
+        <line num="252" count="28" type="stmt"/>
+        <line num="254" count="14" type="stmt"/>
+        <line num="255" count="14" type="stmt"/>
+        <line num="256" count="14" type="stmt"/>
+        <line num="257" count="14" type="stmt"/>
+        <line num="258" count="14" type="stmt"/>
+        <line num="260" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="261" count="10" type="stmt"/>
+        <line num="262" count="120" type="stmt"/>
+        <line num="263" count="60" type="stmt"/>
+        <line num="271" count="10" type="stmt"/>
+        <line num="273" count="4" type="stmt"/>
+        <line num="277" count="14" type="stmt"/>
+        <line num="281" count="14" type="stmt"/>
+        <line num="287" count="14" type="stmt"/>
+        <line num="297" count="28" type="stmt"/>
+        <line num="298" count="28" type="cond" truecount="1" falsecount="1"/>
+        <line num="300" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="301" count="0" type="stmt"/>
+        <line num="302" count="0" type="stmt"/>
+        <line num="303" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="304" count="0" type="stmt"/>
+        <line num="305" count="0" type="stmt"/>
+        <line num="314" count="28" type="stmt"/>
+        <line num="315" count="28" type="stmt"/>
+        <line num="317" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="318" count="0" type="stmt"/>
+        <line num="325" count="28" type="stmt"/>
+        <line num="326" count="1" type="stmt"/>
+        <line num="329" count="28" type="stmt"/>
+        <line num="330" count="28" type="stmt"/>
+        <line num="332" count="28" type="stmt"/>
+        <line num="336" count="60" type="stmt"/>
+        <line num="390" count="2" type="cond" truecount="1" falsecount="4"/>
+        <line num="391" count="2" type="stmt"/>
+        <line num="392" count="0" type="stmt"/>
+        <line num="393" count="0" type="stmt"/>
+        <line num="394" count="0" type="stmt"/>
+        <line num="395" count="0" type="stmt"/>
+        <line num="422" count="84" type="stmt"/>
+        <line num="423" count="84" type="stmt"/>
       </file>
       <file name="ConfigWarning.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/ConfigWarning.tsx">
         <metrics statements="5" coveredstatements="5" conditionals="3" coveredconditionals="3" methods="2" coveredmethods="2"/>
@@ -206,64 +224,64 @@
         <line num="58" count="13" type="stmt"/>
         <line num="64" count="13" type="stmt"/>
         <line num="69" count="13" type="stmt"/>
-        <line num="86" count="1" type="stmt"/>
+        <line num="92" count="1" type="stmt"/>
       </file>
       <file name="FocusGuideOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/FocusGuideOverlay.tsx">
-        <metrics statements="54" coveredstatements="35" conditionals="22" coveredconditionals="10" methods="17" coveredmethods="5"/>
-        <line num="23" count="1" type="stmt"/>
-        <line num="29" count="1" type="stmt"/>
+        <metrics statements="54" coveredstatements="35" conditionals="26" coveredconditionals="14" methods="17" coveredmethods="5"/>
+        <line num="24" count="1" type="stmt"/>
         <line num="30" count="1" type="stmt"/>
-        <line num="41" count="0" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
         <line num="42" count="0" type="stmt"/>
-        <line num="44" count="0" type="stmt"/>
-        <line num="49" count="0" type="stmt"/>
-        <line num="52" count="0" type="stmt"/>
-        <line num="56" count="0" type="stmt"/>
-        <line num="57" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="62" count="0" type="stmt"/>
-        <line num="81" count="14" type="stmt"/>
-        <line num="84" count="14" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="53" count="0" type="stmt"/>
+        <line num="57" count="0" type="stmt"/>
+        <line num="58" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="63" count="0" type="stmt"/>
+        <line num="82" count="14" type="stmt"/>
         <line num="85" count="14" type="stmt"/>
         <line num="86" count="14" type="stmt"/>
-        <line num="183" count="14" type="cond" truecount="2" falsecount="0"/>
-        <line num="186" count="14" type="stmt"/>
-        <line num="188" count="14" type="stmt"/>
+        <line num="87" count="14" type="stmt"/>
+        <line num="184" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="187" count="14" type="stmt"/>
         <line num="189" count="14" type="stmt"/>
         <line num="190" count="14" type="stmt"/>
-        <line num="193" count="14" type="stmt"/>
-        <line num="195" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="191" count="14" type="stmt"/>
+        <line num="194" count="14" type="stmt"/>
         <line num="196" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="198" count="0" type="stmt"/>
-        <line num="199" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="200" count="0" type="stmt"/>
-        <line num="205" count="14" type="stmt"/>
-        <line num="211" count="14" type="stmt"/>
-        <line num="213" count="14" type="stmt"/>
-        <line num="215" count="9" type="cond" truecount="1" falsecount="1"/>
-        <line num="216" count="9" type="stmt"/>
-        <line num="218" count="9" type="cond" truecount="2" falsecount="0"/>
-        <line num="219" count="6" type="stmt"/>
+        <line num="197" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="199" count="0" type="stmt"/>
+        <line num="200" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="201" count="0" type="stmt"/>
+        <line num="206" count="14" type="stmt"/>
+        <line num="212" count="14" type="stmt"/>
+        <line num="214" count="14" type="stmt"/>
+        <line num="216" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="217" count="9" type="stmt"/>
+        <line num="219" count="9" type="cond" truecount="2" falsecount="0"/>
         <line num="220" count="6" type="stmt"/>
-        <line num="221" count="4" type="stmt"/>
-        <line num="223" count="2" type="stmt"/>
+        <line num="221" count="6" type="stmt"/>
+        <line num="222" count="4" type="stmt"/>
         <line num="224" count="2" type="stmt"/>
-        <line num="227" count="3" type="stmt"/>
+        <line num="225" count="2" type="stmt"/>
         <line num="228" count="3" type="stmt"/>
-        <line num="234" count="14" type="stmt"/>
-        <line num="236" count="0" type="stmt"/>
+        <line num="229" count="3" type="stmt"/>
+        <line num="235" count="14" type="stmt"/>
         <line num="237" count="0" type="stmt"/>
         <line num="238" count="0" type="stmt"/>
-        <line num="243" count="14" type="stmt"/>
-        <line num="244" count="0" type="stmt"/>
-        <line num="247" count="14" type="stmt"/>
+        <line num="239" count="0" type="stmt"/>
+        <line num="244" count="14" type="stmt"/>
+        <line num="245" count="0" type="stmt"/>
         <line num="248" count="14" type="stmt"/>
-        <line num="250" count="14" type="cond" truecount="2" falsecount="0"/>
-        <line num="252" count="13" type="stmt"/>
-        <line num="271" count="39" type="stmt"/>
-        <line num="274" count="9" type="stmt"/>
-        <line num="285" count="0" type="stmt"/>
-        <line num="291" count="0" type="stmt"/>
-        <line num="300" count="1" type="stmt"/>
+        <line num="249" count="14" type="stmt"/>
+        <line num="251" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="253" count="13" type="stmt"/>
+        <line num="272" count="39" type="stmt"/>
+        <line num="275" count="9" type="stmt"/>
+        <line num="297" count="0" type="stmt"/>
+        <line num="303" count="0" type="stmt"/>
+        <line num="312" count="1" type="stmt"/>
       </file>
       <file name="FocusPeakingOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/FocusPeakingOverlay.tsx">
         <metrics statements="41" coveredstatements="39" conditionals="18" coveredconditionals="15" methods="8" coveredmethods="8"/>
@@ -307,7 +325,7 @@
         <line num="137" count="17" type="stmt"/>
         <line num="141" count="40" type="cond" truecount="4" falsecount="0"/>
         <line num="144" count="19" type="stmt"/>
-        <line num="155" count="2" type="stmt"/>
+        <line num="160" count="2" type="stmt"/>
       </file>
       <file name="GridOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/GridOverlay.tsx">
         <metrics statements="35" coveredstatements="31" conditionals="31" coveredconditionals="19" methods="7" coveredmethods="6"/>
@@ -348,50 +366,56 @@
         <line num="326" count="2" type="stmt"/>
       </file>
       <file name="GridSelectorModal.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/GridSelectorModal.tsx">
-        <metrics statements="43" coveredstatements="39" conditionals="22" coveredconditionals="15" methods="16" coveredmethods="13"/>
-        <line num="23" count="1" type="stmt"/>
-        <line num="31" count="1" type="stmt"/>
+        <metrics statements="49" coveredstatements="45" conditionals="22" coveredconditionals="15" methods="17" coveredmethods="14"/>
+        <line num="24" count="1" type="stmt"/>
         <line num="32" count="1" type="stmt"/>
-        <line num="35" count="1" type="stmt"/>
-        <line num="134" count="9" type="stmt"/>
-        <line num="145" count="9" type="stmt"/>
-        <line num="160" count="9" type="stmt"/>
-        <line num="169" count="9" type="stmt"/>
-        <line num="182" count="0" type="stmt"/>
-        <line num="190" count="36" type="cond" truecount="4" falsecount="2"/>
-        <line num="191" count="9" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="135" count="9" type="stmt"/>
+        <line num="146" count="9" type="stmt"/>
+        <line num="161" count="9" type="stmt"/>
+        <line num="170" count="9" type="stmt"/>
+        <line num="183" count="0" type="stmt"/>
+        <line num="191" count="36" type="cond" truecount="4" falsecount="2"/>
         <line num="192" count="9" type="stmt"/>
         <line num="193" count="9" type="stmt"/>
         <line num="194" count="9" type="stmt"/>
-        <line num="195" count="0" type="stmt"/>
+        <line num="195" count="9" type="stmt"/>
         <line num="196" count="0" type="stmt"/>
-        <line num="209" count="36" type="stmt"/>
+        <line num="197" count="0" type="stmt"/>
         <line num="210" count="36" type="stmt"/>
-        <line num="216" count="36" type="stmt"/>
-        <line num="220" count="36" type="stmt"/>
-        <line num="225" count="36" type="stmt"/>
-        <line num="228" count="5" type="stmt"/>
-        <line num="242" count="1" type="stmt"/>
-        <line num="272" count="1" type="stmt"/>
-        <line num="346" count="19" type="stmt"/>
-        <line num="348" count="19" type="stmt"/>
-        <line num="349" count="19" type="stmt"/>
-        <line num="350" count="19" type="stmt"/>
-        <line num="352" count="19" type="stmt"/>
-        <line num="353" count="10" type="cond" truecount="2" falsecount="0"/>
-        <line num="354" count="9" type="stmt"/>
-        <line num="355" count="9" type="stmt"/>
-        <line num="359" count="9" type="stmt"/>
-        <line num="364" count="1" type="stmt"/>
-        <line num="368" count="1" type="stmt"/>
-        <line num="372" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="380" count="19" type="stmt"/>
-        <line num="382" count="19" type="stmt"/>
-        <line num="383" count="19" type="stmt"/>
-        <line num="385" count="19" type="cond" truecount="2" falsecount="0"/>
-        <line num="387" count="9" type="stmt"/>
-        <line num="419" count="36" type="stmt"/>
-        <line num="434" count="1" type="stmt"/>
+        <line num="211" count="36" type="stmt"/>
+        <line num="212" count="36" type="stmt"/>
+        <line num="218" count="36" type="stmt"/>
+        <line num="227" count="36" type="stmt"/>
+        <line num="231" count="36" type="stmt"/>
+        <line num="236" count="36" type="stmt"/>
+        <line num="237" count="5" type="stmt"/>
+        <line num="238" count="5" type="stmt"/>
+        <line num="241" count="36" type="stmt"/>
+        <line num="258" count="1" type="stmt"/>
+        <line num="282" count="1" type="stmt"/>
+        <line num="356" count="19" type="stmt"/>
+        <line num="357" count="19" type="stmt"/>
+        <line num="359" count="19" type="stmt"/>
+        <line num="360" count="19" type="stmt"/>
+        <line num="361" count="19" type="stmt"/>
+        <line num="363" count="19" type="stmt"/>
+        <line num="364" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="365" count="9" type="stmt"/>
+        <line num="366" count="9" type="stmt"/>
+        <line num="370" count="9" type="stmt"/>
+        <line num="375" count="1" type="stmt"/>
+        <line num="379" count="1" type="stmt"/>
+        <line num="383" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="391" count="19" type="stmt"/>
+        <line num="393" count="19" type="stmt"/>
+        <line num="394" count="19" type="stmt"/>
+        <line num="396" count="19" type="cond" truecount="2" falsecount="0"/>
+        <line num="398" count="9" type="stmt"/>
+        <line num="430" count="36" type="stmt"/>
+        <line num="446" count="1" type="stmt"/>
+        <line num="447" count="1" type="stmt"/>
       </file>
       <file name="HistogramOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/HistogramOverlay.tsx">
         <metrics statements="63" coveredstatements="62" conditionals="25" coveredconditionals="23" methods="11" coveredmethods="11"/>
@@ -455,22 +479,22 @@
         <line num="166" count="13" type="stmt"/>
         <line num="172" count="14" type="cond" truecount="2" falsecount="0"/>
         <line num="174" count="13" type="stmt"/>
-        <line num="187" count="208" type="cond" truecount="4" falsecount="0"/>
-        <line num="188" count="208" type="stmt"/>
-        <line num="189" count="208" type="stmt"/>
+        <line num="192" count="208" type="cond" truecount="4" falsecount="0"/>
+        <line num="193" count="208" type="stmt"/>
+        <line num="194" count="208" type="stmt"/>
       </file>
       <file name="KeypointOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/KeypointOverlay.tsx">
         <metrics statements="28" coveredstatements="28" conditionals="6" coveredconditionals="6" methods="11" coveredmethods="11"/>
         <line num="23" count="2" type="stmt"/>
         <line num="32" count="2" type="stmt"/>
         <line num="35" count="2" type="stmt"/>
-        <line num="85" count="26" type="stmt"/>
-        <line num="88" count="26" type="stmt"/>
-        <line num="95" count="26" type="stmt"/>
-        <line num="96" count="26" type="cond" truecount="4" falsecount="0"/>
+        <line num="85" count="29" type="stmt"/>
+        <line num="88" count="29" type="stmt"/>
+        <line num="95" count="29" type="stmt"/>
+        <line num="96" count="29" type="cond" truecount="4" falsecount="0"/>
         <line num="97" count="8" type="stmt"/>
         <line num="100" count="18" type="stmt"/>
-        <line num="110" count="26" type="stmt"/>
+        <line num="110" count="29" type="stmt"/>
         <line num="114" count="2" type="stmt"/>
         <line num="126" count="14" type="stmt"/>
         <line num="128" count="14" type="stmt"/>
@@ -491,7 +515,7 @@
         <line num="212" count="4" type="stmt"/>
       </file>
       <file name="LevelIndicator.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/LevelIndicator.tsx">
-        <metrics statements="43" coveredstatements="43" conditionals="32" coveredconditionals="32" methods="7" coveredmethods="7"/>
+        <metrics statements="44" coveredstatements="44" conditionals="32" coveredconditionals="32" methods="7" coveredmethods="7"/>
         <line num="9" count="2" type="stmt"/>
         <line num="10" count="2" type="stmt"/>
         <line num="11" count="2" type="stmt"/>
@@ -508,47 +532,49 @@
         <line num="36" count="19" type="stmt"/>
         <line num="37" count="19" type="stmt"/>
         <line num="38" count="19" type="stmt"/>
-        <line num="43" count="19" type="stmt"/>
-        <line num="68" count="21" type="stmt"/>
+        <line num="39" count="19" type="stmt"/>
+        <line num="44" count="19" type="stmt"/>
         <line num="69" count="21" type="stmt"/>
         <line num="70" count="21" type="stmt"/>
         <line num="71" count="21" type="stmt"/>
-        <line num="74" count="21" type="stmt"/>
+        <line num="72" count="21" type="stmt"/>
         <line num="75" count="21" type="stmt"/>
-        <line num="77" count="21" type="cond" truecount="2" falsecount="0"/>
-        <line num="78" count="2" type="stmt"/>
-        <line num="81" count="19" type="stmt"/>
+        <line num="76" count="21" type="stmt"/>
+        <line num="78" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="79" count="2" type="stmt"/>
         <line num="82" count="19" type="stmt"/>
-        <line num="83" count="19" type="cond" truecount="4" falsecount="0"/>
-        <line num="88" count="19" type="stmt"/>
-        <line num="95" count="19" type="stmt"/>
-        <line num="96" count="18" type="stmt"/>
+        <line num="83" count="19" type="stmt"/>
+        <line num="84" count="19" type="cond" truecount="4" falsecount="0"/>
+        <line num="89" count="19" type="stmt"/>
+        <line num="96" count="19" type="stmt"/>
         <line num="97" count="18" type="stmt"/>
-        <line num="101" count="19" type="stmt"/>
-        <line num="102" count="18" type="cond" truecount="2" falsecount="0"/>
-        <line num="103" count="11" type="stmt"/>
-        <line num="104" count="11" type="cond" truecount="2" falsecount="0"/>
-        <line num="105" count="1" type="stmt"/>
-        <line num="106" count="10" type="cond" truecount="2" falsecount="0"/>
-        <line num="107" count="7" type="stmt"/>
-        <line num="113" count="19" type="cond" truecount="2" falsecount="0"/>
-        <line num="120" count="19" type="cond" truecount="2" falsecount="0"/>
-        <line num="126" count="19" type="stmt"/>
-        <line num="145" count="2" type="stmt"/>
+        <line num="98" count="18" type="stmt"/>
+        <line num="102" count="19" type="stmt"/>
+        <line num="103" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="104" count="11" type="stmt"/>
+        <line num="105" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="106" count="1" type="stmt"/>
+        <line num="107" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="108" count="7" type="stmt"/>
+        <line num="114" count="19" type="cond" truecount="2" falsecount="0"/>
+        <line num="121" count="19" type="cond" truecount="2" falsecount="0"/>
+        <line num="127" count="19" type="stmt"/>
+        <line num="146" count="2" type="stmt"/>
       </file>
       <file name="ModeSelector.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/ModeSelector.tsx">
-        <metrics statements="11" coveredstatements="11" conditionals="4" coveredconditionals="4" methods="6" coveredmethods="6"/>
+        <metrics statements="12" coveredstatements="12" conditionals="4" coveredconditionals="4" methods="7" coveredmethods="7"/>
         <line num="10" count="1" type="stmt"/>
-        <line num="26" count="40" type="stmt"/>
         <line num="27" count="40" type="stmt"/>
-        <line num="33" count="40" type="stmt"/>
-        <line num="49" count="1" type="stmt"/>
-        <line num="73" count="10" type="stmt"/>
-        <line num="75" count="10" type="stmt"/>
-        <line num="79" count="10" type="stmt"/>
-        <line num="84" count="10" type="stmt"/>
-        <line num="87" count="40" type="stmt"/>
-        <line num="91" count="7" type="stmt"/>
+        <line num="28" count="40" type="stmt"/>
+        <line num="34" count="40" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+        <line num="72" count="10" type="stmt"/>
+        <line num="74" count="10" type="stmt"/>
+        <line num="78" count="10" type="stmt"/>
+        <line num="82" count="10" type="stmt"/>
+        <line num="87" count="10" type="stmt"/>
+        <line num="90" count="40" type="stmt"/>
+        <line num="94" count="7" type="stmt"/>
       </file>
       <file name="PermissionGate.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/PermissionGate.tsx">
         <metrics statements="7" coveredstatements="7" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
@@ -577,42 +603,43 @@
         <line num="67" count="7" type="stmt"/>
       </file>
       <file name="ShareButton.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/ShareButton.tsx">
-        <metrics statements="32" coveredstatements="27" conditionals="32" coveredconditionals="26" methods="7" coveredmethods="5"/>
+        <metrics statements="33" coveredstatements="28" conditionals="32" coveredconditionals="26" methods="8" coveredmethods="6"/>
         <line num="26" count="1" type="stmt"/>
+        <line num="53" count="13" type="stmt"/>
+        <line num="55" count="13" type="stmt"/>
+        <line num="56" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="58" count="3" type="stmt"/>
+        <line num="61" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="62" count="0" type="stmt"/>
+        <line num="67" count="6" type="stmt"/>
         <line num="71" count="13" type="stmt"/>
-        <line num="73" count="13" type="stmt"/>
-        <line num="74" count="9" type="cond" truecount="2" falsecount="0"/>
-        <line num="76" count="3" type="stmt"/>
-        <line num="79" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="80" count="0" type="stmt"/>
-        <line num="85" count="6" type="stmt"/>
-        <line num="89" count="13" type="stmt"/>
-        <line num="91" count="13" type="cond" truecount="2" falsecount="0"/>
-        <line num="93" count="3" type="stmt"/>
-        <line num="108" count="13" type="stmt"/>
-        <line num="109" count="13" type="stmt"/>
-        <line num="110" count="13" type="stmt"/>
-        <line num="111" count="13" type="stmt"/>
-        <line num="113" count="13" type="stmt"/>
-        <line num="115" count="13" type="stmt"/>
-        <line num="122" count="13" type="stmt"/>
-        <line num="123" count="4" type="cond" truecount="3" falsecount="1"/>
-        <line num="125" count="4" type="stmt"/>
-        <line num="126" count="4" type="stmt"/>
-        <line num="127" count="4" type="stmt"/>
-        <line num="134" count="4" type="stmt"/>
-        <line num="135" count="3" type="cond" truecount="2" falsecount="0"/>
-        <line num="136" count="2" type="stmt"/>
-        <line num="138" count="1" type="cond" truecount="1" falsecount="1"/>
-        <line num="141" count="0" type="stmt"/>
-        <line num="143" count="3" type="stmt"/>
-        <line num="144" count="3" type="stmt"/>
-        <line num="149" count="13" type="stmt"/>
-        <line num="176" count="0" type="stmt"/>
-        <line num="177" count="0" type="stmt"/>
+        <line num="73" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="75" count="3" type="stmt"/>
+        <line num="90" count="13" type="stmt"/>
+        <line num="91" count="13" type="stmt"/>
+        <line num="92" count="13" type="stmt"/>
+        <line num="93" count="13" type="stmt"/>
+        <line num="95" count="13" type="stmt"/>
+        <line num="116" count="13" type="stmt"/>
+        <line num="118" count="13" type="stmt"/>
+        <line num="125" count="13" type="stmt"/>
+        <line num="126" count="4" type="cond" truecount="3" falsecount="1"/>
+        <line num="128" count="4" type="stmt"/>
+        <line num="129" count="4" type="stmt"/>
+        <line num="130" count="4" type="stmt"/>
+        <line num="137" count="4" type="stmt"/>
+        <line num="138" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="139" count="2" type="stmt"/>
+        <line num="141" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="144" count="0" type="stmt"/>
+        <line num="146" count="3" type="stmt"/>
+        <line num="147" count="3" type="stmt"/>
+        <line num="152" count="13" type="stmt"/>
+        <line num="179" count="0" type="stmt"/>
+        <line num="180" count="0" type="stmt"/>
       </file>
       <file name="StreamingDrawer.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/StreamingDrawer.tsx">
-        <metrics statements="36" coveredstatements="35" conditionals="17" coveredconditionals="14" methods="10" coveredmethods="9"/>
+        <metrics statements="37" coveredstatements="36" conditionals="17" coveredconditionals="14" methods="11" coveredmethods="10"/>
         <line num="6" count="1" type="stmt"/>
         <line num="7" count="1" type="stmt"/>
         <line num="17" count="20" type="stmt"/>
@@ -622,33 +649,34 @@
         <line num="21" count="20" type="stmt"/>
         <line num="22" count="20" type="stmt"/>
         <line num="24" count="20" type="stmt"/>
-        <line num="25" count="11" type="cond" truecount="2" falsecount="0"/>
-        <line num="26" count="9" type="stmt"/>
-        <line num="27" count="9" type="stmt"/>
-        <line num="29" count="2" type="stmt"/>
-        <line num="33" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="39" count="20" type="stmt"/>
-        <line num="40" count="9" type="stmt"/>
-        <line num="50" count="20" type="stmt"/>
-        <line num="51" count="11" type="cond" truecount="2" falsecount="0"/>
-        <line num="53" count="8" type="stmt"/>
-        <line num="54" count="8" type="stmt"/>
-        <line num="55" count="8" type="stmt"/>
-        <line num="56" count="8" type="stmt"/>
-        <line num="58" count="3" type="stmt"/>
-        <line num="59" count="3" type="stmt"/>
-        <line num="60" count="3" type="stmt"/>
-        <line num="61" count="3" type="stmt"/>
-        <line num="62" count="3" type="stmt"/>
-        <line num="63" count="3" type="stmt"/>
-        <line num="64" count="3" type="stmt"/>
+        <line num="42" count="20" type="stmt"/>
+        <line num="43" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="44" count="9" type="stmt"/>
+        <line num="45" count="9" type="stmt"/>
+        <line num="47" count="2" type="stmt"/>
+        <line num="51" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="57" count="20" type="stmt"/>
+        <line num="58" count="9" type="stmt"/>
         <line num="68" count="20" type="stmt"/>
-        <line num="72" count="20" type="stmt"/>
-        <line num="73" count="20" type="stmt"/>
-        <line num="74" count="20" type="stmt"/>
-        <line num="76" count="20" type="cond" truecount="2" falsecount="0"/>
-        <line num="78" count="9" type="stmt"/>
-        <line num="105" count="1" type="stmt"/>
+        <line num="69" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="71" count="8" type="stmt"/>
+        <line num="72" count="8" type="stmt"/>
+        <line num="73" count="8" type="stmt"/>
+        <line num="74" count="8" type="stmt"/>
+        <line num="76" count="3" type="stmt"/>
+        <line num="77" count="3" type="stmt"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="81" count="3" type="stmt"/>
+        <line num="82" count="3" type="stmt"/>
+        <line num="86" count="20" type="stmt"/>
+        <line num="90" count="20" type="stmt"/>
+        <line num="91" count="20" type="stmt"/>
+        <line num="92" count="20" type="stmt"/>
+        <line num="94" count="20" type="cond" truecount="2" falsecount="0"/>
+        <line num="96" count="9" type="stmt"/>
+        <line num="123" count="1" type="stmt"/>
       </file>
       <file name="SunPositionOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/SunPositionOverlay.tsx">
         <metrics statements="12" coveredstatements="12" conditionals="17" coveredconditionals="17" methods="3" coveredmethods="3"/>
@@ -667,55 +695,55 @@
       </file>
       <file name="TimerSelectorModal.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/TimerSelectorModal.tsx">
         <metrics statements="28" coveredstatements="27" conditionals="14" coveredconditionals="11" methods="9" coveredmethods="8"/>
-        <line num="32" count="27" type="stmt"/>
-        <line num="33" count="27" type="stmt"/>
-        <line num="39" count="27" type="stmt"/>
-        <line num="43" count="27" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="47" count="27" type="stmt"/>
         <line num="48" count="27" type="stmt"/>
-        <line num="51" count="1" type="stmt"/>
-        <line num="63" count="1" type="stmt"/>
-        <line num="83" count="27" type="stmt"/>
-        <line num="85" count="27" type="stmt"/>
-        <line num="93" count="1" type="stmt"/>
-        <line num="118" count="1" type="stmt"/>
-        <line num="120" count="1" type="stmt"/>
-        <line num="186" count="19" type="stmt"/>
-        <line num="187" count="19" type="stmt"/>
-        <line num="188" count="19" type="stmt"/>
-        <line num="190" count="19" type="stmt"/>
-        <line num="191" count="19" type="stmt"/>
-        <line num="193" count="19" type="stmt"/>
-        <line num="194" count="10" type="cond" truecount="2" falsecount="0"/>
-        <line num="195" count="9" type="stmt"/>
-        <line num="196" count="9" type="stmt"/>
-        <line num="197" count="9" type="stmt"/>
-        <line num="199" count="1" type="stmt"/>
-        <line num="200" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="202" count="1" type="stmt"/>
-        <line num="206" count="19" type="cond" truecount="2" falsecount="0"/>
-        <line num="208" count="9" type="stmt"/>
-        <line num="235" count="27" type="stmt"/>
+        <line num="54" count="27" type="stmt"/>
+        <line num="60" count="27" type="stmt"/>
+        <line num="65" count="27" type="stmt"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="80" count="27" type="stmt"/>
+        <line num="82" count="27" type="stmt"/>
+        <line num="101" count="1" type="stmt"/>
+        <line num="109" count="19" type="stmt"/>
+        <line num="110" count="19" type="stmt"/>
+        <line num="111" count="19" type="stmt"/>
+        <line num="112" count="19" type="stmt"/>
+        <line num="114" count="19" type="stmt"/>
+        <line num="115" count="19" type="stmt"/>
+        <line num="117" count="19" type="stmt"/>
+        <line num="118" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="119" count="9" type="stmt"/>
+        <line num="120" count="9" type="stmt"/>
+        <line num="121" count="9" type="stmt"/>
+        <line num="123" count="1" type="stmt"/>
+        <line num="124" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="126" count="1" type="stmt"/>
+        <line num="130" count="19" type="cond" truecount="2" falsecount="0"/>
+        <line num="132" count="9" type="stmt"/>
+        <line num="159" count="27" type="stmt"/>
+        <line num="180" count="1" type="stmt"/>
       </file>
     </package>
     <package name="contexts">
-      <metrics statements="15" coveredstatements="3" conditionals="4" coveredconditionals="0" methods="8" coveredmethods="1"/>
+      <metrics statements="15" coveredstatements="15" conditionals="4" coveredconditionals="4" methods="8" coveredmethods="6"/>
       <file name="ThemeContext.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/contexts/ThemeContext.tsx">
-        <metrics statements="15" coveredstatements="3" conditionals="4" coveredconditionals="0" methods="8" coveredmethods="1"/>
-        <line num="13" count="11" type="stmt"/>
-        <line num="20" count="11" type="stmt"/>
-        <line num="23" count="0" type="stmt"/>
-        <line num="25" count="0" type="stmt"/>
-        <line num="26" count="0" type="stmt"/>
-        <line num="27" count="0" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
-        <line num="32" count="0" type="stmt"/>
-        <line num="33" count="0" type="stmt"/>
-        <line num="36" count="0" type="stmt"/>
-        <line num="37" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="38" count="0" type="stmt"/>
-        <line num="41" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="43" count="0" type="stmt"/>
-        <line num="51" count="162" type="stmt"/>
+        <metrics statements="15" coveredstatements="15" conditionals="4" coveredconditionals="4" methods="8" coveredmethods="6"/>
+        <line num="13" count="12" type="stmt"/>
+        <line num="20" count="12" type="stmt"/>
+        <line num="23" count="26" type="stmt"/>
+        <line num="25" count="26" type="stmt"/>
+        <line num="26" count="15" type="stmt"/>
+        <line num="27" count="15" type="stmt"/>
+        <line num="31" count="26" type="stmt"/>
+        <line num="32" count="7" type="stmt"/>
+        <line num="33" count="7" type="stmt"/>
+        <line num="36" count="26" type="stmt"/>
+        <line num="37" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="4" type="stmt"/>
+        <line num="41" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="43" count="26" type="stmt"/>
+        <line num="51" count="194" type="stmt"/>
       </file>
     </package>
     <package name="hooks">
@@ -737,12 +765,12 @@
         <line num="47" count="5" type="stmt"/>
         <line num="48" count="5" type="stmt"/>
         <line num="51" count="5" type="stmt"/>
-        <line num="65" count="313" type="cond" truecount="2" falsecount="0"/>
-        <line num="67" count="313" type="stmt"/>
-        <line num="71" count="313" type="stmt"/>
-        <line num="77" count="313" type="cond" truecount="2" falsecount="0"/>
-        <line num="78" count="306" type="stmt"/>
-        <line num="81" count="313" type="stmt"/>
+        <line num="65" count="369" type="cond" truecount="2" falsecount="0"/>
+        <line num="67" count="369" type="stmt"/>
+        <line num="71" count="369" type="stmt"/>
+        <line num="77" count="369" type="cond" truecount="2" falsecount="0"/>
+        <line num="78" count="362" type="stmt"/>
+        <line num="81" count="369" type="stmt"/>
       </file>
       <file name="useAnimationFrameTimer.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/hooks/useAnimationFrameTimer.ts">
         <metrics statements="14" coveredstatements="14" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
@@ -1226,26 +1254,26 @@
       </file>
       <file name="useHaptics.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/hooks/useHaptics.ts">
         <metrics statements="20" coveredstatements="20" conditionals="2" coveredconditionals="2" methods="8" coveredmethods="8"/>
-        <line num="4" count="3" type="stmt"/>
-        <line num="11" count="19" type="stmt"/>
-        <line num="17" count="19" type="stmt"/>
+        <line num="4" count="4" type="stmt"/>
+        <line num="11" count="74" type="stmt"/>
+        <line num="17" count="74" type="stmt"/>
         <line num="18" count="11" type="stmt"/>
         <line num="19" count="11" type="cond" truecount="2" falsecount="0"/>
         <line num="20" count="8" type="stmt"/>
         <line num="22" count="8" type="stmt"/>
-        <line num="28" count="19" type="stmt"/>
-        <line num="29" count="2" type="stmt"/>
-        <line num="35" count="19" type="stmt"/>
+        <line num="28" count="74" type="stmt"/>
+        <line num="29" count="8" type="stmt"/>
+        <line num="35" count="74" type="stmt"/>
         <line num="36" count="2" type="stmt"/>
-        <line num="42" count="19" type="stmt"/>
+        <line num="42" count="74" type="stmt"/>
         <line num="43" count="2" type="stmt"/>
-        <line num="49" count="19" type="stmt"/>
+        <line num="49" count="74" type="stmt"/>
         <line num="50" count="2" type="stmt"/>
-        <line num="56" count="19" type="stmt"/>
+        <line num="56" count="74" type="stmt"/>
         <line num="57" count="2" type="stmt"/>
-        <line num="63" count="19" type="stmt"/>
+        <line num="63" count="74" type="stmt"/>
         <line num="64" count="2" type="stmt"/>
-        <line num="67" count="19" type="stmt"/>
+        <line num="67" count="74" type="stmt"/>
       </file>
       <file name="useHistogram.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/hooks/useHistogram.ts">
         <metrics statements="45" coveredstatements="40" conditionals="12" coveredconditionals="8" methods="6" coveredmethods="6"/>
@@ -2152,11 +2180,11 @@
         <metrics statements="10" coveredstatements="10" conditionals="2" coveredconditionals="2" methods="2" coveredmethods="2"/>
         <line num="4" count="12" type="stmt"/>
         <line num="6" count="12" type="stmt"/>
-        <line num="13" count="16" type="stmt"/>
-        <line num="14" count="16" type="stmt"/>
+        <line num="13" count="19" type="stmt"/>
+        <line num="14" count="19" type="stmt"/>
         <line num="15" count="16" type="cond" truecount="2" falsecount="0"/>
         <line num="16" count="8" type="stmt"/>
-        <line num="18" count="1" type="stmt"/>
+        <line num="18" count="4" type="stmt"/>
         <line num="23" count="7" type="stmt"/>
         <line num="24" count="7" type="stmt"/>
         <line num="25" count="7" type="stmt"/>
@@ -2346,9 +2374,9 @@
       <metrics statements="3" coveredstatements="3" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
       <file name="colors.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/theme/colors.ts">
         <metrics statements="3" coveredstatements="3" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
-        <line num="1" count="12" type="stmt"/>
-        <line num="18" count="12" type="stmt"/>
-        <line num="38" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="1" count="13" type="stmt"/>
+        <line num="82" count="13" type="stmt"/>
+        <line num="166" count="4" type="cond" truecount="2" falsecount="0"/>
       </file>
     </package>
     <package name="utils">

@@ -11,6 +11,11 @@ jest.mock('../services/share', () => ({
   sharePhoto: jest.fn(),
 }));
 
+// Mock react-native-view-shot
+jest.mock('react-native-view-shot', () => ({
+  captureRef: jest.fn(() => Promise.resolve('file:///captured.jpg')),
+}));
+
 const mockSharePhoto = require('../services/share').sharePhoto;
 
 describe('ShareButton', () => {
@@ -43,19 +48,23 @@ describe('ShareButton', () => {
     fireEvent.press(getByText('分享'));
 
     await waitFor(() => {
-      expect(mockSharePhoto).toHaveBeenCalledWith({
-        photoUri: 'file:///test/photo.jpg',
-        suggestions: ['[左上] 将主体放在左侧三分线附近', '[右下] 留出空间平衡画面'],
-        gridType: '三分法',
-        score: 85,
-        gridVariant: 'thirds',
-      });
+      expect(mockSharePhoto).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gridType: '三分法',
+          suggestions: ['[左上] 将主体放在左侧三分线附近', '[右下] 留出空间平衡画面'],
+          score: 85,
+          gridVariant: 'thirds',
+        })
+      );
     });
+    // The photoUri passed to sharePhoto is the captured composite (from view-shot mock),
+    // not the raw photoUri — this is the new ShareCard sharing behavior
+    const call = mockSharePhoto.mock.calls[0][0];
+    expect(call.photoUri).toBe('file:///captured.jpg');
   });
 
-  it('does not share again while already sharing', () => {
-    // When sharing is in progress, pressing again should be ignored
-    // (button is disabled and shows '分享中')
+  it('does not share again while already sharing', async () => {
+    // Override mockSharePhoto to delay resolution (simulates ongoing share)
     mockSharePhoto.mockImplementation(
       () => new Promise(resolve => setTimeout(() => resolve({ success: true }), 500))
     );
@@ -64,7 +73,12 @@ describe('ShareButton', () => {
     // While sharing, the button shows '分享中' instead of '分享'
     expect(queryByText('分享')).toBeNull();
     expect(getByText('分享中')).toBeTruthy();
-    expect(mockSharePhoto).toHaveBeenCalledTimes(1);
+    // sharePhoto was called once with the captured composite image
+    await waitFor(() => {
+      expect(mockSharePhoto).toHaveBeenCalledTimes(1);
+    });
+    const call = mockSharePhoto.mock.calls[0][0];
+    expect(call.photoUri).toBe('file:///captured.jpg');
   });
 
   it('shows error toast when share fails', async () => {

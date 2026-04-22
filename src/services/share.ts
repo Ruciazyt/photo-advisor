@@ -17,7 +17,7 @@ async function prepareImage(uri: string): Promise<string> {
   return manipResult.uri;
 }
 
-function buildShareText(opts: ShareOptions): string {
+export function buildShareText(opts: ShareOptions): string {
   const { gridType, suggestions, score } = opts;
 
   const gridIcon: Record<string, string> = {

@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useMemo, useRef } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay, runOnJS } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { sharePhoto } from '../services/share';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { ShareCard } from './ShareCard';
+import { captureRef } from 'react-native-view-shot';
 import type { ShareOptions } from '../types';
 
 interface ShareButtonProps {
@@ -45,6 +47,12 @@ const staticStyles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+  },
+  // ShareCard is rendered off-screen for capture
+  offscreenCard: {
+    position: 'absolute',
+    left: -9999,
+    top: 0,
   },
 });
 
@@ -92,6 +100,9 @@ export function ShareButton({
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
+  // Ref for the off-screen ShareCard used as capture source for view-shot
+  const shareCardRef = useRef<View>(null);
+
   const buttonStyles = useMemo(() => StyleSheet.create({
     button: {
       position: 'absolute',
@@ -134,7 +145,23 @@ export function ShareButton({
         score,
         gridVariant,
       };
-      const result = await sharePhoto(opts);
+
+      // Capture the ShareCard as a composite image via view-shot
+      let shareUri = photoUri;
+      if (shareCardRef.current) {
+        try {
+          const uri = await captureRef(shareCardRef, {
+            format: 'jpg',
+            quality: 0.9,
+          });
+          shareUri = uri;
+        } catch {
+          // Fall back to raw photo if capture fails
+          shareUri = photoUri;
+        }
+      }
+
+      const result = await sharePhoto({ ...opts, photoUri: shareUri });
       if (result.success) {
         setToastMessage('分享成功！');
       } else {
@@ -145,12 +172,22 @@ export function ShareButton({
     } finally {
       setSharing(false);
       setShowToast(true);
-      // onHidden is called by the Reanimated animation chain after fade-out completes
     }
   };
 
   return (
     <>
+      {/* Off-screen ShareCard rendered for view-shot capture */}
+      <View ref={shareCardRef} style={staticStyles.offscreenCard} collapsable={false}>
+        <ShareCard
+          photoUri={photoUri}
+          suggestions={suggestions}
+          gridType={gridType}
+          score={score}
+          gridVariant={gridVariant}
+        />
+      </View>
+
       <TouchableOpacity
         style={[buttonStyles.button, !canShare && staticStyles.buttonDisabled]}
         onPress={handleShare}

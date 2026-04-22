@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>47/47</span>
+                <span class='fraction'>48/48</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>43/43</span>
+                <span class='fraction'>44/44</span>
             </div>
         
             
@@ -278,13 +278,7 @@
 <a name='L213'></a><a href='#L213'>213</a>
 <a name='L214'></a><a href='#L214'>214</a>
 <a name='L215'></a><a href='#L215'>215</a>
-<a name='L216'></a><a href='#L216'>216</a>
-<a name='L217'></a><a href='#L217'>217</a>
-<a name='L218'></a><a href='#L218'>218</a>
-<a name='L219'></a><a href='#L219'>219</a>
-<a name='L220'></a><a href='#L220'>220</a>
-<a name='L221'></a><a href='#L221'>221</a>
-<a name='L222'></a><a href='#L222'>222</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L216'></a><a href='#L216'>216</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -316,6 +310,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">19x</span>
@@ -498,13 +493,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, runOnJS, SharedValue } from 'react-native-reanimated';
@@ -537,6 +525,7 @@ interface BubbleDotProps {
 }
 &nbsp;
 function BubbleDot({ animPitch, animRoll, color }: BubbleDotProps) {
+  const { colors } = useTheme();
   const animatedStyle = useAnimatedStyle(() =&gt; {
     const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, animPitch.value));
     const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, animRoll.value));
@@ -550,10 +539,10 @@ function BubbleDot({ animPitch, animRoll, color }: BubbleDotProps) {
   return (
     &lt;View style={styles.bubbleContainer} pointerEvents="none"&gt;
       {/* Outer ring */}
-      &lt;View style={[styles.outerRing, { borderColor: color }]}&gt;
+      &lt;View style={[styles.outerRing, { borderColor: color, backgroundColor: colors.bubbleBg }]}&gt;
         {/* Cross hairs */}
-        &lt;View style={styles.crossH} /&gt;
-        &lt;View style={styles.crossV} /&gt;
+        &lt;View style={[styles.crossH, { backgroundColor: colors.topBarBorderInactive }]} /&gt;
+        &lt;View style={[styles.crossV, { backgroundColor: colors.topBarBorderInactive }]} /&gt;
         {/* Center target */}
         &lt;View style={[styles.centerTarget, { borderColor: color }]} /&gt;
         {/* Bubble dot — animated on UI thread */}
@@ -631,16 +620,16 @@ export function LevelIndicator() {
       : 'close-circle';
 &nbsp;
   return (
-    &lt;View style={styles.container} pointerEvents="none"&gt;
+    &lt;View style={[styles.container, { backgroundColor: colors.overlayBg, borderColor: colors.topBarBorderInactive }]} pointerEvents="none"&gt;
       &lt;View style={styles.indicatorRow}&gt;
         &lt;BubbleDot animPitch={animPitch} animRoll={animRoll} color={color} /&gt;
         &lt;View style={styles.infoPanel}&gt;
           &lt;Ionicons name={statusIcon} size={18} color={color} /&gt;
           &lt;Text style={[styles.statusText, { color }]}&gt;{statusText}&lt;/Text&gt;
-          &lt;Text style={styles.tiltLabel}&gt;
+          &lt;Text style={[styles.tiltLabel, { color: colors.topBarTextSecondary }]}&gt;
             俯仰 {orientation.pitch.toFixed(1)}°
           &lt;/Text&gt;
-          &lt;Text style={styles.tiltLabel}&gt;
+          &lt;Text style={[styles.tiltLabel, { color: colors.topBarTextSecondary }]}&gt;
             横滚 {orientation.roll.toFixed(1)}°
           &lt;/Text&gt;
         &lt;/View&gt;
@@ -655,11 +644,8 @@ const styles = StyleSheet.create({
     top: 60,
     right: 16,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.55)',
     borderRadius: 12,
     padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   indicatorRow: {
     flexDirection: 'row',
@@ -677,7 +663,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   crossH: {
     position: 'absolute',
@@ -685,7 +670,6 @@ const styles = StyleSheet.create({
     right: 8,
     top: '50%',
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     marginTop: -0.5,
   },
   crossV: {
@@ -694,7 +678,6 @@ const styles = StyleSheet.create({
     bottom: 8,
     left: '50%',
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     marginLeft: -0.5,
   },
   centerTarget: {
@@ -721,7 +704,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   tiltLabel: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: 10,
     fontWeight: '400',
   },
@@ -733,7 +715,7 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-21T04:26:25.177Z
+                at 2026-04-22T12:25:33.352Z
             </div>
         <script src="../prettify.js"></script>
         <script>

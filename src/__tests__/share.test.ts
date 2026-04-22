@@ -2,7 +2,7 @@
  * Tests for src/services/share.ts
  */
 
-import { sharePhoto, ShareOptions } from '../services/share';
+import { sharePhoto, buildShareText, ShareOptions } from '../services/share';
 
 // Mock expo-file-system and expo-image-manipulator and expo-sharing
 jest.mock('expo-file-system/legacy', () => ({
@@ -23,6 +23,160 @@ jest.mock('expo-sharing', () => ({
 }));
 
 const mockSharing = require('expo-sharing').default;
+
+describe('buildShareText', () => {
+  it('includes grid type', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('网格: 三分法');
+  });
+
+  it('includes grid icon for thirds', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('📐');
+  });
+
+  it('includes grid icon for golden ratio', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '黄金分割',
+      gridVariant: 'golden',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('🥇');
+  });
+
+  it('includes star rating when score is provided', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      score: 85,
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('评分:');
+    expect(text).toContain('★');
+  });
+
+  it('renders 5 stars for score >= 90', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      score: 95,
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('★★★★★');
+  });
+
+  it('renders 4 stars for score >= 75', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      score: 80,
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('★★★★☆');
+  });
+
+  it('renders 1 star for score < 40', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      score: 30,
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('★☆☆☆☆');
+  });
+
+  it('does not include score line when score is undefined', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).not.toContain('评分:');
+  });
+
+  it('renders suggestions with bullet points', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: ['[左上] 将主体放在左侧三分线附近', '[右下] 留出空间平衡画面'],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('💡 AI 建议:');
+    expect(text).toContain('• 将主体放在左侧三分线附近');
+    expect(text).toContain('• 留出空间平衡画面');
+  });
+
+  it('strips region tags from suggestion text', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: ['[中心] 把主体放在画面中心'],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('• 把主体放在画面中心');
+    expect(text).not.toContain('[中心]');
+  });
+
+  it('includes the footer', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('📸 由拍摄参谋生成');
+  });
+
+  it('handles empty suggestions gracefully', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      gridVariant: 'thirds',
+    };
+    const text = buildShareText(opts);
+    expect(text).toBeTruthy();
+    expect(text).not.toContain('AI 建议');
+  });
+
+  it('uses default grid icon for unknown variant', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '三分法',
+      gridVariant: 'unknown-variant',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('📐');
+  });
+});
 
 describe('sharePhoto', () => {
   const baseOptions: ShareOptions = {
