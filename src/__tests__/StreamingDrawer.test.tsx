@@ -20,9 +20,13 @@ jest.mock('../contexts/ThemeContext', () => ({
     colors: {
       primary: '#000',
       accent: '#e8d5b7',
+      text: '#fff',
       success: '#22c55e',
       error: '#ef4444',
       warning: '#f59e0b',
+      drawerBg: '#1A1A1A',
+      drawerHandle: '#666666',
+      drawerTextSecondary: '#999999',
     },
     setTheme: jest.fn(),
     toggleTheme: jest.fn(),
@@ -157,8 +161,8 @@ describe('StreamingDrawer', () => {
         <StreamingDrawer visible={true} text="测试" loading={false} onClose={noop} />
       );
       const json = JSON.stringify(toJSON());
-      // Overlay touch area uses absoluteFillObject
-      expect(json).toContain('absolute');
+      // Overlay touch area uses absoluteFillObject — check for drawer's unique padding
+      expect(json).toContain('paddingBottom":40');
     });
 
     it('displays text content when provided', () => {

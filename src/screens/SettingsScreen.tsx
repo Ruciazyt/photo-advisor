@@ -438,7 +438,7 @@ export function SettingsScreen({ onSaved }: Props) {
               <Ionicons
                 name={theme === 'dark' ? 'moon' : 'sunny'}
                 size={18}
-                color={theme === 'dark' ? colors.accent : '#FFB800'}
+                color={theme === 'dark' ? colors.accent : colors.sunColor}
               />
               <Text style={[styles.themeToggleText, { color: theme === 'light' ? colors.accent : colors.textSecondary }]}>
                 {theme === 'dark' ? '深色' : '浅色'}

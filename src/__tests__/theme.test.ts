@@ -16,6 +16,9 @@ describe('DarkColors', () => {
       expect(DarkColors).toHaveProperty(key);
       expect(typeof (DarkColors as any)[key]).toBe('string');
     });
+    // sparkleColors is an array of hex color strings
+    expect(Array.isArray(DarkColors.sparkleColors)).toBe(true);
+    (DarkColors.sparkleColors as string[]).forEach(c => expect(c).toMatch(/^#[A-Fa-f0-9]{6}$/));
   });
 
   it('primary is black (#000000)', () => {
@@ -26,9 +29,13 @@ describe('DarkColors', () => {
     expect(DarkColors.accent).toMatch(/^#[A-Fa-f0-9]{6}$/);
   });
 
-  it('all colors are valid hex strings', () => {
-    Object.values(DarkColors).forEach(color => {
-      expect(color).toMatch(/^(#[A-Fa-f0-9]{6}|rgba?\()/);
+  it('all colors are valid hex strings or rgba() strings or string arrays', () => {
+    Object.entries(DarkColors).forEach(([key, color]) => {
+      if (Array.isArray(color)) {
+        (color as string[]).forEach(c => expect(c).toMatch(/^#[A-Fa-f0-9]{6}$/));
+      } else {
+        expect(color).toMatch(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^rgba?\(/);
+      }
     });
   });
 });
@@ -38,7 +45,11 @@ describe('LightColors', () => {
     const keys = Object.keys(DarkColors);
     keys.forEach(key => {
       expect(LightColors).toHaveProperty(key);
-      expect(typeof (LightColors as any)[key]).toBe('string');
+      if (key === 'sparkleColors') {
+        expect(Array.isArray((LightColors as any)[key])).toBe(true);
+      } else {
+        expect(typeof (LightColors as any)[key]).toBe('string');
+      }
     });
   });
 
@@ -46,9 +57,13 @@ describe('LightColors', () => {
     expect(LightColors.primary).toBe('#FFFFFF');
   });
 
-  it('all colors are valid hex strings', () => {
-    Object.values(LightColors).forEach(color => {
-      expect(color).toMatch(/^(#[A-Fa-f0-9]{6}|rgba?\()/);
+  it('all colors are valid hex strings or rgba() strings or string arrays', () => {
+    Object.entries(LightColors).forEach(([key, color]) => {
+      if (Array.isArray(color)) {
+        (color as string[]).forEach(c => expect(c).toMatch(/^#[A-Fa-f0-9]{6}$/));
+      } else {
+        expect(color).toMatch(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^rgba?\(/);
+      }
     });
   });
 

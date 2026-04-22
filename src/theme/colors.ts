@@ -61,6 +61,22 @@ export const DarkColors = {
   burstSuggestionBorder: 'rgba(255,215,0,0.35)',
   toastBg: 'rgba(255,107,138,0.9)',
   favoriteIcon: '#FF6B8A',
+  // ShareButton
+  shareButtonBg: 'rgba(0,0,0,0.55)',
+  shareButtonBorder: 'rgba(255,255,255,0.15)',
+  shareButtonDisabledText: 'rgba(255,255,255,0.3)',
+  // StreamingDrawer
+  drawerBg: '#1A1A1A',
+  drawerHandle: '#666666',
+  drawerTextSecondary: '#999999',
+  // GridSelectorModal
+  gridCardDisabledText: '#AAAAAA',
+  // Sparkle colors for CompositionScoreOverlay (S/A rank sparkles)
+  sparkleColors: ['#FFD700', '#C0C0C0', '#FF69B4', '#87CEEB', '#98FB98'],
+  // Star rating colors for FavoritesScreen
+  starGreen: '#8BC34A',
+  starYellow: '#FFC107',
+  starOrange: '#FF9800',
 };
 
 export const LightColors = {
@@ -126,6 +142,22 @@ export const LightColors = {
   burstSuggestionBorder: 'rgba(200,160,80,0.4)',
   toastBg: 'rgba(255,107,138,0.9)',
   favoriteIcon: '#E85A7A',
+  // ShareButton
+  shareButtonBg: 'rgba(0,0,0,0.55)',
+  shareButtonBorder: 'rgba(255,255,255,0.15)',
+  shareButtonDisabledText: 'rgba(255,255,255,0.3)',
+  // StreamingDrawer
+  drawerBg: '#F5F5F5',
+  drawerHandle: '#CCCCCC',
+  drawerTextSecondary: '#AAAAAA',
+  // GridSelectorModal
+  gridCardDisabledText: '#AAAAAA',
+  // Sparkle colors for CompositionScoreOverlay (S/A rank sparkles)
+  sparkleColors: ['#FFD700', '#C0C0C0', '#FF69B4', '#87CEEB', '#98FB98'],
+  // Star rating colors for FavoritesScreen
+  starGreen: '#7CB342',
+  starYellow: '#F9A825',
+  starOrange: '#FB8C00',
 };
 
 export type ColorPalette = typeof DarkColors;

@@ -27,11 +27,11 @@ function formatDate(iso: string): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function getStarConfig(score: number, colors: { success: string; error: string }) {
+function getStarConfig(score: number, colors: { success: string; error: string; starGreen: string; starYellow: string; starOrange: string }) {
   if (score >= 90) return { stars: 5, color: colors.success };
-  if (score >= 75) return { stars: 4, color: '#8BC34A' };
-  if (score >= 60) return { stars: 3, color: '#FFC107' };
-  if (score >= 40) return { stars: 2, color: '#FF9800' };
+  if (score >= 75) return { stars: 4, color: colors.starGreen };
+  if (score >= 60) return { stars: 3, color: colors.starYellow };
+  if (score >= 40) return { stars: 2, color: colors.starOrange };
   return { stars: 1, color: colors.error };
 }
 

@@ -37,6 +37,12 @@ const timerCardStaticStyles = StyleSheet.create({
   },
 });
 
+interface TimerCardProps {
+  opt: { label: string; value: TimerDuration };
+  isSelected: boolean;
+  onSelect: (value: number) => void;
+}
+
 function TimerCard({ opt, isSelected, onSelect }: TimerCardProps) {
   const { colors } = useTheme();
   const a11y = useAccessibilityButton({

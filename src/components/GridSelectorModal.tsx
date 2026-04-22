@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -215,12 +215,21 @@ function GridCard({ variant, isSelected, onSelect }: GridCardProps) {
     role: 'menuitem',
   });
 
+  const cardStyles = useMemo(() => StyleSheet.create({
+    cardLabel: {
+      color: colors.gridCardDisabledText,
+      fontSize: 12,
+      fontWeight: '600',
+      marginTop: 4,
+    },
+  }), [colors.gridCardDisabledText]);
+
   const cardStyle = [
     gridCardStaticStyles.card,
     isSelected && { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
   ];
   const labelStyle = [
-    gridCardStaticStyles.cardLabel,
+    cardStyles.cardLabel,
     isSelected && { color: colors.accent },
   ];
 
@@ -265,12 +274,6 @@ const gridCardStaticStyles = StyleSheet.create({
     height: 80,
     overflow: 'hidden',
     borderRadius: 6,
-  },
-  cardLabel: {
-    color: '#AAAAAA',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
   },
 });
 

@@ -37,6 +37,7 @@ jest.mock('../contexts/ThemeContext', () => ({
       scoreCardBorder: 'rgba(255,255,255,0.1)',
       scoreLabelText: 'rgba(255,255,255,0.6)',
       scoreBarBg: 'rgba(255,255,255,0.1)',
+      sparkleColors: ['#FFD700', '#C0C0C0', '#FF69B4', '#87CEEB', '#98FB98'],
     },
     setTheme: jest.fn(),
     toggleTheme: jest.fn(),

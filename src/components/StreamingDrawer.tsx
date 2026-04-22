@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay, Easing, cancelAnimation, runOnJS, SharedValue } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
@@ -20,6 +20,24 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
   const dot1 = useSharedValue(0);
   const dot2 = useSharedValue(0);
   const dot3 = useSharedValue(0);
+
+  const styles = useMemo(() => StyleSheet.create({
+    drawer: {
+      height: DRAWER_HEIGHT,
+      backgroundColor: colors.drawerBg,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: 20,
+      paddingBottom: 40,
+    },
+    handle: { width: 40, height: 4, backgroundColor: colors.drawerHandle, borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
+    headerTitle: { color: colors.accent, fontSize: 16, fontWeight: '600' },
+    closeBtn: { color: colors.drawerTextSecondary, fontSize: 20 },
+    text: { color: colors.text, fontSize: 15, lineHeight: 24 },
+    dot: { fontSize: 20, color: colors.accent },
+    placeholder: { color: colors.drawerTextSecondary, fontSize: 14, textAlign: 'center', paddingTop: 40 },
+  }), [colors.drawerBg, colors.drawerHandle, colors.accent, colors.drawerTextSecondary, colors.text]);
 
   useEffect(() => {
     if (visible) {
@@ -103,25 +121,10 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end', zIndex: 100 },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', zIndex: 100 },
   overlayHidden: { opacity: 0, pointerEvents: 'none' },
-  overlayTouch: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
-  drawer: {
-    height: DRAWER_HEIGHT,
-    backgroundColor: '#1a1a1a',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  handle: { width: 40, height: 4, backgroundColor: '#666', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
-  headerTitle: { color: '#e8d5b7', fontSize: 16, fontWeight: '600' },
-  closeBtn: { color: '#999', fontSize: 20 },
+  overlayTouch: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' },
   content: { flex: 1, marginTop: 12 },
   contentContainer: { paddingBottom: 20 },
-  text: { color: '#fff', fontSize: 15, lineHeight: 24 },
   dotsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 6 },
-  dot: { fontSize: 20, color: '#e8d5b7' },
-  placeholder: { color: '#999', fontSize: 14, textAlign: 'center', paddingTop: 40 },
 });

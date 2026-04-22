@@ -169,7 +169,7 @@ export function ComparisonOverlay({
         pointerEvents: 'box-none',
       },
       toggleTextActive: {
-        color: c.primary === '#000000' ? '#000' : c.primary,
+        color: c.text,
       },
       scoreBadge: {
         color: c.text,

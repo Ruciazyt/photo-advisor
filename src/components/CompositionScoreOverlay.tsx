@@ -258,7 +258,7 @@ export function CompositionScoreOverlay({
     gradePopScale.value = 0;
 
     if (isHighRank) {
-      const sparkleColors = [colors.scoreS, colors.scoreA, '#FF69B4', '#87CEEB', '#98FB98'];
+      const sparkleColors = colors.sparkleColors;
       const angle = (i: number) => (i / 6) * Math.PI * 2;
       const newItems: SparkleItem[] = Array.from({ length: 6 }, (_, i) => ({
         id: i,

@@ -177,7 +177,7 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
 
         {sunData.goldenHourStart && sunData.goldenHourEnd && (
           <View style={staticStyles.goldenRow}>
-            <Ionicons name="time-outline" size={11} color="#FFB800" />
+            <Ionicons name="time-outline" size={11} color={colors.sunColor} />
             <Text style={[staticStyles.goldenText, { color: colors.sunColor }]}>
               黄金时刻 {sunData.goldenHourStart}-{sunData.goldenHourEnd}
             </Text>

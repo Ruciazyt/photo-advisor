@@ -29,38 +29,7 @@ const POSITION_STYLES: Record<BubbleItem['position'], object> = {
   'center':       { top: '40%', left: 0, right: 0, alignSelf: 'center' },
 };
 
-// Module-level static styles
-const bubbleBaseStyles = StyleSheet.create({
-  bubble: {
-    position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    borderRadius: 12,
-    padding: 12,
-    paddingRight: 28,
-    maxWidth: 260,
-  },
-  bubbleText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '500',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-  },
-});
-
-// Module-level container styles
+// Module-level container styles (no theme dependency)
 const containerStyles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
@@ -94,10 +63,40 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
   const { colors } = useTheme();
   const opacity = useSharedValue(0);
 
+  const bubbleStyles = useMemo(() => StyleSheet.create({
+    bubble: {
+      position: 'absolute',
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      borderRadius: 12,
+      padding: 12,
+      paddingRight: 28,
+      maxWidth: 260,
+    },
+    bubbleText: {
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '500',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      width: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    closeText: {
+      color: colors.text,
+      fontSize: 12,
+    },
+  }), [colors.text]);
+
   const closeTextStyle = useMemo(() => [
-    bubbleBaseStyles.closeText,
+    bubbleStyles.closeText,
     { color: colors.accent },
-  ], [colors.accent]);
+  ], [colors.accent, bubbleStyles.closeText]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
@@ -112,9 +111,9 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
   const posStyle = POSITION_STYLES[item.position];
 
   return (
-    <Animated.View style={[bubbleBaseStyles.bubble, posStyle, animatedStyle]}>
-      <Text style={bubbleBaseStyles.bubbleText}>{item.text}</Text>
-      <TouchableOpacity style={bubbleBaseStyles.closeBtn} onPress={onDismiss} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+    <Animated.View style={[bubbleStyles.bubble, posStyle, animatedStyle]}>
+      <Text style={bubbleStyles.bubbleText}>{item.text}</Text>
+      <TouchableOpacity style={bubbleStyles.closeBtn} onPress={onDismiss} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <Text style={closeTextStyle}>✕</Text>
       </TouchableOpacity>
     </Animated.View>
