@@ -1,25 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSunPosition } from '../hooks/useSunPosition';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
 
-// Module-level static styles
+// Structural-only styles (no theme colors)
 const staticStyles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 110,
     left: 16,
     zIndex: 10,
-  },
-  panel: {
-    backgroundColor: 'rgba(0,0,0,0.72)',
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    minWidth: 200,
   },
   header: {
     flexDirection: 'row',
@@ -39,28 +31,6 @@ const staticStyles = StyleSheet.create({
   compassContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  compassRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  compassN: { position: 'absolute', top: 2, color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
-  compassE: { position: 'absolute', right: 4, color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
-  compassS: { position: 'absolute', bottom: 2, color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
-  compassW: { position: 'absolute', left: 4, color: 'rgba(255,255,255,0.5)', fontSize: 8, fontWeight: '700' },
-  compassCenter: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    position: 'absolute',
   },
   infoBlock: {
     flex: 1,
@@ -85,7 +55,6 @@ const staticStyles = StyleSheet.create({
     marginTop: 6,
     paddingTop: 6,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   goldenText: {
     fontSize: 10,
@@ -96,22 +65,15 @@ const staticStyles = StyleSheet.create({
     marginLeft: 4,
   },
   toggleBtn: {
-    backgroundColor: 'rgba(0,0,0,0.55)',
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  toggleBtnActive: {
-    backgroundColor: 'rgba(255,184,0,0.15)',
-    borderColor: 'rgba(255,184,0,0.5)',
-  },
   toggleText: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -119,17 +81,27 @@ const staticStyles = StyleSheet.create({
 
 function CompassArrow({ azimuth }: { azimuth: number }) {
   const { colors } = useTheme();
+
+  const compassTextStyle = useMemo(() => ({ color: colors.sunCompassText, fontSize: 8, fontWeight: '700' as const }), [colors.sunCompassText]);
+  const compassCenterStyle = useMemo(() => ({ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.sunCompassCenter, position: 'absolute' as const }), [colors.sunCompassCenter]);
+  const compassRingStyle = useMemo(() => ({
+    width: 52, height: 52, borderRadius: 26, borderWidth: 1,
+    borderColor: colors.topBarBorderInactive,
+    backgroundColor: colors.sunCompassBg,
+    alignItems: 'center', justifyContent: 'center', position: 'relative' as const,
+  }), [colors.topBarBorderInactive, colors.sunCompassBg]);
+
   return (
     <View style={staticStyles.compassContainer}>
-      <View style={staticStyles.compassRing}>
-        <Text style={staticStyles.compassN}>N</Text>
-        <Text style={staticStyles.compassE}>E</Text>
-        <Text style={staticStyles.compassS}>S</Text>
-        <Text style={staticStyles.compassW}>W</Text>
+      <View style={compassRingStyle}>
+        <Text style={[compassTextStyle, { position: 'absolute', top: 2 }]}>N</Text>
+        <Text style={[compassTextStyle, { position: 'absolute', right: 4 }]}>E</Text>
+        <Text style={[compassTextStyle, { position: 'absolute', bottom: 2 }]}>S</Text>
+        <Text style={[compassTextStyle, { position: 'absolute', left: 4 }]}>W</Text>
         <View style={[staticStyles.compassContainer, { transform: [{ rotate: `${azimuth}deg` }] }]}>
           <Text style={{ fontSize: 16, fontWeight: '700', color: colors.sunColor }}>↑</Text>
         </View>
-        <View style={staticStyles.compassCenter} />
+        <View style={compassCenterStyle} />
       </View>
     </View>
   );
@@ -139,12 +111,26 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
   const { colors } = useTheme();
   const { sunData } = useSunPosition();
 
+  const panelStyle = useMemo(() => ({
+    backgroundColor: colors.sunPanelBg,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.sunPanelBorder,
+    minWidth: 200,
+  }), [colors.sunPanelBg, colors.sunPanelBorder]);
+
+  const goldenRowStyle = useMemo(() => ({
+    ...staticStyles.goldenRow,
+    borderTopColor: colors.topBarBorderInactive,
+  }), [colors.topBarBorderInactive]);
+
   if (!visible) return null;
 
   if (!sunData.available) {
     return (
       <View style={staticStyles.container} pointerEvents="none">
-        <View style={staticStyles.panel}>
+        <View style={panelStyle}>
           <Ionicons name="sunny-outline" size={14} color={colors.textSecondary} />
           <Text style={[staticStyles.unavailableText, { color: colors.textSecondary }]}>{sunData.advice}</Text>
         </View>
@@ -154,7 +140,7 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
 
   return (
     <View style={staticStyles.container} pointerEvents="none">
-      <View style={staticStyles.panel}>
+      <View style={panelStyle}>
         <View style={staticStyles.header}>
           <Ionicons name="sunny" size={16} color={colors.sunColor} />
           <Text style={[staticStyles.label, { color: colors.sunColor }]}>太阳</Text>
@@ -176,7 +162,7 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
         </View>
 
         {sunData.goldenHourStart && sunData.goldenHourEnd && (
-          <View style={staticStyles.goldenRow}>
+          <View style={goldenRowStyle}>
             <Ionicons name="time-outline" size={11} color={colors.sunColor} />
             <Text style={[staticStyles.goldenText, { color: colors.sunColor }]}>
               黄金时刻 {sunData.goldenHourStart}-{sunData.goldenHourEnd}
@@ -196,9 +182,19 @@ export function SunToggleButton({ visible, onPress }: { visible: boolean; onPres
     role: 'button',
   });
 
+  const toggleStyle = useMemo(() => [
+    staticStyles.toggleBtn,
+    visible
+      ? { backgroundColor: colors.sunToggleActiveBg, borderColor: colors.sunToggleActiveBorder }
+      : { backgroundColor: colors.topBarBg, borderColor: colors.topBarBorderInactive },
+  ], [visible, colors.sunToggleActiveBg, colors.sunToggleActiveBorder, colors.topBarBg, colors.topBarBorderInactive]);
+
+  const iconColor = visible ? colors.sunColor : colors.topBarTextSecondary;
+  const textColor = visible ? colors.sunColor : colors.topBarTextSecondary;
+
   return (
     <TouchableOpacity
-      style={[staticStyles.toggleBtn, visible && staticStyles.toggleBtnActive]}
+      style={toggleStyle}
       onPress={onPress}
       activeOpacity={0.7}
       {...a11y}
@@ -207,9 +203,9 @@ export function SunToggleButton({ visible, onPress }: { visible: boolean; onPres
       <Ionicons
         name={visible ? 'sunny' : 'sunny-outline'}
         size={14}
-        color={visible ? colors.sunColor : 'rgba(255,255,255,0.6)'}
+        color={iconColor}
       />
-      <Text style={[staticStyles.toggleText, visible && { color: colors.sunColor }]}>太阳</Text>
+      <Text style={[staticStyles.toggleText, { color: textColor }]}>太阳</Text>
     </TouchableOpacity>
   );
 }

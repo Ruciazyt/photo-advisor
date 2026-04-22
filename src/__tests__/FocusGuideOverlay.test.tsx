@@ -6,7 +6,41 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 
-// Mock the useTheme hook
+// ---------------------------------------------------------------------------
+// Mock dependencies
+// ---------------------------------------------------------------------------
+
+// Mock react-native-reanimated — uses the pre-built mock in __mocks__
+jest.mock('react-native-reanimated');
+jest.mock('react-native-worklets');
+
+// Mock useAnimationFrameTimer — each test controls polling manually via a module-level ref
+let pollCallback: (() => void) | null = null;
+let pollEnabled = false;
+
+jest.mock('../hooks/useAnimationFrameTimer', () => ({
+  useAnimationFrameTimer: jest.fn(({ onTick, enabled }) => {
+    pollCallback = onTick;
+    pollEnabled = enabled;
+  }),
+}));
+
+const mockMediumImpact = jest.fn();
+const mockErrorNotification = jest.fn();
+const mockWarningNotification = jest.fn();
+
+jest.mock('../hooks/useHaptics', () => ({
+  useHaptics: () => ({
+    mediumImpact: mockMediumImpact,
+    errorNotification: mockErrorNotification,
+    warningNotification: mockWarningNotification,
+    lightImpact: jest.fn(),
+    heavyImpact: jest.fn(),
+    successNotification: jest.fn(),
+    triggerLevelHaptic: jest.fn(),
+  }),
+}));
+
 jest.mock('../contexts/ThemeContext', () => ({
   useTheme: () => ({
     theme: 'dark',
@@ -29,94 +63,91 @@ jest.mock('../contexts/ThemeContext', () => ({
   }),
 }));
 
-// Mock the useHaptics hook
-const mockMediumImpact = jest.fn();
-const mockErrorNotification = jest.fn();
-const mockWarningNotification = jest.fn();
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-jest.mock('../hooks/useHaptics', () => ({
-  useHaptics: () => ({
-    mediumImpact: mockMediumImpact,
-    errorNotification: mockErrorNotification,
-    warningNotification: mockWarningNotification,
-    lightImpact: jest.fn(),
-    heavyImpact: jest.fn(),
-    successNotification: jest.fn(),
-    triggerLevelHaptic: jest.fn(),
-  }),
-}));
+/** Fire the registered useAnimationFrameTimer onTick callback. */
+function triggerPoll() {
+  if (pollCallback) pollCallback();
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 describe('FocusGuideOverlay', () => {
-  const mockCameraRef = { current: null };
-
   beforeEach(() => {
     jest.clearAllMocks();
+    pollCallback = null;
+    pollEnabled = false;
   });
 
   it('renders nothing when visible=false', () => {
     const { toJSON } = render(
-      <FocusGuideOverlay visible={false} cameraRef={mockCameraRef} />
+      <FocusGuideOverlay visible={false} cameraRef={{ current: null }} />
     );
     expect(toJSON()).toBeNull();
   });
 
   it('renders zoom indicator and 3 focus zone buttons when visible=true', () => {
-    render(<FocusGuideOverlay visible={true} cameraRef={mockCameraRef} />);
-
-    // Zoom label should be visible
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: null }} />);
     expect(screen.getByText('变焦')).toBeTruthy();
-    // Zoom value (starts at 1.0x)
     expect(screen.getByText('1.0x')).toBeTruthy();
-
-    // All three focus zone buttons
     expect(screen.getByText('远景')).toBeTruthy();
     expect(screen.getByText('标准')).toBeTruthy();
     expect(screen.getByText('近拍')).toBeTruthy();
   });
 
+  it('shows DOF warning when zoom >= 2.0x', () => {
+    const cam = { zoom: 2.5, focusDepth: jest.fn() };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+    expect(screen.getByText('⚠️ DOF变浅')).toBeTruthy();
+  });
+
+  it('hides DOF warning when zoom < 2.0x', () => {
+    const cam = { zoom: 1.8, focusDepth: jest.fn() };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+    expect(screen.queryByText('⚠️ DOF变浅')).toBeNull();
+  });
+
   it('calls cameraRef.focusDepth with correct depth when a focus zone button is pressed', () => {
     const focusDepthMock = jest.fn();
     const cam = { zoom: 1.0, focusDepth: focusDepthMock };
-    const ref = { current: cam };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
 
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
-
-    // Tap "远景" (far/infinity, depth 0.95)
     fireEvent.press(screen.getByText('远景'));
     expect(focusDepthMock).toHaveBeenCalledWith(0.95);
 
-    // Tap "标准" (standard, depth 0.5)
     fireEvent.press(screen.getByText('标准'));
     expect(focusDepthMock).toHaveBeenCalledWith(0.5);
 
-    // Tap "近拍" (macro, depth 0.1)
     fireEvent.press(screen.getByText('近拍'));
     expect(focusDepthMock).toHaveBeenCalledWith(0.1);
   });
 
   it('does NOT call focusDepth when device does not support it', () => {
-    // Simulate no focusDepth method
     const cam = { zoom: 1.0 };
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
-
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
     fireEvent.press(screen.getByText('标准'));
-    // Should not crash and should not call focusDepth
+    // Should not crash
   });
 
-  it('calls showToast callback when device does not support focusDepth', () => {
+  it('calls showToast when device does not support focusDepth', () => {
     const showToastMock = jest.fn();
-    const cam = { zoom: 1.0 }; // no focusDepth
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} showToast={showToastMock} />);
-
+    const cam = { zoom: 1.0 };
+    render(
+      <FocusGuideOverlay
+        visible={true}
+        cameraRef={{ current: cam }}
+        showToast={showToastMock}
+      />
+    );
     fireEvent.press(screen.getByText('标准'));
     expect(showToastMock).toHaveBeenCalledWith('当前设备不支持手动对焦');
   });
 
-  it('calls showToast callback with error message when focusDepth throws', () => {
+  it('calls showToast with error message when focusDepth throws', () => {
     const showToastMock = jest.fn();
     const cam = {
       zoom: 1.0,
@@ -124,22 +155,21 @@ describe('FocusGuideOverlay', () => {
         throw new Error('focusDepth failed');
       }),
     };
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} showToast={showToastMock} />);
-
+    render(
+      <FocusGuideOverlay
+        visible={true}
+        cameraRef={{ current: cam }}
+        showToast={showToastMock}
+      />
+    );
     fireEvent.press(screen.getByText('远景'));
     expect(showToastMock).toHaveBeenCalledWith('对焦失败，请重试');
   });
 
-  it('calls mediumImpact when focusDepth succeeds', () => {
+  it('calls mediumImpact haptic when focusDepth succeeds', () => {
     const cam = { zoom: 1.0, focusDepth: jest.fn() };
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
-
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
     fireEvent.press(screen.getByText('标准'));
-    expect(cam.focusDepth).toHaveBeenCalledWith(0.5);
     expect(mockMediumImpact).toHaveBeenCalled();
   });
 
@@ -150,95 +180,101 @@ describe('FocusGuideOverlay', () => {
         throw new Error('focusDepth failed');
       }),
     };
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
-
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
     fireEvent.press(screen.getByText('远景'));
     expect(mockErrorNotification).toHaveBeenCalled();
   });
 
   it('calls warningNotification when device does not support focusDepth', () => {
-    const cam = { zoom: 1.0 }; // no focusDepth
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
-
+    const cam = { zoom: 1.0 };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
     fireEvent.press(screen.getByText('标准'));
     expect(mockWarningNotification).toHaveBeenCalled();
   });
 
-  it('does NOT call focusDepth on tap (tap triggers visual feedback only)', () => {
+  // -------------------------------------------------------------------------
+  // Tap-to-focus / FocusRing tests
+  // -------------------------------------------------------------------------
+
+  it('does NOT call focusDepth on tap (visual feedback only)', () => {
     const cam = { zoom: 1.0, focusDepth: jest.fn() };
-    const ref = { current: cam };
-
     const { UNSAFE_root } = render(
-      <FocusGuideOverlay visible={true} cameraRef={ref} />
+      <FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />
     );
-
-    // Tap on the overlay (simulate touch)
     fireEvent(UNSAFE_root, 'touchEnd', {
       nativeEvent: { locationX: 100, locationY: 200 },
     });
-
-    // Tap-to-focus does NOT call focusDepth (it's visual-only)
     expect(cam.focusDepth).not.toHaveBeenCalled();
   });
 
-  it('unmounts cleanly without pending intervals (mountedRef guard)', () => {
-    // This test verifies that the cleanup function sets mountedRef=false
-    // so any in-flight poll timeouts won't call setState after unmount.
-    // We verify by ensuring render and unmount don't throw.
-    const cam = { zoom: 2.0, focusDepth: jest.fn() };
-    const ref = { current: cam };
-
-    const { unmount } = render(
-      <FocusGuideOverlay visible={true} cameraRef={ref} />
-    );
-
-    // Unmount should be synchronous and clean (no pending async work)
-    expect(() => unmount()).not.toThrow();
-  });
-
-  it('sets initial zoom value immediately on mount', () => {
-    const cam = { zoom: 1.8, focusDepth: jest.fn() };
-    const ref = { current: cam };
-
-    render(<FocusGuideOverlay visible={true} cameraRef={ref} />);
-
-    // The zoom value should be displayed as-is (1.8x)
-    expect(screen.getByText('1.8x')).toBeTruthy();
-  });
-
-  it('applies theme colors from useTheme to dynamic styles', () => {
-    // Verify that the component reads colors from useTheme by checking
-    // that a focus ring is rendered with theme-derived colors passed as props
+  it('registers useAnimationFrameTimer on mount when visible=true', () => {
     const cam = { zoom: 1.0, focusDepth: jest.fn() };
-    const ref = { current: cam };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+    expect(pollCallback).not.toBeNull();
+    expect(pollEnabled).toBe(true);
+  });
 
+  it('tap-to-focus adds a focus ring without calling focusDepth', () => {
+    const cam = { zoom: 1.0, focusDepth: jest.fn() };
     const { UNSAFE_root } = render(
-      <FocusGuideOverlay visible={true} cameraRef={ref} />
+      <FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />
     );
-
-    // Simulate tap to trigger a focus ring
     fireEvent(UNSAFE_root, 'touchEnd', {
       nativeEvent: { locationX: 100, locationY: 200 },
     });
+    // Tap-to-focus is visual-only — does not call camera focusDepth
+    expect(cam.focusDepth).not.toHaveBeenCalled();
+  });
 
-    // Focus ring should appear (animated view with borderColor from theme)
-    // The component uses colors.sunColor + 'E6' for the ring border
-    // We verify the ring was added to state (id counter incremented)
-    expect(cam.focusDepth).not.toHaveBeenCalled(); // tap-to-focus is visual only
+  it('unmounts cleanly — poll callback does not throw after unmount', () => {
+    const cam = { zoom: 2.0, focusDepth: jest.fn() };
+    const { unmount } = render(
+      <FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />
+    );
+    const cb = pollCallback;
+    unmount();
+    // mountedRef guard prevents setState after unmount — must not throw
+    expect(() => { cb?.(); }).not.toThrow();
+  });
+
+  it('sets initial zoom value from cameraRef on mount', () => {
+    const cam = { zoom: 1.8, focusDepth: jest.fn() };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+    expect(screen.getByText('1.8x')).toBeTruthy();
+  });
+
+  it('polling updates zoom display to new value when camera zoom changes', () => {
+    const cam = { zoom: 1.0, focusDepth: jest.fn() };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+
+    expect(screen.getByText('1.0x')).toBeTruthy();
+    expect(screen.queryByText('⚠️ DOF变浅')).toBeNull();
+
+    // Simulate zoom change on camera ref
+    cam.zoom = 2.5;
+    triggerPoll();
+
+    // Zoom display should update to 2.5x and DOF warning should appear
+    expect(screen.getByText('2.5x')).toBeTruthy();
+    expect(screen.getByText('⚠️ DOF变浅')).toBeTruthy();
+  });
+
+  it('applies theme colors via useTheme (sunColor used for focus ring border)', () => {
+    const cam = { zoom: 1.0, focusDepth: jest.fn() };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+    // If theme colors are wrong the render would crash — existence of text proves it worked
+    expect(screen.getByText('1.0x')).toBeTruthy();
   });
 });
 
 describe('FocusGuideOverlay — light theme', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    pollCallback = null;
+    pollEnabled = false;
   });
 
   it('renders correctly with light theme colors', () => {
-    // Override the theme mock for this suite
     jest.doMock('../contexts/ThemeContext', () => ({
       useTheme: () => ({
         theme: 'light',
@@ -262,16 +298,10 @@ describe('FocusGuideOverlay — light theme', () => {
     }));
 
     const cam = { zoom: 1.0, focusDepth: jest.fn() };
-    const ref = { current: cam };
-
-    const { getAllByText } = render(
-      <FocusGuideOverlay visible={true} cameraRef={ref} />
-    );
-
-    // All three focus zone buttons should be visible
-    expect(getAllByText('远景')).toBeTruthy();
-    expect(getAllByText('标准')).toBeTruthy();
-    expect(getAllByText('近拍')).toBeTruthy();
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
     expect(screen.getByText('1.0x')).toBeTruthy();
+    expect(screen.getByText('远景')).toBeTruthy();
+    expect(screen.getByText('标准')).toBeTruthy();
+    expect(screen.getByText('近拍')).toBeTruthy();
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -204,37 +204,30 @@ interface GridCardProps {
   variant: { key: GridVariant; label: string };
   isSelected: boolean;
   onSelect: (v: GridVariant) => void;
+  triggerHaptic?: () => void;
 }
 
-function GridCard({ variant, isSelected, onSelect }: GridCardProps) {
+function GridCard({ variant, isSelected, onSelect, triggerHaptic }: GridCardProps) {
   const { colors } = useTheme();
-  const { lightImpact } = useHaptics();
   const a11y = useAccessibilityButton({
     label: variant.label,
     hint: `选择${variant.label}网格`,
     role: 'menuitem',
   });
 
-  const cardStyles = useMemo(() => StyleSheet.create({
-    cardLabel: {
-      color: colors.gridCardDisabledText,
-      fontSize: 12,
-      fontWeight: '600',
-      marginTop: 4,
-    },
-  }), [colors.gridCardDisabledText]);
-
   const cardStyle = [
     gridCardStaticStyles.card,
     isSelected && { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
   ];
   const labelStyle = [
-    cardStyles.cardLabel,
+    gridCardStaticStyles.cardLabel,
     isSelected && { color: colors.accent },
   ];
 
   const handleSelect = () => {
-    try { lightImpact?.(); } catch (_) {}
+    if (triggerHaptic) {
+      try { triggerHaptic(); } catch (_) { /* guard against missing haptics */ }
+    }
     onSelect(variant.key);
   };
 
@@ -274,6 +267,12 @@ const gridCardStaticStyles = StyleSheet.create({
     height: 80,
     overflow: 'hidden',
     borderRadius: 6,
+  },
+  cardLabel: {
+    color: '#AAAAAA',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
   },
 });
 
@@ -432,6 +431,7 @@ export function GridSelectorModal({
               variant={v}
               isSelected={selectedVariant === v.key}
               onSelect={onSelect}
+              triggerHaptic={lightImpact}
             />
           ))}
         </View>
@@ -443,7 +443,7 @@ export function GridSelectorModal({
             selectedVariant === 'none' && { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
           ]}
           onPress={() => {
-            try { lightImpact?.(); } catch (_) {}
+            try { lightImpact?.(); } catch (_) { /* guard against missing haptics */ }
             onSelect('none');
           }}
           activeOpacity={0.75}
