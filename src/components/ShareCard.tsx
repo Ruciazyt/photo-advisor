@@ -43,6 +43,8 @@ export interface ShareCardProps {
   score?: number;
   /** Grid variant key */
   gridVariant?: string;
+  /** Optional one-line score reason (e.g. '主体偏左，建议右移') */
+  scoreReason?: string;
 }
 
 /**
@@ -55,6 +57,7 @@ export function ShareCard({
   gridType,
   score,
   gridVariant = 'thirds',
+  scoreReason,
 }: ShareCardProps) {
   const { colors, theme } = useTheme();
   const meta = GRID_META[gridVariant] ?? GRID_META['thirds'];
@@ -113,6 +116,13 @@ export function ShareCard({
       color: textSecondary,
       marginLeft: 8,
     },
+    scoreReason: {
+      fontSize: 11,
+      color: textSecondary,
+      marginLeft: 8,
+      flexShrink: 1,
+      maxWidth: 140,
+    },
     suggestionsHeader: {
       fontSize: 12,
       color: textSecondary,
@@ -163,6 +173,9 @@ export function ShareCard({
           <View style={panelStyles.scoreRow}>
             <Text style={panelStyles.stars}>{buildStars(score)}</Text>
             <Text style={panelStyles.scoreNum}>({score}分)</Text>
+            {scoreReason && (
+              <Text style={panelStyles.scoreReason} numberOfLines={2}>{scoreReason}</Text>
+            )}
           </View>
         )}
 

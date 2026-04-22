@@ -95,6 +95,20 @@ describe('ShareCard', () => {
     gridVariant: 'thirds',
   };
 
+  it('displays scoreReason text beside the score number', () => {
+    const { getByText } = render(
+      <ShareCard {...defaultProps} score={75} scoreReason="主体偏左，建议右移" />
+    );
+    expect(getByText('主体偏左，建议右移')).toBeTruthy();
+  });
+
+  it('does not render scoreReason when score is undefined', () => {
+    const { queryByText } = render(
+      <ShareCard {...defaultProps} score={undefined} scoreReason="some reason" />
+    );
+    expect(queryByText('some reason')).toBeNull();
+  });
+
   it('renders without crashing', () => {
     const { UNSAFE_getByType } = render(<ShareCard {...defaultProps} />);
     expect(UNSAFE_getByType(ShareCard)).toBeTruthy();
