@@ -172,7 +172,12 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
   if (!visible) return null;
 
   return (
-    <View style={staticStyles.container} pointerEvents="none">
+    <View
+      style={staticStyles.container}
+      pointerEvents="none"
+      accessibilityLabel="直方图曝光分析"
+      accessibilityRole="image"
+    >
       <View style={staticStyles.headerRow}>
         <Text style={labelStyle}>直方图</Text>
         <View style={staticStyles.warningRow}>

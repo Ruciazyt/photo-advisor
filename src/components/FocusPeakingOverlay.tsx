@@ -142,7 +142,12 @@ export const FocusPeakingOverlay = React.memo(function FocusPeakingOverlay({
 
   // Dummy passes a stable empty array to DotMarkers, only changing when dotsRef actually changes
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View
+      style={styles.container}
+      pointerEvents="none"
+      accessibilityLabel="对焦峰值覆盖层，显示画面中处于焦点的边缘区域"
+      accessibilityRole="image"
+    >
       {dotsRef.current.length === 0 ? (
         <Dummy dots={EMPTY_DOTS} />
       ) : (

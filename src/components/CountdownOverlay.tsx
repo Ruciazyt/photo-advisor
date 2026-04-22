@@ -67,7 +67,12 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
   }));
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.overlayBg }]} pointerEvents="none">
+    <View
+      style={[styles.container, { backgroundColor: colors.overlayBg }]}
+      pointerEvents="none"
+      accessibilityLabel={`倒计时 ${count} 秒`}
+      accessibilityRole="image"
+    >
       <Animated.View
         style={[
           styles.bubble,

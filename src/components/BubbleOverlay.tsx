@@ -17,6 +17,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityButton } from '../hooks/useAccessibility';
 import type { BubbleItem } from '../types';
 export type { BubblePosition } from '../types';
 export { BubbleItem };
@@ -110,10 +111,20 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
 
   const posStyle = POSITION_STYLES[item.position];
 
+  const dismissA11yProps = useAccessibilityButton({
+    label: `关闭提示: ${item.text}`,
+    hint: '双击关闭此提示',
+  });
+
   return (
     <Animated.View style={[bubbleStyles.bubble, posStyle, animatedStyle]}>
       <Text style={bubbleStyles.bubbleText}>{item.text}</Text>
-      <TouchableOpacity style={bubbleStyles.closeBtn} onPress={onDismiss} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+      <TouchableOpacity
+        style={bubbleStyles.closeBtn}
+        onPress={onDismiss}
+        hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+        {...dismissA11yProps}
+      >
         <Text style={closeTextStyle}>✕</Text>
       </TouchableOpacity>
     </Animated.View>
@@ -160,7 +171,11 @@ export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll }
         />
       ))}
       {visibleItems.length > 1 && !loading && (
-        <TouchableOpacity style={containerStyles.dismissAllBtn} onPress={onDismissAll}>
+        <TouchableOpacity
+          style={containerStyles.dismissAllBtn}
+          onPress={onDismissAll}
+          {...useAccessibilityButton({ label: '清除全部提示', hint: '双击关闭所有提示' })}
+        >
           <Text style={dismissAllTextStyle}>清除全部</Text>
         </TouchableOpacity>
       )}
