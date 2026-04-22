@@ -55,11 +55,8 @@ const staticStyles = StyleSheet.create({
     top: 110,
     left: 16,
     zIndex: 20,
-    backgroundColor: 'rgba(0,0,0,0.65)',
     borderRadius: 8,
     padding: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
   },
   headerRow: {
     flexDirection: 'row',
@@ -173,7 +170,7 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
 
   return (
     <View
-      style={staticStyles.container}
+      style={[staticStyles.container, { backgroundColor: colors.histogramBg, borderColor: colors.histogramBorder, borderWidth: 1 }]}
       pointerEvents="none"
       accessibilityLabel="直方图曝光分析"
       accessibilityRole="image"

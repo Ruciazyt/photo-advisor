@@ -23,6 +23,7 @@
 ### 拍摄辅助
 - [x] **直方图显示** — HistogramOverlay + useHistogram（实时曝光分析）
 - [x] **对焦峰值（Focus Peaking）** — 手动对焦时高亮显示合焦边缘（已集成到CameraScreen，500ms周期性边缘采样）
+- [x] **对焦辅助（FocusGuideOverlay）** — FocusGuideOverlay（变焦指示器/DOF警告/景深按钮/点击对焦环动画），已集成到CameraOverlays
 - [x] **RAW 格式支持** — 更高质量的图像捕获（需要 Camera2 API）
 - [x] **快门延迟/倒计时** — TimerSelectorModal + useCountdown（3s/5s/10s）
 

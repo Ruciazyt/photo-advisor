@@ -63,7 +63,7 @@ jest.mock('../services/update', () => ({
 }));
 
 jest.mock('../services/settings', () => ({
-  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3 })),
+  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true })),
   saveAppSettings: jest.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (loadApiConfig as jest.Mock).mockResolvedValue(null);
-    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3 });
+    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true });
     (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
   });
 
@@ -275,6 +275,12 @@ describe('SettingsScreen', () => {
       voiceEnabled: true,
       theme: 'dark',
       timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: false,
+      showLevel: true,
+      showFocusPeaking: false,
+      showSunPosition: false,
+      showFocusGuide: true,
     });
     const { getByText } = render(<SettingsScreen />);
     await waitFor(() => {
@@ -419,5 +425,77 @@ describe('SettingsScreen', () => {
       expect(getByDisplayValue('sk-minimax-saved')).toBeTruthy();
     });
     expect(getByText('MiniMax M2.7')).toBeTruthy();
+  });
+
+  // 28. camera preferences section renders with all toggles
+  it('renders camera preferences section with all overlay toggles', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => {
+      expect(getByText('相机偏好')).toBeTruthy();
+      expect(getByText('默认网格')).toBeTruthy();
+      expect(getByText('直方图')).toBeTruthy();
+      expect(getByText('水平仪')).toBeTruthy();
+      expect(getByText('对焦峰值')).toBeTruthy();
+      expect(getByText('太阳位置')).toBeTruthy();
+      expect(getByText('对焦辅助')).toBeTruthy();
+    });
+  });
+
+  // 29. camera preferences loads saved settings on mount
+  it('loads camera preference settings on mount', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false,
+      theme: 'dark',
+      timerDuration: 3,
+      defaultGridVariant: 'golden',
+      showHistogram: true,
+      showLevel: false,
+      showFocusPeaking: true,
+      showSunPosition: true,
+      showFocusGuide: false,
+    });
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => {
+      expect(getByText('相机偏好')).toBeTruthy();
+    });
+  });
+
+  // 30. toggling histogram saves showHistogram setting
+  it('toggles histogram and calls saveAppSettings', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('直方图')).toBeTruthy(); });
+    // The toggle uses checkmark-circle/ellipse-outline icons; find via the label row
+    const histogramRow = screen.getByText('直方图').parentView?.parentView;
+    const toggle = histogramRow?.findAllByType?.('TouchableOpacity').pop();
+    if (toggle) fireEvent.press(toggle);
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showHistogram: true });
+    });
+  });
+
+  // 31. selecting default grid variant saves defaultGridVariant
+  it('selects golden grid variant and saves defaultGridVariant', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('默认网格')).toBeTruthy(); });
+    fireEvent.press(getByText('黄金'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ defaultGridVariant: 'golden' });
+    });
+  });
+
+  // 32. toggling showLevel saves showLevel setting
+  it('toggles level indicator and saves showLevel', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('水平仪')).toBeTruthy(); });
+    const levelRow = screen.getByText('水平仪').parentView?.parentView;
+    const toggle = levelRow?.findAllByType?.('TouchableOpacity').pop();
+    if (toggle) fireEvent.press(toggle);
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showLevel: false });
+    });
   });
 });
