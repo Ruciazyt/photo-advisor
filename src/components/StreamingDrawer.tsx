@@ -37,6 +37,12 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
     text: { color: colors.text, fontSize: 15, lineHeight: 24 },
     dot: { fontSize: 20, color: colors.accent },
     placeholder: { color: colors.drawerTextSecondary, fontSize: 14, textAlign: 'center', paddingTop: 40 },
+    overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', zIndex: 100 },
+    overlayHidden: { opacity: 0, pointerEvents: 'none' as const },
+    overlayTouch: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' },
+    content: { flex: 1, marginTop: 12 },
+    contentContainer: { paddingBottom: 20 },
+    dotsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 6 },
   }), [colors.drawerBg, colors.drawerHandle, colors.accent, colors.drawerTextSecondary, colors.text]);
 
   useEffect(() => {
@@ -119,12 +125,3 @@ export function StreamingDrawer({ visible, text, loading, onClose }: StreamingDr
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', zIndex: 100 },
-  overlayHidden: { opacity: 0, pointerEvents: 'none' },
-  overlayTouch: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' },
-  content: { flex: 1, marginTop: 12 },
-  contentContainer: { paddingBottom: 20 },
-  dotsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 6 },
-});

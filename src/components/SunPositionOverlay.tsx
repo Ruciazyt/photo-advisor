@@ -88,7 +88,7 @@ function CompassArrow({ azimuth }: { azimuth: number }) {
     width: 52, height: 52, borderRadius: 26, borderWidth: 1,
     borderColor: colors.topBarBorderInactive,
     backgroundColor: colors.sunCompassBg,
-    alignItems: 'center', justifyContent: 'center', position: 'relative' as const,
+    alignItems: 'center' as const, justifyContent: 'center' as const, position: 'relative' as const,
   }), [colors.topBarBorderInactive, colors.sunCompassBg]);
 
   return (

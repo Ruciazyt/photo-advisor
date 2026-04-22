@@ -19,8 +19,8 @@ const defaultValue: ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue>(defaultValue);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<'dark' | 'light'>('dark');
+export function ThemeProvider({ children, initialTheme }: { children: React.ReactNode; initialTheme?: 'dark' | 'light' }) {
+  const [theme, setThemeState] = useState<'dark' | 'light'>(initialTheme ?? 'dark');
 
   useEffect(() => {
     loadAppSettings().then((settings) => {

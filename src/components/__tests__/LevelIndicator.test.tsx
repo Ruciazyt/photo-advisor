@@ -9,7 +9,7 @@ jest.mock('react-native-reanimated', () =>
 
 // Mock Ionicons
 jest.mock('@expo/vector-icons', () => ({
-  Ionicons: function MockIonicons({ name, size, color }) {
+  Ionicons: function MockIonicons({ name, size, color }: { name?: string; size?: number; color?: string }) {
     return null; // icon rendered as null in tests
   },
 }));
@@ -17,7 +17,7 @@ jest.mock('@expo/vector-icons', () => ({
 // Mock useDeviceOrientation
 const mockUseDeviceOrientation = jest.fn();
 jest.mock('../../hooks/useDeviceOrientation', () => ({
-  useDeviceOrientation: (...args) => mockUseDeviceOrientation(...args),
+  useDeviceOrientation: (...args: unknown[]) => mockUseDeviceOrientation(...args),
 }));
 
 // Mock useHaptics
