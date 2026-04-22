@@ -124,7 +124,7 @@ export function CameraScreen() {
   const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
   const { addEntry } = useShootLog();
-  const { request: requestLocation, locationName } = useCurrentLocation();
+  const { request: requestLocation, locationName, coords } = useCurrentLocation();
   const {
     facing,
     cameraReady,
@@ -219,6 +219,8 @@ export function CameraScreen() {
         scoreReason: capturedScoreReasonRef.current || undefined,
         sceneTag: capturedSceneTagRef.current || undefined,
         locationName: locationName ?? undefined,
+        latitude: coords?.latitude ?? undefined,
+        longitude: coords?.longitude ?? undefined,
         timerDuration: capturedTimerDurationRef.current || undefined,
         wasFavorite: false,
         thumbnailUri: capturedLastCapturedUriRef.current ?? undefined,
