@@ -363,6 +363,8 @@ export interface ShootLogEntry {
   scoreReason?: string;
   sceneTag?: string;
   locationName?: string;
+  latitude?: number;
+  longitude?: number;
   timerDuration?: number;
   wasFavorite: boolean;
   thumbnailUri?: string;

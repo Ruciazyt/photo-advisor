@@ -102,3 +102,6 @@ export { useToast } from './useToast';
 
 // useVoiceFeedback
 export { speak, useVoiceFeedback } from './useVoiceFeedback';
+
+// useCurrentLocation
+export { useCurrentLocation } from './useCurrentLocation';

@@ -38,6 +38,8 @@ import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
 import { useBurstMode } from '../hooks/useBurstMode';
 import { useBubbleChat } from '../hooks/useBubbleChat';
 import { useKeypoints } from '../hooks/useKeypoints';
+import { useShootLog } from '../hooks/useShootLog';
+import { useCurrentLocation } from '../hooks/useCurrentLocation';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -62,6 +64,15 @@ export function CameraScreen() {
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
   const preAnalysisStartedRef = useRef(false);
+
+  // Shoot log — capture metadata at photo time so the useEffect can write after analysis
+  const capturedGridVariantRef = useRef<GridVariant>('thirds');
+  const capturedSuggestionsRef = useRef<string[]>([]);
+  const capturedSceneTagRef = useRef<string>('');
+  const capturedLastCapturedUriRef = useRef<string | null>(null);
+  const capturedScoreRef = useRef<number>(0);
+  const capturedScoreReasonRef = useRef<string>('');
+  const capturedTimerDurationRef = useRef<number>(0);
 
   const { suggestions, setSuggestions, loading, setLoading, handleDismiss, handleDismissAll, bubbleItems } = useSuggestions();
 
@@ -112,6 +123,8 @@ export function CameraScreen() {
 
   const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
+  const { addEntry } = useShootLog();
+  const { request: requestLocation, locationName } = useCurrentLocation();
   const {
     facing,
     cameraReady,
@@ -148,12 +161,28 @@ export function CameraScreen() {
     lastCaptureIdRef.current += 1;
     const captureId = lastCaptureIdRef.current;
     setShowScoreOverlay(false);
+
+    // Snapshot state into refs for the useEffect that runs after analysis completes
+    capturedGridVariantRef.current = gridVariant;
+    capturedSuggestionsRef.current = suggestions;
+    capturedSceneTagRef.current = sceneTag;
+    capturedTimerDurationRef.current = timerDuration;
+
+    // Request location in background — result is read after analysis completes
+    requestLocation();
+
     const result = await takePicture(rawMode);
     if (!result) { setSuggestions(['错误: 无法获取相机画面']); setLoading(false); return; }
     const { base64, uri: originalUri } = result;
     await savePhotoToGallery(originalUri);
     setLastCapturedUri(originalUri);
     lastCapturedBase64Ref.current = base64;
+    capturedLastCapturedUriRef.current = originalUri;
+
+    const { score, reason } = computeScoreFromSuggestions(suggestions);
+    capturedScoreRef.current = score;
+    capturedScoreReasonRef.current = reason;
+
     recognizeSceneTag(base64).then(() => { setSceneTagVisible(true); setTimeout(() => setSceneTagVisible(false), 4000); });
     const gridPromptMap: Record<GridVariant, string> = { thirds: '三分法网格', golden: '黄金分割网格', diagonal: '对角线网格', spiral: '螺旋线网格', none: '无网格' };
     if (!preAnalysisStartedRef.current) {
@@ -178,6 +207,27 @@ export function CameraScreen() {
   }, [capturePeaks, cameraRef, screenWidth, screenHeight]);
   useAnimationFrameTimer({ intervalMs: 500, onTick: doCapturePeaks, enabled: showFocusGuide });
   useEffect(() => { if (!showFocusGuide) setPeakPoints([]); }, [showFocusGuide]);
+
+  // Shoot log — add entry when AI analysis finishes (loading: true → false)
+  const prevLoadingRef = useRef(false);
+  useEffect(() => {
+    if (prevLoadingRef.current && !loading) {
+      // Analysis just finished — use the refs captured at doCapture time
+      const entry = {
+        gridType: GRID_LABELS[capturedGridVariantRef.current] ?? capturedGridVariantRef.current,
+        score: capturedScoreRef.current || undefined,
+        scoreReason: capturedScoreReasonRef.current || undefined,
+        sceneTag: capturedSceneTagRef.current || undefined,
+        locationName: locationName ?? undefined,
+        timerDuration: capturedTimerDurationRef.current || undefined,
+        wasFavorite: false,
+        thumbnailUri: capturedLastCapturedUriRef.current ?? undefined,
+        suggestions: capturedSuggestionsRef.current,
+      };
+      addEntry(entry);
+    }
+    prevLoadingRef.current = loading;
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Score overlay
   const prevKeypointsRef = useRef<Keypoint[]>([]);

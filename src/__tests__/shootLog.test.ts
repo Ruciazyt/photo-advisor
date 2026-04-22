@@ -59,6 +59,21 @@ describe('addEntry', () => {
     expect(parsed[0].id).toBe('new_entry');
     expect(parsed[1].id).toBe('existing');
   });
+
+  it('preserves latitude and longitude fields', async () => {
+    const entry = makeEntry({
+      id: 'with_coords',
+      latitude: 39.9042,
+      longitude: 116.4074,
+      locationName: '北京市朝阳区',
+    });
+    await addEntry(entry);
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(stored ?? '[]') as ShootLogEntry[];
+    expect(parsed[0].latitude).toBe(39.9042);
+    expect(parsed[0].longitude).toBe(116.4074);
+    expect(parsed[0].locationName).toBe('北京市朝阳区');
+  });
 });
 
 describe('clearLog', () => {
