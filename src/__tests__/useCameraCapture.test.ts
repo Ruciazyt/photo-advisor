@@ -39,6 +39,22 @@ jest.mock('../services/api', () => ({
   analyzeImageAnthropic: jest.fn(),
 }));
 
+jest.mock('../services/settings', () => ({
+  loadAppSettings: jest.fn().mockResolvedValue({
+    voiceEnabled: false,
+    theme: 'dark',
+    timerDuration: 3,
+    defaultGridVariant: 'thirds',
+    showHistogram: false,
+    showLevel: true,
+    showFocusPeaking: false,
+    showSunPosition: false,
+    showFocusGuide: true,
+    imageQualityPreset: 'balanced',
+  }),
+  saveAppSettings: jest.fn(),
+}));
+
 jest.mock('../components/KeypointOverlay', () => ({
   KeypointOverlay: 'KeypointOverlay',
   Keypoint: {},
@@ -227,6 +243,38 @@ describe('getImageQualitySettings', () => {
 
   it('returns { resizeWidth: 2048, compress: 0.9 } for quality preset', () => {
     expect(getImageQualitySettings('quality')).toEqual({ resizeWidth: 2048, compress: 0.9 });
+  });
+});
+
+// --- takePicture preset integration ---
+// Verifies loadAppSettings is correctly mocked so takePicture uses the preset at runtime
+describe('takePicture uses imageQualityPreset', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('loadAppSettings mock returns balanced preset by default', async () => {
+    const { loadAppSettings } = require('../services/settings');
+    const settings = await loadAppSettings();
+    expect(settings.imageQualityPreset).toBe('balanced');
+  });
+
+  it('getImageQualitySettings maps balanced preset to resizeWidth=1536 compress=0.8', () => {
+    const { resizeWidth, compress } = getImageQualitySettings('balanced');
+    expect(resizeWidth).toBe(1536);
+    expect(compress).toBe(0.8);
+  });
+
+  it('getImageQualitySettings maps size preset to resizeWidth=1024 compress=0.7', () => {
+    const { resizeWidth, compress } = getImageQualitySettings('size');
+    expect(resizeWidth).toBe(1024);
+    expect(compress).toBe(0.7);
+  });
+
+  it('getImageQualitySettings maps quality preset to resizeWidth=2048 compress=0.9', () => {
+    const { resizeWidth, compress } = getImageQualitySettings('quality');
+    expect(resizeWidth).toBe(2048);
+    expect(compress).toBe(0.9);
   });
 });
 

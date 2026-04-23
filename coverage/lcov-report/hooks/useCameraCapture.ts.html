@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">14.58% </span>
+                <span class="strong">16.55% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>21/144</span>
+                <span class='fraction'>25/151</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">7.69% </span>
+                <span class="strong">11.76% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/65</span>
+                <span class='fraction'>8/68</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">21.73% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/23</span>
+                <span class='fraction'>6/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">14.06% </span>
+                <span class="strong">16.29% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>18/128</span>
+                <span class='fraction'>22/135</span>
             </div>
         
             
@@ -316,7 +316,29 @@
 <a name='L251'></a><a href='#L251'>251</a>
 <a name='L252'></a><a href='#L252'>252</a>
 <a name='L253'></a><a href='#L253'>253</a>
-<a name='L254'></a><a href='#L254'>254</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -324,6 +346,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -543,6 +580,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -579,6 +623,21 @@ import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../s
 import { Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
 &nbsp;
 export type { Keypoint };
+&nbsp;
+import type { ImageQualityPreset } from '../types';
+import { loadAppSettings } from '../services/settings';
+&nbsp;
+/** Returns resize width and compress quality for a given image quality preset. */
+export function getImageQualitySettings(preset: ImageQualityPreset): { resizeWidth: number; compress: number } {
+  switch (preset) {
+    case 'size':
+      return { resizeWidth: 1024, compress: 0.7 };
+    case 'balanced':
+      return { resizeWidth: 1536, compress: 0.8 };
+    case 'quality':
+      return { resizeWidth: 2048, compress: 0.9 };
+  }
+}
 &nbsp;
 /** Parse a raw text stream chunk into complete suggestion sentences.
  *  Splits on newlines or Chinese sentence-ending punctuation. */
@@ -795,7 +854,14 @@ export function <span class="fstat-no" title="function not covered" >useCameraCa
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const { status } = <span class="cstat-no" title="statement not covered" >await MediaLibrary.requestPermissionsAsync();</span>
 <span class="cstat-no" title="statement not covered" >      if (status === 'granted') {</span>
-<span class="cstat-no" title="statement not covered" >        await MediaLibrary.saveToLibraryAsync(uri);</span>
+        const settings = <span class="cstat-no" title="statement not covered" >await loadAppSettings();</span>
+        const { resizeWidth, compress } = <span class="cstat-no" title="statement not covered" >getImageQualitySettings(settings.imageQualityPreset);</span>
+        const manipulated = <span class="cstat-no" title="statement not covered" >await manipulateAsync(</span>
+          uri,
+          [{ resize: { width: resizeWidth } }],
+          { compress, format: SaveFormat.JPEG }
+        );
+<span class="cstat-no" title="statement not covered" >        await MediaLibrary.saveToLibraryAsync(manipulated.uri);</span>
       }
     } catch (e) {
 <span class="cstat-no" title="statement not covered" >      console.log('[savePhotoToGallery] failed:', e);</span>
@@ -829,7 +895,7 @@ export function <span class="fstat-no" title="function not covered" >useCameraCa
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-23T00:44:48.150Z
+                at 2026-04-23T10:31:00.881Z
             </div>
         <script src="../prettify.js"></script>
         <script>

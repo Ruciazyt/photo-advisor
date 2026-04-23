@@ -81,16 +81,29 @@ export function useCameraCapture({
   const takePicture = useCallback(async (raw = false): Promise<{ base64: string; uri: string } | null> => {
     if (!cameraRef.current || !cameraReady) return null;
     try {
+      const settings = await loadAppSettings();
+      const { resizeWidth, compress } = getImageQualitySettings(settings.imageQualityPreset);
+
       // If RAW is requested, try native capture first (Android only)
       if (raw && Platform.OS === 'android') {
         const rawResult = await captureRawNative();
         if (rawResult?.uri) {
-          // RAW capture succeeded — return base64 for analysis, uri for display
+          // RAW capture succeeded — apply quality preset before returning base64
           let base64 = '';
           try {
-            base64 = await FileSystem.readAsStringAsync(rawResult.uri, { encoding: 'base64' });
+            const resized = await manipulateAsync(
+              rawResult.uri,
+              [{ resize: { width: resizeWidth } }],
+              { compress, format: SaveFormat.JPEG }
+            );
+            base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
           } catch {
-            // base64 read failed, but we still have the raw file saved
+            // resize failed, fall back to reading raw file directly
+            try {
+              base64 = await FileSystem.readAsStringAsync(rawResult.uri, { encoding: 'base64' });
+            } catch {
+              // base64 read failed, but we still have the raw file saved
+            }
           }
           return { base64, uri: rawResult.uri };
         }
@@ -99,7 +112,7 @@ export function useCameraCapture({
 
       // Standard JPEG capture via expo-camera
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
+        quality: compress,
       });
       if (!photo?.uri) return null;
       const originalUri = photo.uri;
@@ -109,8 +122,8 @@ export function useCameraCapture({
       try {
         const resized = await manipulateAsync(
           originalUri,
-          [{ resize: { width: 1024 } }],
-          { compress: 0.8, format: SaveFormat.JPEG }
+          [{ resize: { width: resizeWidth } }],
+          { compress, format: SaveFormat.JPEG }
         );
         console.log('[takePicture] resized:', resized.uri, resized.width, 'x', resized.height);
         base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
