@@ -213,6 +213,23 @@ describe('RAW toggle logic (CameraScreen state simulation)', () => {
   });
 });
 
+// --- getImageQualitySettings tests ---
+import { getImageQualitySettings } from '../hooks/useCameraCapture';
+
+describe('getImageQualitySettings', () => {
+  it('returns { resizeWidth: 1024, compress: 0.7 } for size preset', () => {
+    expect(getImageQualitySettings('size')).toEqual({ resizeWidth: 1024, compress: 0.7 });
+  });
+
+  it('returns { resizeWidth: 1536, compress: 0.8 } for balanced preset', () => {
+    expect(getImageQualitySettings('balanced')).toEqual({ resizeWidth: 1536, compress: 0.8 });
+  });
+
+  it('returns { resizeWidth: 2048, compress: 0.9 } for quality preset', () => {
+    expect(getImageQualitySettings('quality')).toEqual({ resizeWidth: 2048, compress: 0.9 });
+  });
+});
+
 // --- parseSuggestions tests ---
 describe('parseSuggestions', () => {
   it('returns empty arrays when both buffer and chunk are empty', () => {

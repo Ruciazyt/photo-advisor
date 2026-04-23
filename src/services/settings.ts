@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showFocusPeaking: false,
   showSunPosition: false,
   showFocusGuide: true,
+  imageQualityPreset: 'balanced',
 };
 
 export async function loadAppSettings(): Promise<AppSettings> {

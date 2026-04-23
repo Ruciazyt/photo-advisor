@@ -327,6 +327,8 @@ export interface FavoriteItem {
 // Settings
 // ============================================================
 
+export type ImageQualityPreset = 'size' | 'balanced' | 'quality';
+
 export interface AppSettings {
   voiceEnabled: boolean;
   theme: 'dark' | 'light';
@@ -337,6 +339,7 @@ export interface AppSettings {
   showFocusPeaking: boolean;
   showSunPosition: boolean;
   showFocusGuide: boolean;
+  imageQualityPreset: ImageQualityPreset;
 }
 
 // ============================================================

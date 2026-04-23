@@ -9,6 +9,21 @@ import { Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
 
 export type { Keypoint };
 
+import type { ImageQualityPreset } from '../types';
+import { loadAppSettings } from '../services/settings';
+
+/** Returns resize width and compress quality for a given image quality preset. */
+export function getImageQualitySettings(preset: ImageQualityPreset): { resizeWidth: number; compress: number } {
+  switch (preset) {
+    case 'size':
+      return { resizeWidth: 1024, compress: 0.7 };
+    case 'balanced':
+      return { resizeWidth: 1536, compress: 0.8 };
+    case 'quality':
+      return { resizeWidth: 2048, compress: 0.9 };
+  }
+}
+
 /** Parse a raw text stream chunk into complete suggestion sentences.
  *  Splits on newlines or Chinese sentence-ending punctuation. */
 export function parseSuggestions(buffer: string, newChunk: string): { done: string[]; remaining: string } {
@@ -224,7 +239,14 @@ export function useCameraCapture({
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status === 'granted') {
-        await MediaLibrary.saveToLibraryAsync(uri);
+        const settings = await loadAppSettings();
+        const { resizeWidth, compress } = getImageQualitySettings(settings.imageQualityPreset);
+        const manipulated = await manipulateAsync(
+          uri,
+          [{ resize: { width: resizeWidth } }],
+          { compress, format: SaveFormat.JPEG }
+        );
+        await MediaLibrary.saveToLibraryAsync(manipulated.uri);
       }
     } catch (e) {
       console.log('[savePhotoToGallery] failed:', e);

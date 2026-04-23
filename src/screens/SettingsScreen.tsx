@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { GridVariant } from '../types';
+import type { GridVariant, ImageQualityPreset } from '../types';
 
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -57,6 +57,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showFocusPeaking, setShowFocusPeaking] = useState(false);
   const [showSunPosition, setShowSunPosition] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(true);
+  const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -75,6 +76,7 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowFocusPeaking(settings.showFocusPeaking);
       setShowSunPosition(settings.showSunPosition);
       setShowFocusGuide(settings.showFocusGuide);
+      setImageQualityPreset(settings.imageQualityPreset);
     });
   }, []);
 
@@ -525,6 +527,38 @@ export function SettingsScreen({ onSaved }: Props) {
               </TouchableOpacity>
             </View>
           ))}
+
+          {/* Image Quality Preset */}
+          <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+            <View style={styles.prefInfo}>
+              <Text style={[styles.prefTitle, { color: colors.text }]}>图片质量</Text>
+              <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>保存照片的分辨率与压缩质量</Text>
+            </View>
+          </View>
+          <View style={styles.qualityPresetRow}>
+            {(['size', 'balanced', 'quality'] as ImageQualityPreset[]).map((p) => {
+              const labels: Record<ImageQualityPreset, string> = { size: '省空间', balanced: '均衡', quality: '高质量' };
+              return (
+                <TouchableOpacity
+                  key={p}
+                  style={[
+                    styles.qualityOption,
+                    { backgroundColor: colors.cardBg, borderColor: imageQualityPreset === p ? colors.accent : colors.border },
+                    imageQualityPreset === p && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
+                  ]}
+                  onPress={async () => {
+                    setImageQualityPreset(p);
+                    await saveAppSettings({ imageQualityPreset: p });
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.qualityOptionText, { color: imageQualityPreset === p ? colors.accent : colors.textSecondary }]}>
+                    {labels[p]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         <View style={[styles.versionSection, { borderTopColor: colors.border }]}>
@@ -820,6 +854,22 @@ cameraPrefsSection: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
+  },
+  qualityPresetRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 12,
+  },
+  qualityOption: {
+    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  qualityOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 versionSection: {
     marginTop: 32,
