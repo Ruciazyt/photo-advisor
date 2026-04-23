@@ -50,6 +50,8 @@ const defaultProps: CameraTopBarProps = {
   onSunToggle: jest.fn(),
   showFocusGuide: false,
   onFocusGuideToggle: jest.fn(),
+  showFocusPeaking: false,
+  onFocusPeakingToggle: jest.fn(),
   voiceEnabled: false,
   onVoiceToggle: jest.fn(),
   rawMode: false,
@@ -105,6 +107,13 @@ describe('CameraTopBar', () => {
     const { getByText } = render(<CameraTopBar {...defaultProps} onFocusGuideToggle={onFocusGuideToggle} />);
     fireEvent.press(getByText('🎯 对焦'));
     expect(onFocusGuideToggle).toHaveBeenCalled();
+  });
+
+  it('calls onFocusPeakingToggle when focus peaking toggle is pressed', () => {
+    const onFocusPeakingToggle = jest.fn();
+    const { getByText } = render(<CameraTopBar {...defaultProps} onFocusPeakingToggle={onFocusPeakingToggle} />);
+    fireEvent.press(getByText('🎚️ 峰值'));
+    expect(onFocusPeakingToggle).toHaveBeenCalled();
   });
 
   it('calls onVoiceToggle when voice button is pressed', () => {

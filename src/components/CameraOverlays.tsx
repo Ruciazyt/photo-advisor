@@ -36,6 +36,7 @@ export interface CameraOverlaysProps {
   histogramData: number[];
   // Focus
   showFocusGuide: boolean;
+  showFocusPeaking: boolean;
   cameraRef: React.RefObject<CameraView | null>;
   peakPoints: PeakPoint[];
   screenWidth: number;
@@ -84,6 +85,7 @@ export function CameraOverlays({
   showHistogram,
   histogramData,
   showFocusGuide,
+  showFocusPeaking,
   cameraRef,
   peakPoints,
   screenWidth,
@@ -131,7 +133,7 @@ export function CameraOverlays({
       <HistogramOverlay histogramData={histogramData} visible={showHistogram} />
       <FocusGuideOverlay visible={showFocusGuide} cameraRef={cameraRef} showToast={showToast} />
       <FocusPeakingOverlay
-        visible={showFocusGuide}
+        visible={showFocusPeaking}
         peaks={peakPoints}
         screenWidth={screenWidth}
         screenHeight={screenHeight}

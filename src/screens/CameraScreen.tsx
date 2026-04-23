@@ -113,6 +113,7 @@ export function CameraScreen() {
   const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
+  const [showFocusPeaking, setShowFocusPeaking] = useState(false);
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
@@ -283,6 +284,7 @@ export function CameraScreen() {
       setGridVariant(settings.defaultGridVariant);
       setShowLevel(settings.showLevel);
       setShowFocusGuide(settings.showFocusGuide);
+      setShowFocusPeaking(settings.showFocusPeaking);
       setShowSunOverlay(settings.showSunPosition);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
@@ -321,7 +323,7 @@ export function CameraScreen() {
           apiConfigured={apiConfigured} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
           showLevel={showLevel} showHistogram={showHistogram} histogramData={histogramData}
-          showFocusGuide={showFocusGuide} cameraRef={cameraRef} peakPoints={peakPoints}
+          showFocusGuide={showFocusGuide} showFocusPeaking={showFocusPeaking} cameraRef={cameraRef} peakPoints={peakPoints}
           screenWidth={screenWidth} screenHeight={screenHeight} showSunOverlay={showSunOverlay}
           showToast={showToast}
           showBurstSuggestion={showBurstSuggestion} burstSuggestionText={burstSuggestionText.current}
@@ -344,6 +346,7 @@ export function CameraScreen() {
           showLevel={showLevel} onLevelToggle={() => setShowLevel(v => !v)}
           showSunOverlay={showSunOverlay} onSunToggle={() => setShowSunOverlay(v => !v)}
           showFocusGuide={showFocusGuide} onFocusGuideToggle={() => setShowFocusGuide(v => !v)}
+          showFocusPeaking={showFocusPeaking} onFocusPeakingToggle={() => setShowFocusPeaking(v => !v)}
           voiceEnabled={voiceEnabled} onVoiceToggle={() => setVoiceEnabled(v => !v)}
           rawMode={rawMode} rawSupported={rawSupported} onRawToggle={toggleRawMode}
           challengeMode={challengeMode} onChallengeToggle={toggleChallengeMode}

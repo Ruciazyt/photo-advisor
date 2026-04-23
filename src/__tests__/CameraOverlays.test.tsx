@@ -165,9 +165,25 @@ describe('CameraOverlays', () => {
   });
 
   it('shows focus guide when showFocusGuide is true', () => {
-    const { getByTestId } = render(<CameraOverlays {...defaultProps} showFocusGuide={true} />);
+    const { getByTestId } = render(<CameraOverlays {...defaultProps} showFocusGuide={true} showFocusPeaking={true} />);
     expect(getByTestId('focus-guide')).toBeTruthy();
     expect(getByTestId('focus-peaking')).toBeTruthy();
+  });
+
+  it('shows focus peaking when showFocusPeaking is true (independent of showFocusGuide)', () => {
+    const { getByTestId, queryByTestId } = render(
+      <CameraOverlays {...defaultProps} showFocusGuide={false} showFocusPeaking={true} />
+    );
+    expect(queryByTestId('focus-guide')).toBeNull();
+    expect(getByTestId('focus-peaking')).toBeTruthy();
+  });
+
+  it('hides focus peaking when showFocusPeaking is false', () => {
+    const { getByTestId, queryByTestId } = render(
+      <CameraOverlays {...defaultProps} showFocusGuide={true} showFocusPeaking={false} />
+    );
+    expect(getByTestId('focus-guide')).toBeTruthy();
+    expect(queryByTestId('focus-peaking')).toBeNull();
   });
 
   it('shows sun overlay when showSunOverlay is true', () => {

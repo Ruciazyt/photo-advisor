@@ -39,6 +39,9 @@ export interface CameraTopBarProps {
   // Focus guide
   showFocusGuide: boolean;
   onFocusGuideToggle: () => void;
+  // Focus peaking
+  showFocusPeaking: boolean;
+  onFocusPeakingToggle: () => void;
   // Voice
   voiceEnabled: boolean;
   onVoiceToggle: () => void;
@@ -83,6 +86,8 @@ export function CameraTopBar({  gridVariant,
   onSunToggle,
   showFocusGuide,
   onFocusGuideToggle,
+  showFocusPeaking,
+  onFocusPeakingToggle,
   voiceEnabled,
   onVoiceToggle,
   rawMode,
@@ -358,6 +363,33 @@ export function CameraTopBar({  gridVariant,
     focusGuideSelectorTextActive: {
       color: colors.focusGuideActiveText,
     },
+    focusPeakingSelector: {
+      position: 'absolute',
+      top: 60,
+      left: 300,
+      zIndex: 10,
+      backgroundColor: colors.topBarBg,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.topBarBorderInactive,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    focusPeakingSelectorActive: {
+      backgroundColor: colors.focusGuideActiveBg,
+      borderColor: colors.focusGuideActiveBorder,
+    },
+    focusPeakingSelectorText: {
+      color: colors.topBarTextSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    focusPeakingSelectorTextActive: {
+      color: colors.focusGuideActiveText,
+    },
     burstIndicator: {
       position: 'absolute',
       top: 60,
@@ -445,6 +477,21 @@ export function CameraTopBar({  gridVariant,
         accessibilityState={{ selected: showFocusGuide }}
       >
         <Text style={[dynamicTopBarStyles.focusGuideSelectorText, showFocusGuide && dynamicTopBarStyles.focusGuideSelectorTextActive]}>🎯 对焦</Text>
+      </TouchableOpacity>
+
+      {/* Focus Peaking Toggle */}
+      <TouchableOpacity
+        style={[dynamicTopBarStyles.focusPeakingSelector, showFocusPeaking && dynamicTopBarStyles.focusPeakingSelectorActive]}
+        onPress={onFocusPeakingToggle}
+        activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '峰值',
+          hint: showFocusPeaking ? '关闭对焦峰值' : '打开对焦峰值',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showFocusPeaking }}
+      >
+        <Text style={[dynamicTopBarStyles.focusPeakingSelectorText, showFocusPeaking && dynamicTopBarStyles.focusPeakingSelectorTextActive]}>🎚️ 峰值</Text>
       </TouchableOpacity>
 
       {/* Voice Toggle */}
