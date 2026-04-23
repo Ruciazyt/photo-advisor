@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent, act } from '@testing-library/react-native';
 import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 
 // ---------------------------------------------------------------------------
@@ -252,7 +252,7 @@ describe('FocusGuideOverlay', () => {
 
     // Simulate zoom change on camera ref
     cam.zoom = 2.5;
-    triggerPoll();
+    act(() => { triggerPoll(); });
 
     // Zoom display should update to 2.5x and DOF warning should appear
     expect(screen.getByText('2.5x')).toBeTruthy();
