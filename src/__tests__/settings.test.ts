@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
   showFocusPeaking: false,
   showSunPosition: false,
   showFocusGuide: true,
+  imageQualityPreset: 'balanced',
 };
 
 describe('settings service', () => {
