@@ -206,8 +206,8 @@ export function CameraScreen() {
     const points = await capturePeaks(cameraRef, screenWidth, screenHeight);
     if (points.length > 0) setPeakPoints(points);
   }, [capturePeaks, cameraRef, screenWidth, screenHeight]);
-  useAnimationFrameTimer({ intervalMs: 500, onTick: doCapturePeaks, enabled: showFocusGuide });
-  useEffect(() => { if (!showFocusGuide) setPeakPoints([]); }, [showFocusGuide]);
+  useAnimationFrameTimer({ intervalMs: 500, onTick: doCapturePeaks, enabled: showFocusPeaking });
+  useEffect(() => { if (!showFocusPeaking) setPeakPoints([]); }, [showFocusPeaking]);
 
   // Shoot log — add entry when AI analysis finishes (loading: true → false)
   const prevLoadingRef = useRef(false);
