@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.47% </span>
+                <span class="strong">89.09% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>51/57</span>
+                <span class='fraction'>49/55</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.18% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>15/22</span>
+                <span class='fraction'>16/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.35% </span>
+                <span class="strong">81.25% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>14/17</span>
+                <span class='fraction'>13/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.83% </span>
+                <span class="strong">91.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>45/49</span>
+                <span class='fraction'>44/48</span>
             </div>
         
             
@@ -741,18 +741,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">36x</span>
-<span class="cline-any cline-yes">36x</span>
-<span class="cline-any cline-yes">36x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">36x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -769,6 +760,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -790,6 +783,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -977,6 +976,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1001,7 +1001,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useEffect, useRef, useMemo } from 'react';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -1207,37 +1207,30 @@ interface GridCardProps {
   variant: { key: GridVariant; label: string };
   isSelected: boolean;
   onSelect: (v: GridVariant) =&gt; void;
+  triggerHaptic?: () =&gt; void;
 }
 &nbsp;
-function GridCard({ variant, isSelected, onSelect }: GridCardProps) {
+function GridCard({ variant, isSelected, onSelect, triggerHaptic }: GridCardProps) {
   const { colors } = useTheme();
-  const { lightImpact } = useHaptics();
   const a11y = useAccessibilityButton({
     label: variant.label,
     hint: `选择${variant.label}网格`,
     role: 'menuitem',
   });
 &nbsp;
-  const cardStyles = useMemo(() =&gt; StyleSheet.create({
-    cardLabel: {
-      color: colors.gridCardDisabledText,
-      fontSize: 12,
-      fontWeight: '600',
-      marginTop: 4,
-    },
-  }), [colors.gridCardDisabledText]);
-&nbsp;
   const cardStyle = [
     gridCardStaticStyles.card,
     isSelected &amp;&amp; { borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },
   ];
   const labelStyle = [
-    cardStyles.cardLabel,
+    gridCardStaticStyles.cardLabel,
     isSelected &amp;&amp; { color: colors.accent },
   ];
 &nbsp;
   const handleSelect = () =&gt; {
-    try { lightImpact?.(); } catch (_) {}
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (triggerHaptic) {
+      try { triggerHaptic(); } catch (_) { /* guard against missing haptics */ }
+    }
     onSelect(variant.key);
   };
 &nbsp;
@@ -1277,6 +1270,12 @@ const gridCardStaticStyles = StyleSheet.create({
     height: 80,
     overflow: 'hidden',
     borderRadius: 6,
+  },
+  cardLabel: {
+    color: '#AAAAAA',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
   },
 });
 &nbsp;
@@ -1435,6 +1434,7 @@ export function GridSelectorModal({
               variant={v}
               isSelected={selectedVariant === v.key}
               onSelect={onSelect}
+              triggerHaptic={lightImpact}
             /&gt;
           ))}
         &lt;/View&gt;
@@ -1446,7 +1446,7 @@ export function GridSelectorModal({
             selectedVariant === 'none' &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ borderColor: colors.accent, backgroundColor: 'rgba(232,213,183,0.12)' },</span>
           ]}
           onPress={() =&gt; {
-            try { lightImpact?.(); } catch (_) {}
+            try { lightImpact?.(); } catch (_) { /* guard against missing haptics */ }
             onSelect('none');
           }}
           activeOpacity={0.75}
@@ -1477,7 +1477,7 @@ export function GridSelectorModal({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-22T12:25:33.352Z
+                at 2026-04-23T00:44:48.150Z
             </div>
         <script src="../prettify.js"></script>
         <script>
