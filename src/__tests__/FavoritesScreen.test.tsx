@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, screen } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { useFavorites } from '../hooks/useFavorites';
 
@@ -258,5 +259,138 @@ describe('FavoritesScreen', () => {
     expect(getByText('三分法')).toBeTruthy();
     expect(getByText('螺旋线')).toBeTruthy();
     expect(getByText('对角线')).toBeTruthy();
+  });
+
+  // --- Multi-select tests ---
+
+  it('selectMode is initially false', () => {
+    mockUseFavorites.mockReturnValue({
+      favorites: [makeFavorite({ id: 'f1' })],
+      loading: false,
+      saveFavorite: jest.fn(),
+      deleteFavorite: jest.fn(),
+      refresh: jest.fn(),
+    });
+
+    const { queryByText } = render(<FavoritesScreen />);
+    // "取消" button should not be visible when not in select mode
+    expect(queryByText('取消')).toBeNull();
+  });
+
+  it('tapping "选择" button enters select mode', () => {
+    mockUseFavorites.mockReturnValue({
+      favorites: [makeFavorite({ id: 'f1' })],
+      loading: false,
+      saveFavorite: jest.fn(),
+      deleteFavorite: jest.fn(),
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<FavoritesScreen />);
+    fireEvent.press(getByText('选择'));
+    // After entering select mode, 取消 should be visible
+    expect(getByText('取消')).toBeTruthy();
+  });
+
+  it('in selectMode, tapping cards toggles selection', () => {
+    mockUseFavorites.mockReturnValue({
+      favorites: [
+        makeFavorite({ id: 'f1', gridType: '三分法', score: 85 }),
+        makeFavorite({ id: 'f2', gridType: '黄金分割', score: 76 }),
+      ],
+      loading: false,
+      saveFavorite: jest.fn(),
+      deleteFavorite: jest.fn(),
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<FavoritesScreen />);
+    // Enter select mode
+    fireEvent.press(getByText('选择'));
+    // Tap first card via testID
+    fireEvent.press(screen.getByTestId('favorite-card-f1'));
+    // Delete button should show count 1
+    expect(getByText('删除 (1)')).toBeTruthy();
+  });
+
+  it('"取消" button exits select mode', () => {
+    mockUseFavorites.mockReturnValue({
+      favorites: [makeFavorite({ id: 'f1' })],
+      loading: false,
+      saveFavorite: jest.fn(),
+      deleteFavorite: jest.fn(),
+      refresh: jest.fn(),
+    });
+
+    const { getByText, queryByText } = render(<FavoritesScreen />);
+    fireEvent.press(getByText('选择'));
+    expect(getByText('取消')).toBeTruthy();
+    fireEvent.press(getByText('取消'));
+    expect(queryByText('取消')).toBeNull();
+  });
+
+  it('"删除" button shows Alert with correct count', () => {
+    const deleteFavorite = jest.fn();
+    mockUseFavorites.mockReturnValue({
+      favorites: [
+        makeFavorite({ id: 'f1' }),
+        makeFavorite({ id: 'f2', score: 76 }),
+      ],
+      loading: false,
+      saveFavorite: jest.fn(),
+      deleteFavorite,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<FavoritesScreen />);
+    fireEvent.press(getByText('选择'));
+    fireEvent.press(screen.getByTestId('favorite-card-f1'));
+    // Mock Alert.alert
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    fireEvent.press(getByText('删除 (1)'));
+    expect(alertSpy).toHaveBeenCalledWith(
+      '批量删除',
+      '确定删除 1 张照片？',
+      expect.arrayContaining([]),
+    );
+  });
+
+  it('confirming Alert deletes all selected items', async () => {
+    const deleteFavorite = jest.fn().mockResolvedValue(undefined);
+    mockUseFavorites.mockReturnValue({
+      favorites: [
+        makeFavorite({ id: 'f1' }),
+        makeFavorite({ id: 'f2', score: 76 }),
+      ],
+      loading: false,
+      saveFavorite: jest.fn(),
+      deleteFavorite,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<FavoritesScreen />);
+    fireEvent.press(getByText('选择'));
+    fireEvent.press(screen.getByTestId('favorite-card-f1'));
+    fireEvent.press(screen.getByTestId('favorite-card-f2'));
+
+    // Capture the alert callback
+    let alertCall: Parameters<typeof Alert.alert>[2];
+    const originalAlert = Alert.alert;
+    Alert.alert = jest.fn().mockImplementation((title, message, callbacks) => {
+      alertCall = callbacks;
+    });
+
+
+    fireEvent.press(getByText('删除 (2)'));
+
+    // Simulate confirming delete
+    if (alertCall && alertCall[1]?.onPress) {
+      await alertCall[1].onPress();
+    }
+
+    expect(deleteFavorite).toHaveBeenCalledWith('f1');
+    expect(deleteFavorite).toHaveBeenCalledWith('f2');
+
+    Alert.alert = originalAlert;
   });
 });

@@ -41,13 +41,22 @@ export function FavoritesScreen() {
   const [selectedItem, setSelectedItem] = useState<FavoriteItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.primary },
     header: { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 16, alignItems: 'center' },
     headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 8 },
+    headerRowSelect: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 8, marginBottom: 8 },
     statsBtn: { backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
     statsBtnText: { color: colors.accent, fontSize: 13, fontWeight: '600' },
+    selectBtn: { backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    selectBtnText: { color: colors.accent, fontSize: 13, fontWeight: '600' },
+    cancelBtn: { backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    cancelBtnText: { color: colors.accent, fontSize: 13, fontWeight: '600' },
+    deleteBtn: { backgroundColor: colors.error, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    deleteBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
     title: { color: colors.accent, fontSize: 28, fontWeight: '700', letterSpacing: 2 },
     subtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
     centerState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
@@ -56,9 +65,12 @@ export function FavoritesScreen() {
     gridContent: { paddingHorizontal: 16, paddingBottom: 20 },
     columnWrapper: { gap: ITEM_GAP, marginBottom: ITEM_GAP },
     card: { width: ITEM_WIDTH, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border },
+    cardSelected: { width: ITEM_WIDTH, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.cardBg, borderWidth: 2, borderColor: colors.accent, transform: [{ scale: 1.02 }] },
     thumbnail: { width: '100%', height: ITEM_WIDTH, backgroundColor: colors.border },
     scoreBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
+    scoreBadgeShifted: { position: 'absolute', top: 8, right: 36, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
     scoreText: { color: colors.accent, fontSize: 14, fontWeight: '700' },
+    checkbox: { position: 'absolute', top: 8, left: 8, zIndex: 1 },
     cardFooter: { paddingHorizontal: 8, paddingVertical: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     gridLabel: { color: colors.textSecondary, fontSize: 11 },
     dateLabel: { color: colors.textSecondary, fontSize: 10 },
@@ -88,29 +100,32 @@ export function FavoritesScreen() {
     );
   };
 
-  const FavoriteCard = ({ item, onDelete, onPress }: {
+  const FavoriteCard = ({ item, isSelected, onToggle }: {
     item: FavoriteItem;
-    onDelete: (id: string) => void;
-    onPress: (item: FavoriteItem) => void;
+    isSelected: boolean;
+    onToggle: (item: FavoriteItem) => void;
   }) => {
-    const handleLongPress = () => {
-      Alert.alert('删除收藏', '确定要删除这张照片的收藏吗？', [
-        { text: '取消', style: 'cancel' },
-        { text: '删除', style: 'destructive', onPress: () => onDelete(item.id) },
-      ]);
-    };
-
     return (
       <TouchableOpacity
-        style={styles.card}
-        onPress={() => onPress(item)}
-        onLongPress={handleLongPress}
+        style={isSelected ? styles.cardSelected : styles.card}
+        onPress={() => onToggle(item)}
         activeOpacity={0.8}
+        testID={"favorite-card-" + item.id}
       >
         <Image source={{ uri: item.uri }} style={styles.thumbnail} />
-        <View style={styles.scoreBadge}>
+        <View style={isSelected ? styles.scoreBadgeShifted : styles.scoreBadge}>
           <Text style={styles.scoreText}>{item.score}</Text>
         </View>
+        {isSelected && (
+          <View style={styles.checkbox}>
+            <Ionicons name="checkmark-circle" size={24} color={colors.accent} />
+          </View>
+        )}
+        {!isSelected && (
+          <View style={styles.checkbox}>
+            <Ionicons name="ellipse-outline" size={24} color="#fff" />
+          </View>
+        )}
         <View style={styles.cardFooter}>
           <Text style={styles.gridLabel}>{item.gridType}</Text>
           <StarRating score={item.score} size={11} />
@@ -164,13 +179,59 @@ export function FavoritesScreen() {
     );
   };
 
+  const enterSelectMode = () => {
+    setSelectMode(true);
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleBatchDelete = () => {
+    const count = selectedIds.size;
+    Alert.alert(
+      '批量删除',
+      `确定删除 ${count} 张照片？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            for (const id of selectedIds) {
+              await deleteFavorite(id);
+            }
+            exitSelectMode();
+          },
+        },
+      ]
+    );
+  };
+
   if (showStats) {
     return <StatsScreen onBack={() => setShowStats(false)} />;
   }
 
-  const handlePress = (item: FavoriteItem) => {
-    setSelectedItem(item);
-    setModalVisible(true);
+  const handleCardPress = (item: FavoriteItem) => {
+    if (selectMode) {
+      toggleSelection(item.id);
+    } else {
+      setSelectedItem(item);
+      setModalVisible(true);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -199,12 +260,32 @@ export function FavoritesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>优秀照片</Text>
-          <TouchableOpacity onPress={() => setShowStats(true)} style={styles.statsBtn}>
-            <Text style={styles.statsBtnText}>📊 统计</Text>
-          </TouchableOpacity>
-        </View>
+        {selectMode ? (
+          <View style={styles.headerRowSelect}>
+            <TouchableOpacity onPress={exitSelectMode} style={styles.cancelBtn}>
+              <Text style={styles.cancelBtnText}>取消</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleBatchDelete}
+              style={styles.deleteBtn}
+              disabled={selectedIds.size === 0}
+            >
+              <Text style={styles.deleteBtnText}>删除 ({selectedIds.size})</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>优秀照片</Text>
+            {favorites.length > 0 && (
+              <TouchableOpacity onPress={enterSelectMode} style={styles.selectBtn}>
+                <Text style={styles.selectBtnText}>选择</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => setShowStats(true)} style={styles.statsBtn}>
+              <Text style={styles.statsBtnText}>📊 统计</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <Text style={styles.subtitle}>收藏夹 · {favorites.length}张</Text>
       </View>
 
@@ -223,7 +304,11 @@ export function FavoritesScreen() {
           columnWrapperStyle={styles.columnWrapper}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <FavoriteCard item={item} onDelete={handleDelete} onPress={handlePress} />
+            <FavoriteCard
+              item={item}
+              isSelected={selectedIds.has(item.id)}
+              onToggle={handleCardPress}
+            />
           )}
         />
       )}
