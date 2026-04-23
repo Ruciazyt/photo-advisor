@@ -101,6 +101,7 @@ const defaultProps: CameraOverlaysProps = {
   showHistogram: false,
   histogramData: [],
   showFocusGuide: false,
+  showFocusPeaking: false,
   cameraRef: mockCameraRef,
   peakPoints: [],
   screenWidth: 375,

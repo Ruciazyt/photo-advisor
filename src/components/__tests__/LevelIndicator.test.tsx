@@ -1,3 +1,4 @@
+import React from 'react';
 import { render } from '@testing-library/react-native';
 import { LevelIndicator } from '../LevelIndicator';
 
@@ -9,14 +10,14 @@ let mockSvId = 0;
 
 jest.mock('react-native-reanimated', () => {
   const RN = require('react-native');
-  function mockUseSharedValue(initial) {
+  function mockUseSharedValue(initial: number | boolean | string | object) {
     const id = mockSvId++;
     if (!mockSharedValues.has(id)) {
       mockSharedValues.set(id, { value: initial });
     }
     return mockSharedValues.get(id);
   }
-  function mockUseAnimatedStyle(styleFn) {
+  function mockUseAnimatedStyle<T>(styleFn: () => T) {
     return styleFn();
   }
   const AnimatedView = RN.View;
@@ -26,12 +27,17 @@ jest.mock('react-native-reanimated', () => {
     useSharedValue: mockUseSharedValue,
     useAnimatedStyle: mockUseAnimatedStyle,
     useFrameCallback: () => {},
-    runOnJS: (fn) => fn,
+    runOnJS: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
     Animated: { View: AnimatedView, Text: RN.Text },
-    createAnimatedComponent: (C) => C,
-    withSpring: (v) => v,
-    withTiming: (v) => v,
-    Easing: { out: (e) => e, in: (e) => e, quad: (t) => t, ease: (t) => t },
+    createAnimatedComponent: <C extends React.ComponentType<unknown>>(C: C) => C,
+    withSpring: (v: unknown) => v,
+    withTiming: (v: unknown) => v,
+    Easing: {
+      out: (e: (t: number) => number) => e,
+      in: (e: (t: number) => number) => e,
+      quad: (t: number) => t,
+      ease: (t: number) => t,
+    },
   };
 });
 
