@@ -63,7 +63,7 @@ jest.mock('../services/update', () => ({
 }));
 
 jest.mock('../services/settings', () => ({
-  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true })),
+  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, imageQualityPreset: 'balanced' })),
   saveAppSettings: jest.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (loadApiConfig as jest.Mock).mockResolvedValue(null);
-    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true });
+    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, imageQualityPreset: 'balanced' });
     (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
   });
 
@@ -487,5 +487,36 @@ describe('SettingsScreen', () => {
     const { getByText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByText('水平仪')).toBeTruthy(); });
     expect(getByText('显示相机水平状态')).toBeTruthy();
+  });
+
+  // 33. renders image quality preset section with all 3 options
+  it('renders image quality preset section with all 3 options', async () => {
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
+    expect(getByText('省空间')).toBeTruthy();
+    expect(getByText('均衡')).toBeTruthy();
+    expect(getByText('高质量')).toBeTruthy();
+  });
+
+  // 34. selects quality preset and saves imageQualityPreset
+  it('selects quality preset and saves imageQualityPreset', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
+    fireEvent.press(getByText('高质量'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ imageQualityPreset: 'quality' });
+    });
+  });
+
+  // 35. selects size preset and saves imageQualityPreset
+  it('selects size preset and saves imageQualityPreset', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
+    fireEvent.press(getByText('省空间'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ imageQualityPreset: 'size' });
+    });
   });
 });
