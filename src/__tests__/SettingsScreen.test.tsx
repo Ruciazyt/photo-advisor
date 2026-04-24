@@ -221,13 +221,12 @@ describe('SettingsScreen', () => {
   // 13. voice toggle calls saveAppSettings
   it('voice toggle calls saveAppSettings with updated value', async () => {
     (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
-    const { getAllByText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => {
-      // Multiple toggles show '关' by default (voice, histogram, focus peaking, sun position, theme)
-      // The first '关' is the voice toggle (AccessibleToggle, line ~419 in SettingsScreen)
-      expect(getAllByText('关')[0]).toBeTruthy();
+      // AccessibleToggle renders icon instead of text; find by accessibilityLabel
+      expect(getByLabelText('语音反馈')).toBeTruthy();
     });
-    fireEvent.press(getAllByText('关')[0]);
+    fireEvent.press(getByLabelText('语音反馈'));
     await waitFor(() => {
       expect(saveAppSettings).toHaveBeenCalledWith({ voiceEnabled: true });
     });
@@ -284,10 +283,11 @@ describe('SettingsScreen', () => {
       showSunPosition: false,
       showFocusGuide: false,
     });
-    const { getByText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => {
-      // Only voice toggle should show '开'; all other overlay toggles are false
-      expect(getByText('开')).toBeTruthy();
+      // Voice toggle is ON (voiceEnabled: true) — find by accessibilityLabel
+      const voiceToggle = getByLabelText('语音反馈');
+      expect(voiceToggle.props.accessibilityState).toMatchObject({ checked: true });
     });
   });
 
@@ -305,14 +305,12 @@ describe('SettingsScreen', () => {
 
     render(<SettingsScreen />);
 
-    // Track which toggleTheme jest.fn() was passed to AccessibleToggle
+    // Track which toggleTheme jest.fn() was passed via useTheme context
     const firstResult = ThemeContext.useTheme.mock.results[0];
     const passedToggleTheme = firstResult?.value?.toggleTheme as jest.Mock;
 
-    // Find the theme AccessibleToggle - it shows '关' (off) since theme is 'dark'
-    // The AccessibleToggle for theme is the SECOND '关' on the page
-    const toggleElements = screen.getAllByText('关');
-    const themeToggle = toggleElements[1]; // Second '关' is the theme toggle (after voice toggle)
+    // Find the theme AccessibleToggle by its accessibilityLabel (AccessibleToggle uses icons, not text)
+    const themeToggle = screen.getByLabelText('深色/浅色主题');
     expect(themeToggle).toBeTruthy();
 
     // Press the toggle
@@ -567,9 +565,9 @@ describe('SettingsScreen', () => {
 
   // 40. grid option buttons have accessibilityLabel describing selection state
   it('grid option button has accessibilityLabel with selection state', async () => {
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByText, getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByText('默认网格')).toBeTruthy(); });
-    // Default is 'thirds' — the thirds button should say "三分网格，已选中"
+    // Default is 'thirds' — the thirds button should say '三分网格，已选中'
     const thirdsButton = getByLabelText('三分网格，已选中');
     expect(thirdsButton).toBeTruthy();
     expect(thirdsButton.props.accessibilityState).toMatchObject({ selected: true });
@@ -577,7 +575,7 @@ describe('SettingsScreen', () => {
 
   // 41. unselected grid option has correct accessibilityLabel and selectable hint
   it('unselected grid option button has accessibilityHint to select it', async () => {
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByText, getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByText('默认网格')).toBeTruthy(); });
     // '黄金' is not selected by default (thirds is)
     const goldenButton = getByLabelText('黄金网格');
@@ -588,21 +586,22 @@ describe('SettingsScreen', () => {
 
   // 42. quality preset buttons have accessibilityLabel with selection state
   it('quality preset button has accessibilityLabel with selection state', async () => {
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByText, getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
-    // Default preset is 'balanced'
-    const balancedButton = getByLabelText('均衡质量，已选中');
+    // Default preset is 'balanced' → label '均衡，已选中'
+    const balancedButton = getByLabelText('均衡，已选中');
     expect(balancedButton).toBeTruthy();
     expect(balancedButton.props.accessibilityState).toMatchObject({ selected: true });
   });
 
   // 43. unselected quality preset has correct selectable hint
   it('unselected quality preset has correct accessibilityHint', async () => {
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByText, getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
-    const qualityButton = getByLabelText('高质量质量');
+    // 'quality' preset label is '高质量' (not '高质量质量')
+    const qualityButton = getByLabelText('高质量');
     expect(qualityButton).toBeTruthy();
-    expect(qualityButton.props.accessibilityHint).toBe('切换到高质量质量');
+    expect(qualityButton.props.accessibilityHint).toBe('切换到高质量');
   });
 
   // 44. theme toggle has accessibilityLabel describing the feature

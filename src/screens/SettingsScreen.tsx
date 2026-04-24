@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -459,29 +459,25 @@ export function SettingsScreen({ onSaved }: Props) {
             <View style={styles.gridSelectorRow}>
               {(['thirds', 'golden', 'diagonal', 'spiral'] as GridVariant[]).map((v) => {
                 const labels: Record<GridVariant, string> = { thirds: '三分', golden: '黄金', diagonal: '对角', spiral: '螺旋', none: '关' };
-                const gridA11y = useMemo(
-                  () => ({
-                    accessibilityLabel: `${labels[v]}网格${defaultGridVariant === v ? '，已选中' : ''}`,
-                    accessibilityRole: 'button' as const,
-                    accessibilityState: { selected: defaultGridVariant === v },
-                    accessibilityHint: defaultGridVariant === v ? '取消选择此网格类型' : '选择此网格类型为默认',
-                  }),
-                  [v, defaultGridVariant],
-                );
+                const isSelected = defaultGridVariant === v;
+                const gridLabel = `${labels[v]}网格${isSelected ? '，已选中' : ''}`;
                 return (
                   <TouchableOpacity
                     key={v}
                     style={[
                       styles.gridOption,
-                      { backgroundColor: colors.cardBg, borderColor: defaultGridVariant === v ? colors.accent : colors.border },
-                      defaultGridVariant === v && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
+                      { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
+                      isSelected && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
                     ]}
                     onPress={async () => {
                       setDefaultGridVariant(v);
                       await saveAppSettings({ defaultGridVariant: v });
                     }}
                     activeOpacity={0.7}
-                    {...gridA11y}
+                    accessibilityLabel={gridLabel}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityHint={isSelected ? '取消选择此网格类型' : '选择此网格类型为默认'}
                   >
                     <Text style={[styles.gridOptionText, { color: defaultGridVariant === v ? colors.accent : colors.textSecondary }]}>
                       {labels[v]}
@@ -528,15 +524,7 @@ export function SettingsScreen({ onSaved }: Props) {
           <View style={styles.qualityPresetRow}>
             {(['size', 'balanced', 'quality'] as ImageQualityPreset[]).map((p) => {
               const labels: Record<ImageQualityPreset, string> = { size: '省空间', balanced: '均衡', quality: '高质量' };
-              const qualA11y = useMemo(
-                () => ({
-                  accessibilityLabel: `${labels[p]}质量${imageQualityPreset === p ? '，已选中' : ''}`,
-                  accessibilityRole: 'button' as const,
-                  accessibilityState: { selected: imageQualityPreset === p },
-                  accessibilityHint: imageQualityPreset === p ? '当前图片质量设置' : `切换到${labels[p]}质量`,
-                }),
-                [p, imageQualityPreset],
-              );
+              const isSelected = imageQualityPreset === p;
               return (
                 <TouchableOpacity
                   key={p}
@@ -550,9 +538,12 @@ export function SettingsScreen({ onSaved }: Props) {
                     await saveAppSettings({ imageQualityPreset: p });
                   }}
                   activeOpacity={0.7}
-                  {...qualA11y}
+                  accessibilityLabel={`${labels[p]}${isSelected ? '，已选中' : ''}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityHint={isSelected ? '当前图片质量设置' : `切换到${labels[p]}`}
                 >
-                  <Text style={[styles.qualityOptionText, { color: imageQualityPreset === p ? colors.accent : colors.textSecondary }]}>
+                  <Text style={[styles.qualityOptionText, { color: isSelected ? colors.accent : colors.textSecondary }]}>
                     {labels[p]}
                   </Text>
                 </TouchableOpacity>
