@@ -7,9 +7,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: |
-      !contains(join(files, ','), 'coverage/') &&
-      !contains(join(files, ','), '.html')
     steps:
       - uses: actions/checkout@v4
 
