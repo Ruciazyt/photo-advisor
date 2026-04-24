@@ -20,6 +20,8 @@ interface ShareButtonProps {
   score?: number;
   /** Grid variant key for icon */
   gridVariant?: string;
+  /** One-line score reason text (e.g. '主体偏左，建议右移') */
+  scoreReason?: string;
   /** Callback when share completes */
   onShareEnd?: () => void;
 }
@@ -93,6 +95,7 @@ export function ShareButton({
   gridType,
   score,
   gridVariant,
+  scoreReason,
   onShareEnd,
 }: ShareButtonProps) {
   const { colors } = useTheme();
@@ -185,6 +188,7 @@ export function ShareButton({
           gridType={gridType}
           score={score}
           gridVariant={gridVariant}
+          scoreReason={scoreReason}
         />
       </View>
 

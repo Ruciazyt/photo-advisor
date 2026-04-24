@@ -113,4 +113,30 @@ describe('ShareButton', () => {
       );
     });
   });
+
+  it('forwards scoreReason to ShareCard', async () => {
+    const captureRef = require('react-native-view-shot').captureRef;
+    captureRef.mockResolvedValue('file:///captured-with-reason.jpg');
+
+    const { getByText } = render(
+      <ShareButton
+        photoUri="file:///test/photo.jpg"
+        suggestions={[]}
+        gridType="三分法"
+        score={75}
+        scoreReason="主体偏左，建议右移"
+        gridVariant="thirds"
+      />
+    );
+    fireEvent.press(getByText('分享'));
+
+    await waitFor(() => {
+      expect(mockSharePhoto).toHaveBeenCalledTimes(1);
+    });
+    // Verify captureRef was called (ShareCard was rendered off-screen)
+    expect(captureRef).toHaveBeenCalled();
+    // Verify the captured composite image was shared
+    const call = mockSharePhoto.mock.calls[0][0];
+    expect(call.photoUri).toBe('file:///captured-with-reason.jpg');
+  });
 });
