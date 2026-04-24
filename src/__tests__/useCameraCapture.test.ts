@@ -423,3 +423,149 @@ describe('parseSuggestions', () => {
     expect(result.remaining).toBe('嗯？');
   });
 });
+
+// --- savePhotoToGallery tests ---
+import { renderHook } from '@testing-library/react-native';
+import { useCameraCapture } from '../hooks/useCameraCapture';
+
+const renderUseCameraCapture = (extraProps = {}) => {
+  return renderHook(() =>
+    useCameraCapture({
+      cameraRef: { current: null },
+      cameraReady: false,
+      onSuggestionsChange: jest.fn(),
+      onLoadingChange: jest.fn(),
+      onKeypointsChange: jest.fn(),
+      onShowKeypointsChange: jest.fn(),
+      ...extraProps,
+    })
+  );
+};
+
+describe('savePhotoToGallery', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('successful save when permission granted', async () => {
+    const MediaLibrary = require('expo-media-library');
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const { loadAppSettings } = require('../services/settings');
+
+    MediaLibrary.requestPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    MediaLibrary.saveToLibraryAsync.mockResolvedValue(undefined);
+    manipulateAsync.mockResolvedValue({ uri: 'file:///manipulated.jpg' });
+    loadAppSettings.mockResolvedValue({ imageQualityPreset: 'balanced' });
+
+    const { result } = renderUseCameraCapture({ cameraReady: false });
+    await result.current.savePhotoToGallery('file:///original.jpg');
+
+    expect(MediaLibrary.requestPermissionsAsync).toHaveBeenCalled();
+    expect(loadAppSettings).toHaveBeenCalled();
+    expect(manipulateAsync).toHaveBeenCalledWith(
+      'file:///original.jpg',
+      [{ resize: { width: 1536 } }],
+      { compress: 0.8, format: 'jpeg' }
+    );
+    expect(MediaLibrary.saveToLibraryAsync).toHaveBeenCalledWith('file:///manipulated.jpg');
+  });
+
+  it('no-op when permission denied', async () => {
+    const MediaLibrary = require('expo-media-library');
+    MediaLibrary.requestPermissionsAsync.mockResolvedValue({ status: 'denied' });
+
+    const { result } = renderUseCameraCapture({ cameraReady: false });
+    await result.current.savePhotoToGallery('file:///original.jpg');
+
+    expect(MediaLibrary.requestPermissionsAsync).toHaveBeenCalled();
+    expect(MediaLibrary.saveToLibraryAsync).not.toHaveBeenCalled();
+  });
+
+  it('no-op when manipulateAsync throws', async () => {
+    const MediaLibrary = require('expo-media-library');
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const { loadAppSettings } = require('../services/settings');
+
+    MediaLibrary.requestPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    manipulateAsync.mockRejectedValue(new Error('resize failed'));
+    loadAppSettings.mockResolvedValue({ imageQualityPreset: 'balanced' });
+
+    const { result } = renderUseCameraCapture({ cameraReady: false });
+    await expect(result.current.savePhotoToGallery('file:///original.jpg')).resolves.not.toThrow();
+    expect(MediaLibrary.saveToLibraryAsync).not.toHaveBeenCalled();
+  });
+});
+
+// --- capturePreviewFrame tests ---
+describe('capturePreviewFrame', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns { base64, uri } when cameraRef.current and cameraReady are set', async () => {
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///preview.jpg' }),
+    };
+
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const FileSystem = require('expo-file-system/legacy');
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('A'.repeat(600));
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+
+    const output = await result.current.capturePreviewFrame();
+
+    expect(output).toEqual({ base64: 'A'.repeat(600), uri: 'file:///resized.jpg' });
+    expect(mockCamera.takePictureAsync).toHaveBeenCalledWith({ quality: 0.4 });
+    expect(manipulateAsync).toHaveBeenCalledWith(
+      'file:///preview.jpg',
+      [{ resize: { width: 480 } }],
+      { compress: 0.5, format: 'jpeg' }
+    );
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalled();
+  });
+
+  it('returns null when cameraRef.current is null', async () => {
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: null },
+      cameraReady: true,
+    });
+
+    const output = await result.current.capturePreviewFrame();
+    expect(output).toBeNull();
+  });
+
+  it('returns null when cameraReady is false', async () => {
+    const mockCamera = { takePictureAsync: jest.fn() };
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: false,
+    });
+
+    const output = await result.current.capturePreviewFrame();
+    expect(output).toBeNull();
+  });
+
+  it('returns null when base64.length < 500', async () => {
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///preview.jpg' }),
+    };
+
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const FileSystem = require('expo-file-system/legacy');
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('AB');
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+
+    const output = await result.current.capturePreviewFrame();
+    expect(output).toBeNull();
+  });
+});
