@@ -14,7 +14,7 @@ import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 jest.mock('react-native-reanimated');
 jest.mock('react-native-worklets');
 
-// Mock useAnimationFrameTimer — each test controls polling manually via a module-level ref
+// Mock useAnimationFrameTimer — each test controls polling manually via module-level refs
 let pollCallback: (() => void) | null = null;
 let pollEnabled = false;
 
@@ -67,9 +67,9 @@ jest.mock('../contexts/ThemeContext', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Fire the registered useAnimationFrameTimer onTick callback. */
+/** Fire the registered useAnimationFrameTimer onTick callback, wrapped in act(). */
 function triggerPoll() {
-  if (pollCallback) pollCallback();
+  act(() => { pollCallback?.(); });
 }
 
 // ---------------------------------------------------------------------------
@@ -193,8 +193,15 @@ describe('FocusGuideOverlay', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Tap-to-focus / FocusRing tests
+  // Tap-to-focus / FocusRing / useAnimationFrameTimer polling tests
   // -------------------------------------------------------------------------
+
+  it('registers useAnimationFrameTimer when visible=true', () => {
+    const cam = { zoom: 1.0, focusDepth: jest.fn() };
+    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
+    expect(pollCallback).not.toBeNull();
+    expect(pollEnabled).toBe(true);
+  });
 
   it('does NOT call focusDepth on tap (visual feedback only)', () => {
     const cam = { zoom: 1.0, focusDepth: jest.fn() };
@@ -205,13 +212,6 @@ describe('FocusGuideOverlay', () => {
       nativeEvent: { locationX: 100, locationY: 200 },
     });
     expect(cam.focusDepth).not.toHaveBeenCalled();
-  });
-
-  it('registers useAnimationFrameTimer on mount when visible=true', () => {
-    const cam = { zoom: 1.0, focusDepth: jest.fn() };
-    render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
-    expect(pollCallback).not.toBeNull();
-    expect(pollEnabled).toBe(true);
   });
 
   it('tap-to-focus adds a focus ring without calling focusDepth', () => {
@@ -226,7 +226,7 @@ describe('FocusGuideOverlay', () => {
     expect(cam.focusDepth).not.toHaveBeenCalled();
   });
 
-  it('unmounts cleanly — poll callback does not throw after unmount', () => {
+  it('unmounts cleanly — poll callback does not throw after unmount (mountedRef guard)', () => {
     const cam = { zoom: 2.0, focusDepth: jest.fn() };
     const { unmount } = render(
       <FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />
@@ -243,7 +243,7 @@ describe('FocusGuideOverlay', () => {
     expect(screen.getByText('1.8x')).toBeTruthy();
   });
 
-  it('polling updates zoom display to new value when camera zoom changes', () => {
+  it('polling updates zoom display when camera zoom changes', () => {
     const cam = { zoom: 1.0, focusDepth: jest.fn() };
     render(<FocusGuideOverlay visible={true} cameraRef={{ current: cam }} />);
 
@@ -252,7 +252,9 @@ describe('FocusGuideOverlay', () => {
 
     // Simulate zoom change on camera ref
     cam.zoom = 2.5;
-    act(() => { triggerPoll(); });
+
+    // Wrap poll trigger in act() to flush React state updates synchronously
+    act(() => { pollCallback?.(); });
 
     // Zoom display should update to 2.5x and DOF warning should appear
     expect(screen.getByText('2.5x')).toBeTruthy();

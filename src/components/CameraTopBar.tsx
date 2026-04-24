@@ -63,6 +63,7 @@ export interface CameraTopBarProps {
   // Share
   suggestions: string[];
   lastCapturedScore: number | null;
+  lastCapturedScoreReason: string | null;
   // Compare
   showKeypoints: boolean;
   onComparePress: () => void;
@@ -103,6 +104,7 @@ export function CameraTopBar({  gridVariant,
   onSaveToFavorites,
   suggestions,
   lastCapturedScore,
+  lastCapturedScoreReason,
   showKeypoints,
   onComparePress,
   burstActive,
@@ -583,6 +585,7 @@ export function CameraTopBar({  gridVariant,
         suggestions={suggestions}
         gridType={GRID_LABELS[gridVariant]}
         score={lastCapturedScore ?? undefined}
+        scoreReason={lastCapturedScoreReason ?? undefined}
         gridVariant={gridVariant}
       />
 

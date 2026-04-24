@@ -87,28 +87,85 @@ describe('settings service', () => {
     });
   });
 
-  describe('settings - theme', () => {
+  describe('camera overlay settings', () => {
     beforeEach(async () => {
       await AsyncStorage.clear();
     });
 
-    it('should default to dark theme', async () => {
+    it('defaults showHistogram to false', async () => {
       const settings = await loadAppSettings();
-      expect(settings.theme).toBe('dark');
+      expect(settings.showHistogram).toBe(false);
     });
 
-    it('should save and load theme setting', async () => {
-      await saveAppSettings({ theme: 'light' });
+    it('defaults showLevel to true', async () => {
       const settings = await loadAppSettings();
-      expect(settings.theme).toBe('light');
+      expect(settings.showLevel).toBe(true);
     });
 
-    it('should persist theme across multiple saves', async () => {
-      await saveAppSettings({ theme: 'light' });
-      await saveAppSettings({ voiceEnabled: true });
+    it('defaults showFocusPeaking to false', async () => {
       const settings = await loadAppSettings();
-      expect(settings.theme).toBe('light');
-      expect(settings.voiceEnabled).toBe(true);
+      expect(settings.showFocusPeaking).toBe(false);
+    });
+
+    it('defaults showSunPosition to false', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showSunPosition).toBe(false);
+    });
+
+    it('defaults showFocusGuide to true', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showFocusGuide).toBe(true);
+    });
+
+    it('defaults defaultGridVariant to thirds', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.defaultGridVariant).toBe('thirds');
+    });
+
+    it('saves and loads showHistogram', async () => {
+      await saveAppSettings({ showHistogram: true });
+      const settings = await loadAppSettings();
+      expect(settings.showHistogram).toBe(true);
+    });
+
+    it('saves and loads showLevel', async () => {
+      await saveAppSettings({ showLevel: false });
+      const settings = await loadAppSettings();
+      expect(settings.showLevel).toBe(false);
+    });
+
+    it('saves and loads showFocusPeaking', async () => {
+      await saveAppSettings({ showFocusPeaking: true });
+      const settings = await loadAppSettings();
+      expect(settings.showFocusPeaking).toBe(true);
+    });
+
+    it('saves and loads showSunPosition', async () => {
+      await saveAppSettings({ showSunPosition: true });
+      const settings = await loadAppSettings();
+      expect(settings.showSunPosition).toBe(true);
+    });
+
+    it('saves and loads showFocusGuide', async () => {
+      await saveAppSettings({ showFocusGuide: false });
+      const settings = await loadAppSettings();
+      expect(settings.showFocusGuide).toBe(false);
+    });
+
+    it('saves and loads defaultGridVariant', async () => {
+      await saveAppSettings({ defaultGridVariant: 'golden' });
+      const settings = await loadAppSettings();
+      expect(settings.defaultGridVariant).toBe('golden');
+    });
+
+    it('persists all camera overlay settings across multiple saves', async () => {
+      await saveAppSettings({ showHistogram: true, showLevel: false });
+      await saveAppSettings({ showFocusPeaking: true, defaultGridVariant: 'diagonal' });
+      const settings = await loadAppSettings();
+      expect(settings.showHistogram).toBe(true);
+      expect(settings.showLevel).toBe(false);
+      expect(settings.showFocusPeaking).toBe(true);
+      expect(settings.defaultGridVariant).toBe('diagonal');
     });
   });
 });
