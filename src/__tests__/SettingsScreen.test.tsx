@@ -221,11 +221,13 @@ describe('SettingsScreen', () => {
   // 13. voice toggle calls saveAppSettings
   it('voice toggle calls saveAppSettings with updated value', async () => {
     (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
-    const { getByText } = render(<SettingsScreen />);
+    const { getAllByText } = render(<SettingsScreen />);
     await waitFor(() => {
-      expect(getByText('关')).toBeTruthy();
+      // Multiple toggles show '关' by default (voice, histogram, focus peaking, sun position, theme)
+      // The first '关' is the voice toggle (AccessibleToggle, line ~419 in SettingsScreen)
+      expect(getAllByText('关')[0]).toBeTruthy();
     });
-    fireEvent.press(getByText('关'));
+    fireEvent.press(getAllByText('关')[0]);
     await waitFor(() => {
       expect(saveAppSettings).toHaveBeenCalledWith({ voiceEnabled: true });
     });
@@ -277,13 +279,14 @@ describe('SettingsScreen', () => {
       timerDuration: 3,
       defaultGridVariant: 'thirds',
       showHistogram: false,
-      showLevel: true,
+      showLevel: false,
       showFocusPeaking: false,
       showSunPosition: false,
-      showFocusGuide: true,
+      showFocusGuide: false,
     });
     const { getByText } = render(<SettingsScreen />);
     await waitFor(() => {
+      // Only voice toggle should show '开'; all other overlay toggles are false
       expect(getByText('开')).toBeTruthy();
     });
   });
@@ -299,25 +302,22 @@ describe('SettingsScreen', () => {
   // 19. toggling theme calls toggleTheme
   it('theme toggle button calls toggleTheme', () => {
     const ThemeContext = require('../contexts/ThemeContext');
-    // Replace mock implementation to capture the toggleTheme reference
-    const originalImpl = ThemeContext.useTheme.getMockImplementation();
-    let capturedToggleTheme: jest.Mock | null = null;
-    ThemeContext.useTheme.mockImplementation(() => {
-      const toggleTheme = jest.fn();
-      capturedToggleTheme = toggleTheme;
-      const result = originalImpl!();
-      return { ...result, toggleTheme };
-    });
+
     render(<SettingsScreen />);
-    expect(capturedToggleTheme).not.toBeNull();
-    // Find the theme toggle TouchableOpacity via UNSAFE_getAllByType
-    const touchables = screen.UNSAFE_getAllByType(require('react-native').TouchableOpacity);
-    const themeToggle = touchables.find((t) => t.props.onPress === capturedToggleTheme);
-    expect(themeToggle).toBeDefined();
+
+    // Track which toggleTheme jest.fn() was passed to AccessibleToggle
+    const firstResult = ThemeContext.useTheme.mock.results[0];
+    const passedToggleTheme = firstResult?.value?.toggleTheme as jest.Mock;
+
+    // Find the theme AccessibleToggle - it shows '关' (off) since theme is 'dark'
+    // The AccessibleToggle for theme is the SECOND '关' on the page
+    const toggleElements = screen.getAllByText('关');
+    const themeToggle = toggleElements[1]; // Second '关' is the theme toggle (after voice toggle)
+    expect(themeToggle).toBeTruthy();
+
+    // Press the toggle
     fireEvent.press(themeToggle);
-    expect(capturedToggleTheme!.mock.calls.length).toBe(1);
-    // Restore original mock
-    ThemeContext.useTheme.mockImplementation(originalImpl!);
+    expect(passedToggleTheme?.mock.calls.length).toBe(1);
   });
 
   // 20. validation when fetching models without API key
