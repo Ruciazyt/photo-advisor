@@ -5,8 +5,8 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Mock expo-file-system
-jest.mock('expo-file-system', () => ({
+// Mock expo-file-system (legacy API)
+jest.mock('expo-file-system/legacy', () => ({
   cacheDirectory: '/cache/',
   EncodingType: { UTF8: 'utf8' },
   writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
@@ -171,8 +171,8 @@ describe('importData', () => {
       exportedAt: new Date().toISOString(),
       favorites: 'not an array',
       shootLog: [],
-      stats: null as any,
-    };
+      stats: null,
+    } as unknown as Parameters<typeof importData>[0];
 
     await expect(importData(data)).rejects.toThrow('导入数据格式无效');
   });
@@ -183,8 +183,8 @@ describe('importData', () => {
       exportedAt: new Date().toISOString(),
       favorites: [],
       shootLog: 'not an array',
-      stats: null as any,
-    };
+      stats: null,
+    } as unknown as Parameters<typeof importData>[0];
 
     await expect(importData(data)).rejects.toThrow('导入数据格式无效');
   });

@@ -67,6 +67,7 @@ const defaultProps: CameraTopBarProps = {
   onSaveToFavorites: jest.fn(),
   suggestions: [],
   lastCapturedScore: null,
+  lastCapturedScoreReason: null,
   showKeypoints: false,
   onComparePress: jest.fn(),
   burstActive: false,

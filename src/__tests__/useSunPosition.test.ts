@@ -52,7 +52,7 @@ beforeEach(() => {
 
 /** Advance timers to allow pending async work to complete */
 function flushPromises() {
-  return new Promise(resolve => setImmediate(resolve));
+  return new Promise<void>(resolve => setImmediate(resolve));
 }
 
 // ---------------------------------------------------------------------------

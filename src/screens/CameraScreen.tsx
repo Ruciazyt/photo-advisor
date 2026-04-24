@@ -354,6 +354,7 @@ export function CameraScreen() {
           onTimerPress={() => setShowTimerModal(true)} onCancelCountdown={cancelCountdown}
           lastCapturedUri={lastCapturedUri} onSaveToFavorites={handleSaveToFavorites}
           suggestions={suggestions} lastCapturedScore={lastCapturedScore}
+          lastCapturedScoreReason={lastCapturedScoreReason}
           showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)}
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
