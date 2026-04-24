@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import {
 } from '../services/update';
 import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { speak } from '../hooks/useVoiceFeedback';
+import { AccessibleToggle } from '../components/AccessibleToggle';
 
 interface Props {
   onSaved?: () => void;
@@ -415,8 +416,10 @@ export function SettingsScreen({ onSaved }: Props) {
               <Text style={[styles.voiceSectionTitle, { color: colors.text }]}>语音反馈</Text>
               <Text style={[styles.voiceSectionDesc, { color: colors.textSecondary }]}>构图建议达标时播放语音提示</Text>
             </View>
-            <TouchableOpacity
-              style={[styles.voiceToggle, { backgroundColor: colors.cardBg, borderColor: colors.border }, voiceEnabled && styles.voiceToggleActive, voiceEnabled && { borderColor: colors.accent }]}
+            <AccessibleToggle
+              label="语音反馈"
+              hint={voiceEnabled ? '关闭语音反馈' : '打开语音反馈'}
+              toggled={voiceEnabled}
               onPress={async () => {
                 const next = !voiceEnabled;
                 setVoiceEnabled(next);
@@ -425,17 +428,7 @@ export function SettingsScreen({ onSaved }: Props) {
                   speak('语音反馈已开启');
                 }
               }}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={voiceEnabled ? 'volume-high' : 'volume-mute'}
-                size={18}
-                color={voiceEnabled ? colors.accent : colors.textSecondary}
-              />
-              <Text style={[styles.voiceToggleText, { color: voiceEnabled ? colors.accent : colors.textSecondary }]}>
-                {voiceEnabled ? '开' : '关'}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
 
@@ -445,20 +438,12 @@ export function SettingsScreen({ onSaved }: Props) {
               <Text style={[styles.themeSectionTitle, { color: colors.text }]}>深色/浅色主题</Text>
               <Text style={[styles.themeSectionDesc, { color: colors.textSecondary }]}>切换应用外观主题</Text>
             </View>
-            <TouchableOpacity
-              style={[styles.themeToggle, { backgroundColor: colors.cardBg, borderColor: colors.border }, theme === 'light' && styles.themeToggleLight, theme === 'light' && { borderColor: colors.accent }]}
+            <AccessibleToggle
+              label="深色/浅色主题"
+              hint="切换应用外观主题"
+              toggled={theme === 'light'}
               onPress={toggleTheme}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={theme === 'dark' ? 'moon' : 'sunny'}
-                size={18}
-                color={theme === 'dark' ? colors.accent : colors.sunColor}
-              />
-              <Text style={[styles.themeToggleText, { color: theme === 'light' ? colors.accent : colors.textSecondary }]}>
-                {theme === 'dark' ? '深色' : '浅色'}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
 
@@ -474,6 +459,15 @@ export function SettingsScreen({ onSaved }: Props) {
             <View style={styles.gridSelectorRow}>
               {(['thirds', 'golden', 'diagonal', 'spiral'] as GridVariant[]).map((v) => {
                 const labels: Record<GridVariant, string> = { thirds: '三分', golden: '黄金', diagonal: '对角', spiral: '螺旋', none: '关' };
+                const gridA11y = useMemo(
+                  () => ({
+                    accessibilityLabel: `${labels[v]}网格${defaultGridVariant === v ? '，已选中' : ''}`,
+                    accessibilityRole: 'button' as const,
+                    accessibilityState: { selected: defaultGridVariant === v },
+                    accessibilityHint: defaultGridVariant === v ? '取消选择此网格类型' : '选择此网格类型为默认',
+                  }),
+                  [v, defaultGridVariant],
+                );
                 return (
                   <TouchableOpacity
                     key={v}
@@ -487,6 +481,7 @@ export function SettingsScreen({ onSaved }: Props) {
                       await saveAppSettings({ defaultGridVariant: v });
                     }}
                     activeOpacity={0.7}
+                    {...gridA11y}
                   >
                     <Text style={[styles.gridOptionText, { color: defaultGridVariant === v ? colors.accent : colors.textSecondary }]}>
                       {labels[v]}
@@ -510,21 +505,16 @@ export function SettingsScreen({ onSaved }: Props) {
                 <Text style={[styles.prefTitle, { color: colors.text }]}>{label}</Text>
                 <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>{desc}</Text>
               </View>
-              <TouchableOpacity
-                style={[styles.toggle, { backgroundColor: colors.cardBg, borderColor: state ? colors.accent : colors.border }, state && { borderColor: colors.accent }]}
+              <AccessibleToggle
+                label={label}
+                hint={state ? `关闭${label}` : `打开${label}`}
+                toggled={state}
                 onPress={async () => {
                   const next = !state;
                   setter(next);
                   await saveAppSettings({ [saveKey]: next });
                 }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={state ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={20}
-                  color={state ? colors.accent : colors.textSecondary}
-                />
-              </TouchableOpacity>
+              />
             </View>
           ))}
 
@@ -538,6 +528,15 @@ export function SettingsScreen({ onSaved }: Props) {
           <View style={styles.qualityPresetRow}>
             {(['size', 'balanced', 'quality'] as ImageQualityPreset[]).map((p) => {
               const labels: Record<ImageQualityPreset, string> = { size: '省空间', balanced: '均衡', quality: '高质量' };
+              const qualA11y = useMemo(
+                () => ({
+                  accessibilityLabel: `${labels[p]}质量${imageQualityPreset === p ? '，已选中' : ''}`,
+                  accessibilityRole: 'button' as const,
+                  accessibilityState: { selected: imageQualityPreset === p },
+                  accessibilityHint: imageQualityPreset === p ? '当前图片质量设置' : `切换到${labels[p]}质量`,
+                }),
+                [p, imageQualityPreset],
+              );
               return (
                 <TouchableOpacity
                   key={p}
@@ -551,6 +550,7 @@ export function SettingsScreen({ onSaved }: Props) {
                     await saveAppSettings({ imageQualityPreset: p });
                   }}
                   activeOpacity={0.7}
+                  {...qualA11y}
                 >
                   <Text style={[styles.qualityOptionText, { color: imageQualityPreset === p ? colors.accent : colors.textSecondary }]}>
                     {labels[p]}
