@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,9 @@ interface StatsScreenProps {
   onBack: () => void;
 }
 
-export function StatsScreen({ onBack }: StatsScreenProps) {
-  const { colors } = useTheme();
-  const { favorites } = useFavorites();
-  const stats = computeStats(favorites);
-
-  const styles = StyleSheet.create({
+// OUTSIDE component — factory so colors can be injected without per-render re-allocation
+const makeStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
+  StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.primary,
@@ -170,6 +167,13 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
       marginTop: 2,
     },
   });
+
+export function StatsScreen({ onBack }: StatsScreenProps) {
+  const { colors } = useTheme();
+  const { favorites } = useFavorites();
+  const stats = computeStats(favorites);
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   if (favorites.length === 0) {
     return (

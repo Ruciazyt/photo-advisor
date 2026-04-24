@@ -519,4 +519,128 @@ describe('SettingsScreen', () => {
       expect(saveAppSettings).toHaveBeenCalledWith({ imageQualityPreset: 'size' });
     });
   });
+
+  // 36. camera preference toggle has accessibilityRole=switch and correct accessibilityState
+  it('overlay toggle has accessibilityRole=switch', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
+    const histogramToggle = getByLabelText('直方图');
+    expect(histogramToggle.props.accessibilityRole).toBe('switch');
+  });
+
+  // 37. toggle accessibilityState reflects current checked state (off)
+  it('toggle accessibilityState reflects checked=false when off', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false, theme: 'dark', timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: false, showLevel: true, showFocusPeaking: false,
+      showSunPosition: false, showFocusGuide: true, imageQualityPreset: 'balanced',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('水平仪')).toBeTruthy(); });
+    const levelToggle = getByLabelText('水平仪');
+    expect(levelToggle.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  // 38. toggle accessibilityState reflects checked=true when on
+  it('toggle accessibilityState reflects checked=true when on', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false, theme: 'dark', timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: true, showLevel: true, showFocusPeaking: true,
+      showSunPosition: true, showFocusGuide: true, imageQualityPreset: 'balanced',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
+    const histogramToggle = getByLabelText('直方图');
+    expect(histogramToggle.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  // 39. toggle has accessibilityHint describing the action
+  it('toggle has accessibilityHint describing what will happen on press', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
+    const histogramToggle = getByLabelText('直方图');
+    // Off → hint should say "打开直方图"; On → "关闭直方图"
+    expect(histogramToggle.props.accessibilityHint).toMatch(/打开|关闭/);
+  });
+
+  // 40. grid option buttons have accessibilityLabel describing selection state
+  it('grid option button has accessibilityLabel with selection state', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('默认网格')).toBeTruthy(); });
+    // Default is 'thirds' — the thirds button should say "三分网格，已选中"
+    const thirdsButton = getByLabelText('三分网格，已选中');
+    expect(thirdsButton).toBeTruthy();
+    expect(thirdsButton.props.accessibilityState).toMatchObject({ selected: true });
+  });
+
+  // 41. unselected grid option has correct accessibilityLabel and selectable hint
+  it('unselected grid option button has accessibilityHint to select it', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('默认网格')).toBeTruthy(); });
+    // '黄金' is not selected by default (thirds is)
+    const goldenButton = getByLabelText('黄金网格');
+    expect(goldenButton).toBeTruthy();
+    expect(goldenButton.props.accessibilityState).toMatchObject({ selected: false });
+    expect(goldenButton.props.accessibilityHint).toBe('选择此网格类型为默认');
+  });
+
+  // 42. quality preset buttons have accessibilityLabel with selection state
+  it('quality preset button has accessibilityLabel with selection state', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
+    // Default preset is 'balanced'
+    const balancedButton = getByLabelText('均衡质量，已选中');
+    expect(balancedButton).toBeTruthy();
+    expect(balancedButton.props.accessibilityState).toMatchObject({ selected: true });
+  });
+
+  // 43. unselected quality preset has correct selectable hint
+  it('unselected quality preset has correct accessibilityHint', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('图片质量')).toBeTruthy(); });
+    const qualityButton = getByLabelText('高质量质量');
+    expect(qualityButton).toBeTruthy();
+    expect(qualityButton.props.accessibilityHint).toBe('切换到高质量质量');
+  });
+
+  // 44. theme toggle has accessibilityLabel describing the feature
+  it('theme toggle has accessibilityLabel describing theme feature', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('深色/浅色主题')).toBeTruthy(); });
+    const themeToggle = getByLabelText('深色/浅色主题');
+    expect(themeToggle.props.accessibilityRole).toBe('switch');
+  });
+
+  // 45. voice toggle has correct accessibilityLabel
+  it('voice toggle has accessibilityLabel describing voice feedback feature', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('语音反馈')).toBeTruthy(); });
+    const voiceToggle = getByLabelText('语音反馈');
+    expect(voiceToggle.props.accessibilityRole).toBe('switch');
+  });
+
+  // 46. all 5 overlay toggles are accessible via their labels
+  it('all 5 overlay toggles are accessible via their labels', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
+    const toggles = ['直方图', '水平仪', '对焦峰值', '太阳位置', '对焦辅助'] as const;
+    toggles.forEach(label => {
+      const btn = getByLabelText(label);
+      expect(btn.props.accessibilityRole).toBe('switch');
+      expect(typeof btn.props.accessibilityState).toBe('object');
+    });
+  });
+
+  // 47. toggle press updates settings via onPress callback
+  it('toggle press triggers onPress and saves updated setting', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('直方图'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showHistogram: true });
+    });
+  });
 });

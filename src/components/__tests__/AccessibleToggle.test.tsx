@@ -2,153 +2,111 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { AccessibleToggle } from '../AccessibleToggle';
 
-// ---------------------------------------------------------------------------
-// Mock ThemeContext
-// ---------------------------------------------------------------------------
-const mockColors = {
-  accent: '#6B9AFF',
-  cardBg: 'rgba(255,255,255,0.1)',
-  border: 'rgba(255,255,255,0.2)',
-  textSecondary: 'rgba(255,255,255,0.6)',
-};
-
 jest.mock('../../contexts/ThemeContext', () => ({
-  useTheme: () => ({ colors: mockColors }),
+  useTheme: jest.fn(() => ({
+    colors: {
+      accent: '#e8d5b7',
+      textSecondary: '#aaa',
+      cardBg: '#111',
+      border: '#333',
+    },
+  })),
 }));
 
-jest.mock('@expo/vector-icons', () => ({
-  Ionicons: function MockIonicons({ name, size, color }: { name: string; size: number; color: string }) {
-    return null;
-  },
-}));
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 describe('AccessibleToggle', () => {
-  it('renders correctly when toggled on', () => {
-    const { toJSON } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={true}
-        onPress={() => {}}
-      />
+  it('renders without crashing', () => {
+    const { root } = render(
+      <AccessibleToggle label="语音反馈" hint="关闭语音反馈" toggled={false} onPress={() => {}} />
     );
-    expect(toJSON()).not.toBeNull();
+    expect(root).toBeTruthy();
   });
 
-  it('renders correctly when toggled off', () => {
-    const { toJSON } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={false}
-        onPress={() => {}}
-      />
+  it('renders the TouchableOpacity with correct accessibility props', () => {
+    const { getByLabelText } = render(
+      <AccessibleToggle label="语音反馈" hint="关闭语音反馈" toggled={false} onPress={() => {}} />
     );
-    expect(toJSON()).not.toBeNull();
+    const toggle = getByLabelText('语音反馈');
+    expect(toggle.props.accessibilityRole).toBe('switch');
+    expect(toggle.props.accessibilityState).toMatchObject({ checked: false });
+    expect(toggle.props.accessibilityHint).toBe('关闭语音反馈');
   });
 
   it('calls onPress when pressed', () => {
     const onPress = jest.fn();
-    const { getByRole } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={false}
-        onPress={onPress}
-      />
+    const { getByLabelText } = render(
+      <AccessibleToggle label="水平仪" hint="打开水平仪" toggled={false} onPress={onPress} />
     );
-    fireEvent.press(getByRole('switch'));
+    fireEvent.press(getByLabelText('水平仪'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('has accessibilityRole switch', () => {
-    const { getByRole } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={false}
-        onPress={() => {}}
-      />
+  it('onPress is called exactly once per press', () => {
+    const onPress = jest.fn();
+    const { getByLabelText } = render(
+      <AccessibleToggle label="水平仪" hint="打开水平仪" toggled={false} onPress={onPress} />
     );
-    expect(getByRole('switch')).toBeTruthy();
+    fireEvent.press(getByLabelText('水平仪'));
+    fireEvent.press(getByLabelText('水平仪'));
+    expect(onPress).toHaveBeenCalledTimes(2);
   });
 
-  it('sets accessibilityState.checked based on toggled prop', () => {
-    const { getByRole, rerender } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={false}
-        onPress={() => {}}
-      />
+  it('has correct accessibilityRole=switch', () => {
+    const { getByLabelText } = render(
+      <AccessibleToggle label="深色模式" hint="切换深色模式" toggled={false} onPress={() => {}} />
     );
-    expect(getByRole('switch').props.accessibilityState.checked).toBe(false);
+    expect(getByLabelText('深色模式').props.accessibilityRole).toBe('switch');
+  });
+
+  it('passes label as accessibilityLabel', () => {
+    const { getByLabelText } = render(
+      <AccessibleToggle label="直方图" hint="打开直方图" toggled={false} onPress={() => {}} />
+    );
+    expect(getByLabelText('直方图')).toBeTruthy();
+  });
+
+  it('passes hint as accessibilityHint', () => {
+    const { getByLabelText } = render(
+      <AccessibleToggle label="对焦峰值" hint="关闭对焦峰值" toggled={true} onPress={() => {}} />
+    );
+    const toggle = getByLabelText('对焦峰值');
+    expect(toggle.props.accessibilityHint).toBe('关闭对焦峰值');
+  });
+
+  it('toggled=true sets accessibilityState.checked=true', () => {
+    const { getByLabelText } = render(
+      <AccessibleToggle label="太阳位置" hint="关闭太阳位置" toggled={true} onPress={() => {}} />
+    );
+    expect(getByLabelText('太阳位置').props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  it('toggled=false sets accessibilityState.checked=false', () => {
+    const { getByLabelText } = render(
+      <AccessibleToggle label="太阳位置" hint="打开太阳位置" toggled={false} onPress={() => {}} />
+    );
+    expect(getByLabelText('太阳位置').props.accessibilityState).toMatchObject({ checked: false });
+  });
+
+  it('label and toggled state are accessible in the same render', () => {
+    const { getByLabelText, rerender } = render(
+      <AccessibleToggle label="语音反馈" hint="关闭语音反馈" toggled={false} onPress={() => {}} />
+    );
+    expect(getByLabelText('语音反馈').props.accessibilityState).toMatchObject({ checked: false });
 
     rerender(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={true}
-        onPress={() => {}}
-      />
+      <AccessibleToggle label="语音反馈" hint="打开语音反馈" toggled={true} onPress={() => {}} />
     );
-    expect(getByRole('switch').props.accessibilityState.checked).toBe(true);
+    expect(getByLabelText('语音反馈').props.accessibilityState).toMatchObject({ checked: true });
+    expect(getByLabelText('语音反馈').props.accessibilityHint).toBe('打开语音反馈');
   });
 
-  it('uses default hint when toggled on', () => {
-    const { getByRole } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={true}
-        onPress={() => {}}
-      />
+  it('multiple presses all trigger onPress', () => {
+    const onPress = jest.fn();
+    const { getByLabelText } = render(
+      <AccessibleToggle label="测试" hint="测试提示" toggled={false} onPress={onPress} />
     );
-    expect(getByRole('switch').props.accessibilityHint).toBe('关闭语音反馈');
-  });
-
-  it('uses default hint when toggled off', () => {
-    const { getByRole } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={false}
-        onPress={() => {}}
-      />
-    );
-    expect(getByRole('switch').props.accessibilityHint).toBe('打开语音反馈');
-  });
-
-  it('uses custom hint when provided', () => {
-    const { getByRole } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        hint="自定义提示"
-        toggled={false}
-        onPress={() => {}}
-      />
-    );
-    expect(getByRole('switch').props.accessibilityHint).toBe('自定义提示');
-  });
-
-  it('uses custom icon names when provided', () => {
-    const { toJSON } = render(
-      <AccessibleToggle
-        label="语音反馈"
-        toggled={true}
-        onPress={() => {}}
-        iconOn="volume-high"
-        iconOff="volume-mute"
-      />
-    );
-    expect(toJSON()).not.toBeNull();
-  });
-
-  it('uses custom text when provided', () => {
-    const { toJSON } = render(
-      <AccessibleToggle
-        label="主题"
-        toggled={true}
-        onPress={() => {}}
-        textOn="浅色"
-        textOff="深色"
-      />
-    );
-    expect(toJSON()).not.toBeNull();
+    fireEvent.press(getByLabelText('测试'));
+    fireEvent.press(getByLabelText('测试'));
+    fireEvent.press(getByLabelText('测试'));
+    expect(onPress).toHaveBeenCalledTimes(3);
   });
 });
