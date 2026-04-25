@@ -183,6 +183,8 @@ export function CameraScreen() {
     const { score, reason } = computeScoreFromSuggestions(suggestions);
     capturedScoreRef.current = score;
     capturedScoreReasonRef.current = reason;
+    setLastCapturedScore(score);
+    setLastCapturedScoreReason(reason);
 
     recognizeSceneTag(base64).then(() => { setSceneTagVisible(true); setTimeout(() => setSceneTagVisible(false), 4000); });
     const gridPromptMap: Record<GridVariant, string> = { thirds: '三分法网格', golden: '黄金分割网格', diagonal: '对角线网格', spiral: '螺旋线网格', none: '无网格' };
@@ -197,7 +199,7 @@ export function CameraScreen() {
         setShowBurstSuggestion(true);
       }
     }, 100);
-  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions, recognizeSceneTag, rawMode, setSuggestions, setLoading, setShowBurstSuggestion, burstSuggestionText]);
+  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions, recognizeSceneTag, rawMode, setSuggestions, setLoading, setShowBurstSuggestion, burstSuggestionText, setLastCapturedScore, setLastCapturedScoreReason]);
 
   const { active: countdownActive, count: countdownCount, startCountdown, cancelCountdown } = useCountdown({ onComplete: doCapture });
 

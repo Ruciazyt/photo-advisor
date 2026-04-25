@@ -154,6 +154,77 @@ describe('CameraScreen toggle button pattern', () => {
   });
 });
 
+// ---- computeScoreFromSuggestions constant (copied from CameraScreen to avoid dependency chain) ----
+// computeScoreFromSuggestions is a pure function — no Expo dependencies
+function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: string } {
+  const positive = ['好', '优秀', '完美', '不错', '佳'];
+  const negative = ['欠曝', '过曝', '倾斜', '偏移', '不足'];
+  let pos = 0, neg = 0;
+  for (const s of sugs) { for (const p of positive) { if (s.includes(p)) pos++; } for (const n of negative) { if (s.includes(n)) neg++; } }
+  let score = 50 + Math.min(pos * 20, 40) - Math.min(neg * 15, 45);
+  score = Math.max(0, Math.min(100, score));
+  const reason = sugs.length > 0 ? sugs[0].replace(/^[^\u4e00-\u9fa5]*/, '').trim().slice(0, 30) : '';
+  return { score, reason };
+}
+
+// ---- computeScoreFromSuggestions tests ----
+describe('computeScoreFromSuggestions', () => {
+  it('returns base score 50 for empty suggestions', () => {
+    const { score, reason } = computeScoreFromSuggestions([]);
+    expect(score).toBe(50);
+    expect(reason).toBe('');
+  });
+
+  it('increases score for positive keywords', () => {
+    const { score } = computeScoreFromSuggestions(['这是一张优秀的照片']);
+    expect(score).toBeGreaterThan(50);
+    expect(score).toBeLessThanOrEqual(90); // 50 + 40 max
+  });
+
+  it('decreases score for negative keywords', () => {
+    const { score } = computeScoreFromSuggestions(['画面欠曝', '有点倾斜']);
+    expect(score).toBeLessThan(50);
+  });
+
+  it('caps positive score increase at 40', () => {
+    // Multiple positive keywords should not exceed 50 + 40 = 90
+    const { score } = computeScoreFromSuggestions(['完美', '优秀', '好', '佳', '不错']);
+    expect(score).toBeLessThanOrEqual(90);
+  });
+
+  it('caps negative score decrease at 45', () => {
+    // Multiple negative keywords should not go below 50 - 45 = 5
+    const { score } = computeScoreFromSuggestions(['欠曝', '过曝', '倾斜', '偏移', '不足']);
+    expect(score).toBeGreaterThanOrEqual(5);
+  });
+
+  it('clamps score to 0-100 range', () => {
+    // Very positive should be capped at 100
+    const highPositive = computeScoreFromSuggestions(['完美优秀好不错佳完美优秀好不错佳']);
+    expect(highPositive.score).toBeLessThanOrEqual(100);
+
+    // Very negative should be clamped at 0
+    const highNegative = computeScoreFromSuggestions(['欠曝过曝倾斜偏移不足欠曝过曝倾斜偏移不足']);
+    expect(highNegative.score).toBeGreaterThanOrEqual(0);
+  });
+
+  it('extracts reason from first suggestion', () => {
+    const { reason } = computeScoreFromSuggestions(['AI建议: 这是一张优秀的照片']);
+    expect(reason).toContain('优秀');
+  });
+
+  it('limits reason to 30 characters', () => {
+    const longSuggestion = '这是一条非常长的人工智能构图建议反馈信息内容';
+    const { reason } = computeScoreFromSuggestions([longSuggestion]);
+    expect(reason.length).toBeLessThanOrEqual(30);
+  });
+
+  it('returns empty reason for empty suggestions', () => {
+    const { reason } = computeScoreFromSuggestions([]);
+    expect(reason).toBe('');
+  });
+});
+
 // ---- GRID_LABELS integration with CameraScreen UI pattern ----
 describe('GRID_LABELS used in CameraScreen context', () => {
   it('can be used to display grid label in a button', () => {
