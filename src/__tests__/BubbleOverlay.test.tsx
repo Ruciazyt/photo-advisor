@@ -133,4 +133,15 @@ describe('BubbleOverlay', () => {
       expect(getByText(item.text)).toBeTruthy();
     });
   });
+
+  it('renders nothing when hidden=true regardless of visibleItems and loading', () => {
+    // hidden=true with non-empty visibleItems should still return null
+    const visibleItems = [makeItem({ id: 1, text: '[左上] 这个不应该渲染' })];
+    const { toJSON: toJSON1 } = render(<BubbleOverlay {...defaultProps} visibleItems={visibleItems} hidden={true} />);
+    expect(toJSON1()).toBeNull();
+
+    // hidden=true with loading=true should still return null
+    const { toJSON: toJSON2 } = render(<BubbleOverlay {...defaultProps} loading={true} hidden={true} />);
+    expect(toJSON2()).toBeNull();
+  });
 });
