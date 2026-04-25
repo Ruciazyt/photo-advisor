@@ -2,12 +2,11 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
 import { useHaptics } from '../hooks/useHaptics';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { FocusZoneButton } from './FocusZoneButton';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
 import Animated, {
@@ -21,7 +20,7 @@ export type { FocusGuideOverlayProps };
 
 // Focus zone depth approximations (0 = near, 1 = far/infinity)
 // These are heuristics since expo-camera focusDepth support varies by device
-const FOCUS_ZONES = [
+export const FOCUS_ZONES = [
   { label: '远景', sub: '∞', depth: 0.95, description: '风景/建筑' },
   { label: '标准', sub: '~3m', depth: 0.5, description: '人文/抓拍' },
   { label: '近拍', sub: '~0.5m', depth: 0.1, description: '微距/特写' },
@@ -29,40 +28,6 @@ const FOCUS_ZONES = [
 
 const DOF_WARNING_ZOOM = 2.0;
 const ZOOM_POLL_INTERVAL_MS = 300;
-
-// FocusZoneButton: extracted sub-component so useAccessibilityButton is called at top level (Rules of Hooks)
-interface FocusZoneButtonProps {
-  zone: (typeof FOCUS_ZONES)[number];
-  style: object;
-  labelStyle: object;
-  subStyle: object;
-  onPress: () => void;
-}
-
-function FocusZoneButton({ zone, style, labelStyle, subStyle, onPress }: FocusZoneButtonProps) {
-  const a11yProps = useAccessibilityButton({
-    label: `对焦区域：${zone.label}`,
-    hint:
-      zone.label === '远景'
-        ? '切换到远景对焦（无穷远），适合风景和建筑'
-        : zone.label === '标准'
-        ? '切换到标准对焦（约3米），适合人文和抓拍'
-        : '切换到近拍对焦（约0.5米），适合微距和特写',
-    role: 'button',
-    enabled: true,
-  });
-  return (
-    <TouchableOpacity
-      style={style}
-      onPress={onPress}
-      activeOpacity={0.7}
-      {...a11yProps}
-    >
-      <Text style={labelStyle}>{zone.label}</Text>
-      <Text style={subStyle}>{zone.sub}</Text>
-    </TouchableOpacity>
-  );
-}
 
 interface FocusRingProps {
   x: number;
