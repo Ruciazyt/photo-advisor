@@ -368,7 +368,7 @@ export function CameraTopBar({  gridVariant,
     focusPeakingSelector: {
       position: 'absolute',
       top: 60,
-      left: 300,
+      left: 360,
       zIndex: 10,
       backgroundColor: colors.topBarBg,
       borderRadius: 20,

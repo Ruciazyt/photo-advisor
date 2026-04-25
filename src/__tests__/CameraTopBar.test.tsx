@@ -196,4 +196,27 @@ describe('CameraTopBar', () => {
     const { getByTestId } = render(<CameraTopBar {...defaultProps} showSunOverlay={true} />);
     expect(getByTestId('sun-toggle')).toBeTruthy();
   });
+
+  it('focus guide and focus peaking buttons are both tappable when both are enabled (no overlap)', () => {
+    // Regression test: these two buttons previously shared the same left:300 position,
+    // causing the second button to block taps on the first.
+    const onFocusGuideToggle = jest.fn();
+    const onFocusPeakingToggle = jest.fn();
+    const { getByText } = render(
+      <CameraTopBar
+        {...defaultProps}
+        showFocusGuide={true}
+        onFocusGuideToggle={onFocusGuideToggle}
+        showFocusPeaking={true}
+        onFocusPeakingToggle={onFocusPeakingToggle}
+      />
+    );
+    // Both buttons must be findable and independently pressable
+    const focusGuideBtn = getByText('🎯 对焦');
+    const focusPeakingBtn = getByText('🎚️ 峰值');
+    fireEvent.press(focusGuideBtn);
+    fireEvent.press(focusPeakingBtn);
+    expect(onFocusGuideToggle).toHaveBeenCalledTimes(1);
+    expect(onFocusPeakingToggle).toHaveBeenCalledTimes(1);
+  });
 });
