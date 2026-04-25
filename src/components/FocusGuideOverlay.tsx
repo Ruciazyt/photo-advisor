@@ -30,6 +30,40 @@ const FOCUS_ZONES = [
 const DOF_WARNING_ZOOM = 2.0;
 const ZOOM_POLL_INTERVAL_MS = 300;
 
+// FocusZoneButton: extracted sub-component so useAccessibilityButton is called at top level (Rules of Hooks)
+interface FocusZoneButtonProps {
+  zone: (typeof FOCUS_ZONES)[number];
+  style: object;
+  labelStyle: object;
+  subStyle: object;
+  onPress: () => void;
+}
+
+function FocusZoneButton({ zone, style, labelStyle, subStyle, onPress }: FocusZoneButtonProps) {
+  const a11yProps = useAccessibilityButton({
+    label: `对焦区域：${zone.label}`,
+    hint:
+      zone.label === '远景'
+        ? '切换到远景对焦（无穷远），适合风景和建筑'
+        : zone.label === '标准'
+        ? '切换到标准对焦（约3米），适合人文和抓拍'
+        : '切换到近拍对焦（约0.5米），适合微距和特写',
+    role: 'button',
+    enabled: true,
+  });
+  return (
+    <TouchableOpacity
+      style={style}
+      onPress={onPress}
+      activeOpacity={0.7}
+      {...a11yProps}
+    >
+      <Text style={labelStyle}>{zone.label}</Text>
+      <Text style={subStyle}>{zone.sub}</Text>
+    </TouchableOpacity>
+  );
+}
+
 interface FocusRingProps {
   x: number;
   y: number;
@@ -269,26 +303,14 @@ export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideO
         {/* Focus zone buttons — bottom area */}
         <View style={dynamicStyles.zoneButtonsContainer}>
           {FOCUS_ZONES.map(zone => (
-            <TouchableOpacity
+            <FocusZoneButton
               key={zone.label}
+              zone={zone}
               style={dynamicStyles.zoneButton}
+              labelStyle={dynamicStyles.zoneButtonLabel}
+              subStyle={dynamicStyles.zoneButtonSub}
               onPress={() => handleFocusZonePress(zone)}
-              activeOpacity={0.7}
-              {...useAccessibilityButton({
-                label: `对焦区域：${zone.label}`,
-                hint:
-                  zone.label === '远景'
-                    ? '切换到远景对焦（无穷远），适合风景和建筑'
-                    : zone.label === '标准'
-                    ? '切换到标准对焦（约3米），适合人文和抓拍'
-                    : '切换到近拍对焦（约0.5米），适合微距和特写',
-                role: 'button',
-                enabled: true,
-              })}
-            >
-              <Text style={dynamicStyles.zoneButtonLabel}>{zone.label}</Text>
-              <Text style={dynamicStyles.zoneButtonSub}>{zone.sub}</Text>
-            </TouchableOpacity>
+            />
           ))}
         </View>
 
