@@ -339,6 +339,7 @@ export interface AppSettings {
   showFocusPeaking: boolean;
   showSunPosition: boolean;
   showFocusGuide: boolean;
+  showBubbleChat: boolean;
   imageQualityPreset: ImageQualityPreset;
 }
 

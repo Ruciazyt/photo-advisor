@@ -138,10 +138,14 @@ export interface BubbleOverlayProps {
   onDismiss: (id: number) => void;
   onDismissAll: () => void;
   onBubbleAppear?: (text: string) => void;
+  /** When true, BubbleOverlay renders nothing regardless of visibleItems */
+  hidden?: boolean;
 }
 
-export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll }: BubbleOverlayProps) {
+export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll, hidden }: BubbleOverlayProps) {
   const { colors } = useTheme();
+
+  if (hidden) return null;
 
   const loadingTextStyle = useMemo(() => [
     { color: colors.accent },

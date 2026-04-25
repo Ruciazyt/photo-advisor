@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showFocusPeaking: false,
   showSunPosition: false,
   showFocusGuide: true,
+  showBubbleChat: true,
   imageQualityPreset: 'balanced',
 };
 

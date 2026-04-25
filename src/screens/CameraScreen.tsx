@@ -115,6 +115,7 @@ export function CameraScreen() {
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [showFocusPeaking, setShowFocusPeaking] = useState(false);
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
+  const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
@@ -288,6 +289,7 @@ export function CameraScreen() {
       setShowFocusGuide(settings.showFocusGuide);
       setShowFocusPeaking(settings.showFocusPeaking);
       setShowSunOverlay(settings.showSunPosition);
+      setShowBubbleChat(settings.showBubbleChat ?? true);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
@@ -363,7 +365,7 @@ export function CameraScreen() {
         />
         <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
       </CameraView>
-      <BubbleOverlay visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); keypointsHandleDismissAll(); }} />
+      <BubbleOverlay hidden={!showBubbleChat} visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); keypointsHandleDismissAll(); }} />
       <TimerSelectorModal
         visible={showTimerModal}
         selectedDuration={timerDuration}
