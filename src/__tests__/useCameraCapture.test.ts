@@ -3,6 +3,7 @@
  */
 import { Platform } from 'react-native';
 import { parseSuggestions } from '../hooks/useCameraCapture';
+import type { AnthropicStreamCallback, StreamCallback } from '../types';
 
 // --- Mock modules before any imports ---
 jest.mock('react-native', () => ({
@@ -584,10 +585,10 @@ describe('runAnalysis', () => {
     const onLoadingChange = jest.fn();
 
     loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
-    analyzeImageAnthropic.mockImplementation(async (_base64, _apiKey, _model, onChunk) => {
-      // Simulate streaming two chunks
-      onChunk('第一句完整的话。');
-      onChunk('第二句也完整！');
+    analyzeImageAnthropic.mockImplementation(async (_base64: string, _apiKey: string, _model: string, onChunk: AnthropicStreamCallback) => {
+      // Simulate streaming two chunks (false = not done yet)
+      onChunk('第一句完整的话。', false);
+      onChunk('第二句也完整！', false);
     });
 
     const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
@@ -626,10 +627,11 @@ describe('runAnalysis', () => {
     const suggestionCalls = onSuggestionsChange.mock.calls;
     expect(suggestionCalls.length).toBeGreaterThanOrEqual(1);
     // All suggestion calls should only contain empty array (initial state) — no error content
-    const hasErrorSuggestion = suggestionCalls.some((call: unknown[]) => {
-      const arg = call[0] as (prev: string[]) => string[] | string;
+    const hasErrorSuggestion = (suggestionCalls as Array<[unknown]>).some((call) => {
+      const arg = call[0];
       if (typeof arg === 'function') return false;
-      return Array.isArray(arg) && arg.some((s: string) => s.includes('错误'));
+      const arr = arg as string[];
+      return Array.isArray(arr) && arr.some((s) => (s as string).includes('错误'));
     });
     expect(hasErrorSuggestion).toBe(false);
   });
@@ -641,7 +643,7 @@ describe('runAnalysis', () => {
     const onLoadingChange = jest.fn();
 
     loadApiConfig.mockResolvedValue({ apiType: 'openai', apiKey: 'test-key', model: 'gpt-4', baseUrl: 'https://api.openai.com' });
-    streamChatCompletion.mockImplementation(async (_apiKey, _baseUrl, _model, _base64, onChunk) => {
+    streamChatCompletion.mockImplementation(async (_apiKey: string, _baseUrl: string, _model: string, _base64: string, onChunk: StreamCallback) => {
       // Simulate streaming: non-done chunks then a final done=true chunk
       onChunk('这是一段分析。', false);
       onChunk('继续补充内容！', false);
@@ -670,8 +672,8 @@ describe('runAnalysis', () => {
     const onLoadingChange = jest.fn();
 
     loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
-    analyzeImageAnthropic.mockImplementation(async (_base64, _apiKey, _model, onChunk) => {
-      onChunk('结果。');
+    analyzeImageAnthropic.mockImplementation(async (_base64: string, _apiKey: string, _model: string, onChunk: AnthropicStreamCallback) => {
+      onChunk('结果。', false);
     });
 
     const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
@@ -692,7 +694,7 @@ describe('runAnalysis', () => {
     const onLoadingChange = jest.fn();
 
     loadApiConfig.mockResolvedValue({ apiType: 'openai', apiKey: 'test-key', model: 'gpt-4', baseUrl: 'https://api.openai.com' });
-    streamChatCompletion.mockImplementation(async (_apiKey, _baseUrl, _model, _base64, onChunk) => {
+    streamChatCompletion.mockImplementation(async (_apiKey: string, _baseUrl: string, _model: string, _base64: string, onChunk: StreamCallback) => {
       onChunk('', true);
     });
 
@@ -715,12 +717,12 @@ describe('runAnalysis', () => {
     const onLoadingChange = jest.fn();
 
     loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
-    analyzeImageAnthropic.mockImplementation(async (_base64, _apiKey, _model, onChunk) => {
+    analyzeImageAnthropic.mockImplementation(async (_base64: string, _apiKey: string, _model: string, onChunk: AnthropicStreamCallback) => {
       // Stream: first chunk ends with 。(complete), second chunk adds another complete sentence ending with ！
-      onChunk('第一句完整的话。');
-      onChunk('第二句也完整！');
+      onChunk('第一句完整的话。', false);
+      onChunk('第二句也完整！', false);
       // Third chunk with incomplete content
-      onChunk('还在输入中');
+      onChunk('还在输入中', false);
     });
 
     const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
