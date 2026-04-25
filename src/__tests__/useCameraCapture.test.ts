@@ -13,6 +13,7 @@ jest.mock('react-native', () => ({
       captureRAW: jest.fn(),
     },
   },
+  Alert: { alert: jest.fn() },
 }));
 
 jest.mock('expo-file-system/legacy', () => ({
@@ -58,6 +59,7 @@ jest.mock('../services/settings', () => ({
 jest.mock('../components/KeypointOverlay', () => ({
   KeypointOverlay: 'KeypointOverlay',
   Keypoint: {},
+  bubbleTextToKeypoint: jest.fn().mockReturnValue(null),
 }));
 
 // Import after mocks are set up
@@ -567,5 +569,193 @@ describe('capturePreviewFrame', () => {
 
     const output = await result.current.capturePreviewFrame();
     expect(output).toBeNull();
+  });
+});
+
+// --- runAnalysis tests ---
+describe('runAnalysis', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('calls analyzeImageAnthropic when apiType is minimax, calls onLoadingChange(true) then (false), updates suggestions via onSuggestionsChange', async () => {
+    const { loadApiConfig, analyzeImageAnthropic } = require('../services/api');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
+    analyzeImageAnthropic.mockImplementation(async (_base64, _apiKey, _model, onChunk) => {
+      // Simulate streaming two chunks
+      onChunk('第一句完整的话。');
+      onChunk('第二句也完整！');
+    });
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64');
+
+    expect(loadApiConfig).toHaveBeenCalled();
+    expect(analyzeImageAnthropic).toHaveBeenCalledWith(
+      'test-base64',
+      'test-key',
+      'claude-3',
+      expect.any(Function),
+      undefined
+    );
+    expect(onLoadingChange).toHaveBeenCalledWith(true);
+    // onLoadingChange(false) is called after stream ends
+    expect(onLoadingChange).toHaveBeenCalledWith(false);
+    // Suggestions updated via onSuggestionsChange (may be called multiple times)
+    expect(onSuggestionsChange).toHaveBeenCalled();
+  });
+
+  it('shows Alert.alert when loadApiConfig returns null', async () => {
+    const { loadApiConfig } = require('../services/api');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue(null);
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64');
+
+    const Alert = require('react-native').Alert;
+    expect(Alert.alert).toHaveBeenCalledWith('请先在设置中配置API');
+    expect(onLoadingChange).toHaveBeenCalledWith(true);
+    expect(onLoadingChange).toHaveBeenCalledWith(false);
+    // onSuggestionsChange is called with [] at the start of runAnalysis, but no actual suggestions are added
+    const suggestionCalls = onSuggestionsChange.mock.calls;
+    expect(suggestionCalls.length).toBeGreaterThanOrEqual(1);
+    // All suggestion calls should only contain empty array (initial state) — no error content
+    const hasErrorSuggestion = suggestionCalls.some((call: unknown[]) => {
+      const arg = call[0] as (prev: string[]) => string[] | string;
+      if (typeof arg === 'function') return false;
+      return Array.isArray(arg) && arg.some((s: string) => s.includes('错误'));
+    });
+    expect(hasErrorSuggestion).toBe(false);
+  });
+
+  it('calls streamChatCompletion when apiType is not minimax (openai style)', async () => {
+    const { loadApiConfig, streamChatCompletion } = require('../services/api');
+    const { Alert } = require('react-native');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue({ apiType: 'openai', apiKey: 'test-key', model: 'gpt-4', baseUrl: 'https://api.openai.com' });
+    streamChatCompletion.mockImplementation(async (_apiKey, _baseUrl, _model, _base64, onChunk) => {
+      // Simulate streaming: non-done chunks then a final done=true chunk
+      onChunk('这是一段分析。', false);
+      onChunk('继续补充内容！', false);
+      onChunk('', true); // done=true signals end
+    });
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64');
+
+    expect(streamChatCompletion).toHaveBeenCalledWith(
+      'test-key',
+      'https://api.openai.com',
+      'gpt-4',
+      'test-base64',
+      expect.any(Function),
+      undefined
+    );
+    expect(onLoadingChange).toHaveBeenCalledWith(true);
+    expect(onLoadingChange).toHaveBeenCalledWith(false);
+    expect(onSuggestionsChange).toHaveBeenCalled();
+  });
+
+  it('passes extraPrompt to analyzeImageAnthropic when provided', async () => {
+    const { loadApiConfig, analyzeImageAnthropic } = require('../services/api');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
+    analyzeImageAnthropic.mockImplementation(async (_base64, _apiKey, _model, onChunk) => {
+      onChunk('结果。');
+    });
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64', '请重点关注构图');
+
+    expect(analyzeImageAnthropic).toHaveBeenCalledWith(
+      'test-base64',
+      'test-key',
+      'claude-3',
+      expect.any(Function),
+      '请重点关注构图'
+    );
+  });
+
+  it('passes extraPrompt to streamChatCompletion when provided', async () => {
+    const { loadApiConfig, streamChatCompletion } = require('../services/api');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue({ apiType: 'openai', apiKey: 'test-key', model: 'gpt-4', baseUrl: 'https://api.openai.com' });
+    streamChatCompletion.mockImplementation(async (_apiKey, _baseUrl, _model, _base64, onChunk) => {
+      onChunk('', true);
+    });
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64', '重点看光线');
+
+    expect(streamChatCompletion).toHaveBeenCalledWith(
+      'test-key',
+      'https://api.openai.com',
+      'gpt-4',
+      'test-base64',
+      expect.any(Function),
+      '重点看光线'
+    );
+  });
+
+  it('handles parseSuggestions correctly — splits on Chinese punctuation', async () => {
+    const { loadApiConfig, analyzeImageAnthropic } = require('../services/api');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
+    analyzeImageAnthropic.mockImplementation(async (_base64, _apiKey, _model, onChunk) => {
+      // Stream: first chunk ends with 。(complete), second chunk adds another complete sentence ending with ！
+      onChunk('第一句完整的话。');
+      onChunk('第二句也完整！');
+      // Third chunk with incomplete content
+      onChunk('还在输入中');
+    });
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64');
+
+    // Verify suggestions were accumulated (parseSuggestions splits on Chinese punctuation)
+    // The first two complete sentences should be processed, third incomplete stays in buffer
+    expect(onSuggestionsChange).toHaveBeenCalled();
+    const suggestionCalls = onSuggestionsChange.mock.calls;
+    // At least one call should have added suggestions to state
+    const hasSuggestions = suggestionCalls.some((call: unknown[]) => {
+      const arg = call[0] as (prev: string[]) => string[];
+      if (typeof arg === 'function') {
+        const applied = arg([]);
+        return applied.length > 0;
+      }
+      return false;
+    });
+    expect(hasSuggestions).toBe(true);
+  });
+
+  it('handles API error — sets loading false and shows error in suggestions', async () => {
+    const { loadApiConfig, analyzeImageAnthropic } = require('../services/api');
+    const onSuggestionsChange = jest.fn();
+    const onLoadingChange = jest.fn();
+
+    loadApiConfig.mockResolvedValue({ apiType: 'minimax', apiKey: 'test-key', model: 'claude-3' });
+    analyzeImageAnthropic.mockRejectedValue(new Error('network error'));
+
+    const { result } = renderUseCameraCapture({ onSuggestionsChange, onLoadingChange });
+    await result.current.runAnalysis('test-base64');
+
+    expect(onLoadingChange).toHaveBeenCalledWith(true);
+    expect(onLoadingChange).toHaveBeenCalledWith(false);
+    // Error message should be set in suggestions
+    expect(onSuggestionsChange).toHaveBeenCalledWith([expect.stringContaining('network error')]);
   });
 });
