@@ -43,11 +43,33 @@ export function calculateSunPosition(lat: number, lng: number, date: Date) {
   const jSunset = jTransit + omega / 360;
 
   // Convert JD to local time
-  const sunrise = jdToDateTime(jSunrise, date);
-  const sunset = jdToDateTime(jSunset, date);
+  const sunrise = jdToDateTime(jSunrise);
+  const sunset = jdToDateTime(jSunset);
+
+  // Blue hour: sun altitude between -6° and -4°
+  // Morning blue hour: before sunrise (sun rises from -6° to -4° to 0°)
+  // Evening blue hour: after sunset (sun sets from 0° to -4° to -6°)
+  const calcBlueHourTime = (altTarget: number) => {
+    const cosOmegaBlue = (Math.sin(altTarget * Math.PI / 180) - Math.sin(latRad) * sinDec) /
+      (Math.cos(latRad) * Math.cos(dec));
+    const clampedCosOmegaBlue = Math.max(-1, Math.min(1, cosOmegaBlue));
+    return Math.acos(clampedCosOmegaBlue) * (180 / Math.PI);
+  };
+
+  const omegaBlueStart = calcBlueHourTime(-6); // -6° = blue hour start
+  const omegaBlueEnd = calcBlueHourTime(-4); // -4° = blue hour end
+
+  const jBlueHourMorningStart = jTransit - omegaBlueStart / 360;
+  const jBlueHourMorningEnd = jTransit - omegaBlueEnd / 360;
+  const jBlueHourEveningStart = jTransit + omegaBlueEnd / 360;
+  const jBlueHourEveningEnd = jTransit + omegaBlueStart / 360;
+
+  const blueHourMorningStart = jdToDateTime(jBlueHourMorningStart);
+  const blueHourMorningEnd = jdToDateTime(jBlueHourMorningEnd);
+  const blueHourEveningStart = jdToDateTime(jBlueHourEveningStart);
+  const blueHourEveningEnd = jdToDateTime(jBlueHourEveningEnd);
 
   // Golden hour: sun altitude between 0° and 6° (roughly ±1 hour from sunrise/sunset)
-  // Blue hour: sun altitude between -6° and -4°
   const goldenHourMorningStart = sunrise;
   const goldenHourMorningEnd = addMinutes(sunrise, 60);
   const goldenHourEveningStart = addMinutes(sunset, -60);
@@ -76,6 +98,10 @@ export function calculateSunPosition(lat: number, lng: number, date: Date) {
     goldenHourMorningEnd,
     goldenHourEveningStart,
     goldenHourEveningEnd,
+    blueHourMorningStart,
+    blueHourMorningEnd,
+    blueHourEveningStart,
+    blueHourEveningEnd,
   };
 }
 
@@ -93,14 +119,10 @@ export function jdToUnix(jd: number): number {
   return (jd - 2440587.5) * 86400;
 }
 
-export function jdToDateTime(jd: number, refDate: Date): Date {
-  const ms = (jd - 2451545.0) * 86400000;
-  const d = new Date(refDate.getTime() + ms);
-  // Clamp to today
-  const today = new Date(refDate);
-  today.setHours(0, 0, 0, 0);
-  if (d < today) d.setTime(today.getTime());
-  return d;
+export function jdToDateTime(jd: number): Date {
+  // JDN is days since 1970-01-01 00:00 UTC (JDN 2440587.5)
+  // Convert: ms = (jd - 2440587.5) * 86400000
+  return new Date((jd - 2440587.5) * 86400000);
 }
 
 export function addMinutes(date: Date, minutes: number): Date {
@@ -185,6 +207,10 @@ export function useSunPosition(updateIntervalMs = 60000) {
         (nowMs >= pos.goldenHourMorningStart.getTime() && nowMs <= pos.goldenHourMorningEnd.getTime()) ||
         (nowMs >= pos.goldenHourEveningStart.getTime() && nowMs <= pos.goldenHourEveningEnd.getTime());
 
+      const isBlueHour =
+        (nowMs >= pos.blueHourMorningStart.getTime() && nowMs <= pos.blueHourMorningEnd.getTime()) ||
+        (nowMs >= pos.blueHourEveningStart.getTime() && nowMs <= pos.blueHourEveningEnd.getTime());
+
       let goldenHourStart: string | null = null;
       let goldenHourEnd: string | null = null;
       let blueHourStart: string | null = null;
@@ -206,9 +232,34 @@ export function useSunPosition(updateIntervalMs = 60000) {
         goldenHourEnd = formatTime(tomorrowPos.goldenHourMorningEnd);
       }
 
+      // Find next blue hour
+      if (nowMs < pos.blueHourMorningStart.getTime()) {
+        blueHourStart = formatTime(pos.blueHourMorningStart);
+        blueHourEnd = formatTime(pos.blueHourMorningEnd);
+      } else if (nowMs < pos.blueHourEveningStart.getTime()) {
+        blueHourStart = formatTime(pos.blueHourEveningStart);
+        blueHourEnd = formatTime(pos.blueHourEveningEnd);
+      } else {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowPos = calculateSunPosition(coords.latitude, coords.longitude, tomorrow);
+        blueHourStart = formatTime(tomorrowPos.blueHourMorningStart);
+        blueHourEnd = formatTime(tomorrowPos.blueHourMorningEnd);
+      }
+
       const advice = getSunAdvice(altitude, azimuth);
       const direction = getAzimuthDirection(azimuth);
       const dirAdvice = getDirectionAdvice(altitude, azimuth);
+
+      // Build advice string with phase indicators
+      let adviceText = advice;
+      if (isBlueHour) {
+        adviceText = `🌌 蓝调时刻！${dirAdvice}`;
+      } else if (isGoldenHour) {
+        adviceText = `🌅 黄金时刻！${dirAdvice}`;
+      } else {
+        adviceText = `${advice} | 朝${direction}`;
+      }
 
       setSunData({
         available: true,
@@ -219,7 +270,7 @@ export function useSunPosition(updateIntervalMs = 60000) {
         sunAltitude: altitude,
         sunAzimuth: azimuth,
         direction,
-        advice: isGoldenHour ? `🌅 黄金时刻！${dirAdvice}` : `${advice} | 朝${direction}`,
+        advice: adviceText,
       });
     } catch {
       setSunData(prev => ({ ...prev, advice: '太阳计算不可用', available: false }));
