@@ -16,7 +16,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import jpeg from 'jpeg-js';
 
 // ---- Exported for testing ----
-export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS };
+export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS, samplePixels };
 
 // ---- Public interface ----
 

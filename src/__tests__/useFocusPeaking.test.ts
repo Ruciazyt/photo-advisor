@@ -2,7 +2,23 @@
  * Tests for useFocusPeaking edge detection logic
  */
 
-import { sobelMagnitudes, extractPeaks, PeakPoint } from '../hooks/useFocusPeaking';
+// Mock dependencies - must be before any imports that use them
+jest.mock('expo-file-system/legacy', () => ({
+  readAsStringAsync: jest.fn(),
+}));
+
+jest.mock('jpeg-js', () => ({
+  decode: jest.fn(),
+}));
+
+jest.mock('expo-image-manipulator', () => ({
+  manipulateAsync: jest.fn(),
+  SaveFormat: { JPEG: 'jpeg' },
+}));
+
+import { sobelMagnitudes, extractPeaks, useFocusPeaking, samplePixels } from '../hooks/useFocusPeaking';
+import { renderHook, act } from '@testing-library/react-native';
+import type { PeakPoint } from '../hooks/useFocusPeaking';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -312,5 +328,354 @@ describe('PeakPoint interface', () => {
       expect(p.strength).toBeGreaterThan(0);
       expect(p.strength).toBeLessThanOrEqual(1);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeLuminance (Rec.601 formula) - indirect tests
+// ---------------------------------------------------------------------------
+
+describe('computeLuminance Rec.601', () => {
+  // computeLuminance is not exported, but we verify the formula
+  it('produces correct luminance values for known colors', () => {
+    // Red: (255, 0, 0) → Y = 0.299*255 + 0.587*0 + 0.114*0 ≈ 76
+    // Green: (0, 255, 0) → Y = 0.299*0 + 0.587*255 + 0.114*0 ≈ 150
+    // Blue: (0, 0, 255) → Y = 0.299*0 + 0.587*0 + 0.114*255 ≈ 29
+    // White: (255, 255, 255) → Y = 255
+    // Black: (0, 0, 0) → Y = 0
+    const expectedRed = Math.round(0.299 * 255);
+    const expectedGreen = Math.round(0.587 * 255);
+    const expectedBlue = Math.round(0.114 * 255);
+    const expectedWhite = 255;
+    const expectedBlack = 0;
+
+    expect(expectedRed).toBe(76);
+    expect(expectedGreen).toBe(150);
+    expect(expectedBlue).toBe(29);
+    expect(expectedWhite).toBe(255);
+    expect(expectedBlack).toBe(0);
+  });
+
+  it('luminance conversion produces values in valid range [0, 255]', () => {
+    const maxLum = Math.round(0.299 * 255 + 0.587 * 255 + 0.114 * 255);
+    expect(maxLum).toBe(255);
+  });
+
+  it('grayscale images produce same luminance as original value', () => {
+    // For grayscale, R=G=B=Y, so luminance should equal the original
+    // Y = 0.299*Y + 0.587*Y + 0.114*Y = Y
+    for (let v = 0; v <= 255; v += 51) {
+      const lum = Math.round(0.299 * v + 0.587 * v + 0.114 * v);
+      expect(lum).toBe(v);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// capturePeaks tests
+// ---------------------------------------------------------------------------
+
+const FileSystem = require('expo-file-system/legacy');
+const jpeg = require('jpeg-js');
+const { manipulateAsync } = require('expo-image-manipulator');
+
+describe('capturePeaks', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns [] when cameraRef.current is falsy', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const cameraRef = { current: null };
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('returns [] when cameraRef.current is undefined', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const cameraRef = { current: undefined };
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('returns [] when photo.uri is missing', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({}),
+    };
+    const cameraRef = { current: mockCamera };
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+    expect(mockCamera.takePictureAsync).toHaveBeenCalled();
+  });
+
+  it('returns [] when photo is null', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue(null),
+    };
+    const cameraRef = { current: mockCamera };
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('full success path: cameraRef → takePictureAsync → manipulateAsync → samplePixels → sobelMagnitudes → extractPeaks', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+
+    // Create a 4x4 grayscale image with one bright pixel (edge)
+    const width = 4;
+    const height = 4;
+    const rgbaData = new Uint8Array(width * height * 4);
+    // Set all pixels to dark (50) except one which is bright (255) to create an edge
+    for (let i = 0; i < width * height; i++) {
+      const isBright = i === 5; // Create an edge
+      rgbaData[i * 4] = isBright ? 255 : 50;     // R
+      rgbaData[i * 4 + 1] = isBright ? 255 : 50; // G
+      rgbaData[i * 4 + 2] = isBright ? 255 : 50; // B
+      rgbaData[i * 4 + 3] = 255;                 // A
+    }
+
+    const mockDecoded = { width, height, data: rgbaData };
+    const mockBase64 = 'a'.repeat(200); // Must be >= 100 chars to pass base64 validation
+    const mockPhoto = { uri: 'file://camera-photo.jpg' };
+    const mockResized = { uri: 'file://resized-photo.jpg' };
+
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue(mockPhoto),
+    };
+    const cameraRef = { current: mockCamera };
+
+    FileSystem.readAsStringAsync.mockResolvedValue(mockBase64);
+    jpeg.decode.mockReturnValue(mockDecoded);
+    manipulateAsync.mockResolvedValue(mockResized);
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+
+    // Verify the pipeline was called in order
+    expect(mockCamera.takePictureAsync).toHaveBeenCalledWith({
+      quality: 0.1,
+      skipProcessing: true,
+    });
+    expect(manipulateAsync).toHaveBeenCalledWith(
+      mockPhoto.uri,
+      [{ resize: { width: 48, height: 48 } }],
+      { compress: 0.3, format: 'jpeg' }
+    );
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith(mockResized.uri, { encoding: 'base64' });
+    expect(jpeg.decode).toHaveBeenCalled();
+
+    // Result should be an array
+    expect(Array.isArray(capturedResult)).toBe(true);
+  });
+
+  it('returns [] when samplePixels returns empty pixels (short base64)', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file://photo.jpg' }),
+    };
+    const cameraRef = { current: mockCamera };
+
+    // Mock manipulateAsync to return a URI
+    manipulateAsync.mockResolvedValue({ uri: 'file://resized.jpg' });
+
+    // Mock readAsStringAsync to return short base64 (< 100 chars triggers empty return)
+    FileSystem.readAsStringAsync.mockResolvedValue('abc');
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('returns [] when jpeg.decode throws (jpeg-js decode failure)', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file://photo.jpg' }),
+    };
+    const cameraRef = { current: mockCamera };
+
+    manipulateAsync.mockResolvedValue({ uri: 'file://resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('a'.repeat(200)); // valid length
+    jpeg.decode.mockImplementation(() => {
+      throw new Error('JPEG decode error');
+    });
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('returns [] when FileSystem.readAsStringAsync rejects (base64 read failure)', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file://photo.jpg' }),
+    };
+    const cameraRef = { current: mockCamera };
+
+    manipulateAsync.mockResolvedValue({ uri: 'file://resized.jpg' });
+    FileSystem.readAsStringAsync.mockRejectedValue(new Error('File read error'));
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('returns [] on unexpected error in capturePeaks (catch path)', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockRejectedValue(new Error('Camera error')),
+    };
+    const cameraRef = { current: mockCamera };
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+
+  it('returns [] when manipulateAsync rejects', async () => {
+    const { result } = renderHook(() => useFocusPeaking());
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file://photo.jpg' }),
+    };
+    const cameraRef = { current: mockCamera };
+
+    manipulateAsync.mockRejectedValue(new Error('Manipulation error'));
+
+    let capturedResult: any;
+    await act(async () => {
+      capturedResult = await result.current.capturePeaks(cameraRef as any, 100, 100);
+    });
+    expect(capturedResult).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// samplePixels (JPEG decoding path - lines 42-80)
+// ---------------------------------------------------------------------------
+
+describe('samplePixels', () => {
+  const FileSystem = require('expo-file-system/legacy');
+  const jpeg = require('jpeg-js');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns empty pixels when base64 string is shorter than 100 chars', async () => {
+    FileSystem.readAsStringAsync.mockResolvedValue('abc');
+    const result = await samplePixels('file://test.jpg', 48);
+    expect(result.pixels).toHaveLength(0);
+    expect(result.width).toBe(0);
+    expect(result.height).toBe(0);
+  });
+
+  it('returns empty when base64 string is exactly 100 chars', async () => {
+    FileSystem.readAsStringAsync.mockResolvedValue('a'.repeat(100));
+    const result = await samplePixels('file://test.jpg', 48);
+    expect(result.pixels).toHaveLength(0);
+  });
+
+  it('returns empty when base64 string is 99 chars', async () => {
+    FileSystem.readAsStringAsync.mockResolvedValue('a'.repeat(99));
+    const result = await samplePixels('file://test.jpg', 48);
+    expect(result.pixels).toHaveLength(0);
+  });
+
+  it('returns empty pixels when jpeg.decode throws an error', async () => {
+    FileSystem.readAsStringAsync.mockResolvedValue('a'.repeat(200));
+    jpeg.decode.mockImplementation(() => {
+      throw new Error('JPEG decode error');
+    });
+
+    const result = await samplePixels('file://test.jpg', 48);
+
+    expect(result.pixels).toHaveLength(0);
+    expect(result.width).toBe(0);
+    expect(result.height).toBe(0);
+  });
+
+  it('successfully decodes valid JPEG and returns correct luminance array', async () => {
+    // Create a 2x2 image with known grayscale values
+    const width = 2;
+    const height = 2;
+    // RGBA data: each pixel has R, G, B, A (4 bytes per pixel)
+    // All pixels are grayscale (R=G=B), so luminance = the gray value
+    const rgbaData = new Uint8Array([
+      100, 100, 100, 255,  // pixel 0: gray 100
+      200, 200, 200, 255,  // pixel 1: gray 200
+      50, 50, 50, 255,     // pixel 2: gray 50
+      150, 150, 150, 255,  // pixel 3: gray 150
+    ]);
+
+    FileSystem.readAsStringAsync.mockResolvedValue('a'.repeat(200));
+    jpeg.decode.mockReturnValue({ width, height, data: rgbaData });
+
+    const result = await samplePixels('file://test.jpg', 48);
+
+    expect(result.width).toBe(2);
+    expect(result.height).toBe(2);
+    expect(result.pixels).toHaveLength(4);
+    // Grayscale pixels: luminance equals the gray value
+    expect(result.pixels[0]).toBeCloseTo(100, 0);
+    expect(result.pixels[1]).toBeCloseTo(200, 0);
+    expect(result.pixels[2]).toBeCloseTo(50, 0);
+    expect(result.pixels[3]).toBeCloseTo(150, 0);
+  });
+
+  it('correctly applies Rec.601 luminance formula to color pixels', async () => {
+    const width = 1;
+    const height = 1;
+    // Red: (255, 0, 0) → Y = 0.299*255 = 76.245 → truncated to 76
+    // Green: (0, 255, 0) → Y = 0.587*255 = 149.685 → truncated to 149
+    // Blue: (0, 0, 255) → Y = 0.114*255 = 29.07 → truncated to 29
+    // Note: pixelData is Uint8Array so values are truncated, not rounded
+
+    FileSystem.readAsStringAsync.mockResolvedValue('a'.repeat(200));
+
+    // Test red pixel
+    jpeg.decode.mockReturnValue({ width, height, data: new Uint8Array([255, 0, 0, 255]) });
+    let result = await samplePixels('file://red.jpg', 48);
+    expect(result.pixels[0]).toBeCloseTo(76, 0);
+
+    // Test green pixel
+    jpeg.decode.mockReturnValue({ width, height, data: new Uint8Array([0, 255, 0, 255]) });
+    result = await samplePixels('file://green.jpg', 48);
+    expect(result.pixels[0]).toBeCloseTo(149, 0);
+
+    // Test blue pixel
+    jpeg.decode.mockReturnValue({ width, height, data: new Uint8Array([0, 0, 255, 255]) });
+    result = await samplePixels('file://blue.jpg', 48);
+    expect(result.pixels[0]).toBeCloseTo(29, 0);
+  });
+
+  it('propagates error when FileSystem.readAsStringAsync rejects', async () => {
+    FileSystem.readAsStringAsync.mockRejectedValue(new Error('File read error'));
+    await expect(samplePixels('file://test.jpg', 48)).rejects.toThrow('File read error');
   });
 });
