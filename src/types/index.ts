@@ -445,6 +445,80 @@ export type ColorPalette = {
   gridAccent: string;
   countdownBg: string;
   countdownText: string;
+  countdownBorder: string;
+  // Composition score overlay
+  scoreS: string;
+  scoreA: string;
+  scoreB: string;
+  scoreC: string;
+  scoreD: string;
+  scoreOverlayBg: string;
+  scoreHintText: string;
+  scoreCardBg: string;
+  scoreCardBorder: string;
+  scoreLabelText: string;
+  scoreBarBg: string;
+  // ModeSelector
+  modeSelectorBg: string;
+  modeSelectorUnselected: string;
+  // CameraTopBar overlay
+  overlayBg: string;
+  // CameraTopBar selectors
+  topBarBg: string;
+  topBarText: string;
+  topBarTextSecondary: string;
+  topBarBorderInactive: string;
+  topBarBorderActive: string;
+  topBarSelectorBgActive: string;
+  topBarSelectorBorderActive: string;
+  bubbleBg: string;
+  bubbleText: string;
+  timerActiveBg: string;
+  timerActiveBorder: string;
+  timerPreviewBg: string;
+  timerBorder: string;
+  timerUnitText: string;
+  challengeActiveBg: string;
+  challengeActiveBorder: string;
+  challengeActiveText: string;
+  rawActiveBg: string;
+  rawActiveBorder: string;
+  rawActiveText: string;
+  focusGuideActiveBg: string;
+  focusGuideActiveBorder: string;
+  focusGuideActiveText: string;
+  voiceActiveBg: string;
+  burstIndicatorBg: string;
+  burstIndicatorText: string;
+  burstSuggestionBg: string;
+  burstSuggestionBorder: string;
+  histogramBg: string;
+  histogramBorder: string;
+  sunPanelBg: string;
+  sunPanelBorder: string;
+  sunCompassBg: string;
+  sunCompassText: string;
+  sunCompassCenter: string;
+  sunToggleActiveBg: string;
+  sunToggleActiveBorder: string;
+  toastBg: string;
+  favoriteIcon: string;
+  // ShareButton
+  shareButtonBg: string;
+  shareButtonBorder: string;
+  shareButtonDisabledText: string;
+  // StreamingDrawer
+  drawerBg: string;
+  drawerHandle: string;
+  drawerTextSecondary: string;
+  // GridSelectorModal
+  gridCardDisabledText: string;
+  // Sparkle colors
+  sparkleColors: string[];
+  // Star rating colors
+  starGreen: string;
+  starYellow: string;
+  starOrange: string;
 };
 
 export interface ThemeContextValue {
