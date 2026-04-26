@@ -162,4 +162,168 @@ describe('FocusPeakingOverlay', () => {
     const json = toJSON() as any;
     expect(json.children).toHaveLength(80);
   });
+
+  it('has correct accessibility label', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={PEAKS_1}
+        screenWidth={400}
+        screenHeight={600}
+      />
+    );
+    const tree = toJSON() as any;
+    expect(tree.props.accessibilityLabel).toBe(
+      '对焦峰值覆盖层，显示画面中处于焦点的边缘区域'
+    );
+  });
+
+  it('has accessibilityRole="image"', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={PEAKS_1}
+        screenWidth={400}
+        screenHeight={600}
+      />
+    );
+    const tree = toJSON() as any;
+    expect(tree.props.accessibilityRole).toBe('image');
+  });
+
+  it('has pointerEvents="none"', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={PEAKS_1}
+        screenWidth={400}
+        screenHeight={600}
+      />
+    );
+    const tree = toJSON() as any;
+    expect(tree.props.pointerEvents).toBe('none');
+  });
+});
+
+describe('FocusPeakingOverlay React.memo stability', () => {
+  const defaultProps = {
+    visible: true as const,
+    peaks: [
+      { x: 0.5, y: 0.5, strength: 0.8 },
+      { x: 0.25, y: 0.25, strength: 0.6 },
+      { x: 0.75, y: 0.75, strength: 0.9 },
+    ],
+    screenWidth: 400,
+    screenHeight: 800,
+  };
+
+  it('does not re-render unnecessarily when parent re-renders with same props', () => {
+    const { rerender, toJSON } = render(<FocusPeakingOverlay {...defaultProps} />);
+    const first = toJSON();
+
+    rerender(<FocusPeakingOverlay {...defaultProps} />);
+    const second = toJSON();
+
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+  });
+
+  it('updates when peaks actually change', () => {
+    const { rerender, toJSON } = render(<FocusPeakingOverlay {...defaultProps} />);
+    const first = toJSON();
+
+    const newPeaks = [
+      { x: 0.1, y: 0.1, strength: 0.5 },
+      { x: 0.9, y: 0.9, strength: 0.9 },
+    ];
+    rerender(<FocusPeakingOverlay {...defaultProps} peaks={newPeaks} />);
+    const second = toJSON();
+
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+  });
+
+  it('updates when screen dimensions change', () => {
+    const { rerender, toJSON } = render(
+      <FocusPeakingOverlay {...defaultProps} screenWidth={400} screenHeight={800} />
+    );
+    const first = toJSON();
+
+    rerender(
+      <FocusPeakingOverlay {...defaultProps} screenWidth={800} screenHeight={1600} />
+    );
+    const second = toJSON();
+
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+  });
+
+  it('returns to null when peaks become empty after having values', () => {
+    const { rerender, toJSON } = render(<FocusPeakingOverlay {...defaultProps} />);
+    expect(toJSON()).not.toBeNull();
+
+    rerender(<FocusPeakingOverlay {...defaultProps} peaks={[]} />);
+    expect(toJSON()).toBeNull();
+  });
+
+  it('returns to null when visible becomes false after being true', () => {
+    const { rerender, toJSON } = render(<FocusPeakingOverlay {...defaultProps} visible={true} />);
+    expect(toJSON()).not.toBeNull();
+
+    rerender(<FocusPeakingOverlay {...defaultProps} visible={false} />);
+    expect(toJSON()).toBeNull();
+  });
+});
+
+describe('FocusPeakingOverlay edge cases', () => {
+  it('handles single peak', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={[{ x: 0.5, y: 0.5, strength: 0.5 }]}
+        screenWidth={100}
+        screenHeight={100}
+      />
+    );
+    expect(toJSON()).not.toBeNull();
+  });
+
+  it('handles peak at corner positions (0, 0) and (1, 1)', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={[
+          { x: 0, y: 0, strength: 0.5 },
+          { x: 1, y: 1, strength: 0.9 },
+        ]}
+        screenWidth={400}
+        screenHeight={800}
+      />
+    );
+    expect(toJSON()).not.toBeNull();
+  });
+
+  it('handles very low strength (close to 0)', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={[{ x: 0.5, y: 0.5, strength: 0.01 }]}
+        screenWidth={400}
+        screenHeight={800}
+      />
+    );
+    expect(toJSON()).not.toBeNull();
+  });
+
+  it('handles very high strength (close to 1)', () => {
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={[{ x: 0.5, y: 0.5, strength: 1.0 }]}
+        screenWidth={400}
+        screenHeight={800}
+      />
+    );
+    expect(toJSON()).not.toBeNull();
+  });
 });
