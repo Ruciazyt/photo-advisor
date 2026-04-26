@@ -573,6 +573,233 @@ describe('capturePreviewFrame', () => {
   });
 });
 
+// --- takePicture JPEG path tests ---
+describe('takePicture', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns null when cameraRef.current is null', async () => {
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: null },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+    expect(output).toBeNull();
+  });
+
+  it('returns null when cameraReady is false even if cameraRef is set', async () => {
+    const mockCamera = { takePictureAsync: jest.fn() };
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: false,
+    });
+    const output = await result.current.takePicture(false);
+    expect(output).toBeNull();
+    expect(mockCamera.takePictureAsync).not.toHaveBeenCalled();
+  });
+
+  it('returns null when photo.uri is missing', async () => {
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: undefined }),
+    };
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+    expect(output).toBeNull();
+  });
+
+  it('JPEG path: returns { base64, uri } on successful capture with balanced preset', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const { loadAppSettings } = require('../services/settings');
+
+    loadAppSettings.mockResolvedValue({ imageQualityPreset: 'balanced' });
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('A'.repeat(2000));
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+
+    expect(output).toEqual({ base64: 'A'.repeat(2000), uri: 'file:///photo.jpg' });
+    expect(mockCamera.takePictureAsync).toHaveBeenCalledWith({ quality: 0.8 });
+    expect(manipulateAsync).toHaveBeenCalledWith(
+      'file:///photo.jpg',
+      [{ resize: { width: 1536 } }],
+      { compress: 0.8, format: 'jpeg' }
+    );
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('file:///resized.jpg', { encoding: 'base64' });
+  });
+
+  it('JPEG path: quality preset size maps to resizeWidth=1024 compress=0.7', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const { loadAppSettings } = require('../services/settings');
+
+    loadAppSettings.mockResolvedValue({ imageQualityPreset: 'size' });
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('A'.repeat(2000));
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    await result.current.takePicture(false);
+
+    expect(mockCamera.takePictureAsync).toHaveBeenCalledWith({ quality: 0.7 });
+    expect(manipulateAsync).toHaveBeenCalledWith(
+      'file:///photo.jpg',
+      [{ resize: { width: 1024 } }],
+      { compress: 0.7, format: 'jpeg' }
+    );
+  });
+
+  it('JPEG path: quality preset quality maps to resizeWidth=2048 compress=0.9', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const { loadAppSettings } = require('../services/settings');
+
+    loadAppSettings.mockResolvedValue({ imageQualityPreset: 'quality' });
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('A'.repeat(2000));
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    await result.current.takePicture(false);
+
+    expect(mockCamera.takePictureAsync).toHaveBeenCalledWith({ quality: 0.9 });
+    expect(manipulateAsync).toHaveBeenCalledWith(
+      'file:///photo.jpg',
+      [{ resize: { width: 2048 } }],
+      { compress: 0.9, format: 'jpeg' }
+    );
+  });
+
+  it('JPEG path: falls back to original uri when resize fails (manipulateAsync resolves but readAsStringAsync for resized throws)', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    // manipulateAsync succeeds but reading resized base64 throws → fallback to original
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync
+      .mockRejectedValueOnce(new Error('file read error')) // resized read fails
+      .mockResolvedValueOnce('A'.repeat(2000)); // original read succeeds
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+
+    expect(output).toEqual({ base64: 'A'.repeat(2000), uri: 'file:///photo.jpg' });
+    // Called twice: first for resized (failed), then for original (succeeded)
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledTimes(2);
+    expect(FileSystem.readAsStringAsync).toHaveBeenLastCalledWith('file:///photo.jpg', { encoding: 'base64' });
+  });
+
+  it('JPEG path: falls back to original uri when resized base64 is shorter than 1000 chars', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    // First call (resized) returns short base64, second call (original) returns long enough base64
+    FileSystem.readAsStringAsync
+      .mockResolvedValueOnce('ABC') // resized base64 too short
+      .mockResolvedValueOnce('A'.repeat(2000)); // original base64 OK
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+
+    expect(output).toEqual({ base64: 'A'.repeat(2000), uri: 'file:///photo.jpg' });
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledTimes(2);
+  });
+
+  it('JPEG path: returns null when both resized and original base64 are shorter than 1000 chars', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('AB');
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+
+    expect(output).toBeNull();
+  });
+
+  it('JPEG path: returns null when takePictureAsync throws', async () => {
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockRejectedValue(new Error('Camera error')),
+    };
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    const output = await result.current.takePicture(false);
+    expect(output).toBeNull();
+  });
+
+  it('JPEG path: falls back to JPEG when raw=true but captureRawNative returns null', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    const { manipulateAsync } = require('expo-image-manipulator');
+    const { loadAppSettings } = require('../services/settings');
+    const mockNativeModule = require('react-native').NativeModules.Camera2RawModule;
+
+    loadAppSettings.mockResolvedValue({ imageQualityPreset: 'balanced' });
+    // RAW capture returns null (not supported or failed)
+    mockNativeModule.captureRAW.mockResolvedValue(null);
+    // JPEG path works
+    const mockCamera = {
+      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
+    };
+    manipulateAsync.mockResolvedValue({ uri: 'file:///resized.jpg' });
+    FileSystem.readAsStringAsync.mockResolvedValue('A'.repeat(2000));
+
+    const { result } = renderUseCameraCapture({
+      cameraRef: { current: mockCamera },
+      cameraReady: true,
+    });
+    // raw=true on Android → tries RAW first, falls back to JPEG
+    const output = await result.current.takePicture(true);
+
+    expect(output).toEqual({ base64: 'A'.repeat(2000), uri: 'file:///photo.jpg' });
+    expect(mockNativeModule.captureRAW).toHaveBeenCalled();
+    expect(mockCamera.takePictureAsync).toHaveBeenCalled();
+  });
+});
+
 // --- runAnalysis tests ---
 describe('runAnalysis', () => {
   beforeEach(() => {
