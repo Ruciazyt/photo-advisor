@@ -361,3 +361,103 @@ describe('FocusPeakingOverlay edge cases', () => {
     expect(toJSON()).not.toBeNull();
   });
 });
+
+// Type-level test: CameraOverlaysProps.focusPeakingColor is correctly typed
+// and flows through to FocusPeakingOverlay via CameraOverlays
+describe('CameraOverlaysProps type alignment for focusPeakingColor', () => {
+  it('focusPeakingColor prop is typed as optional string on CameraOverlaysProps', () => {
+    // This test validates the type contract: CameraOverlaysProps must include
+    // focusPeakingColor?: string so it can be forwarded to FocusPeakingOverlay's color prop.
+    // If the type definition is wrong, TypeScript would flag a compilation error here.
+    const _props: import('../types').CameraOverlaysProps = {
+      apiConfigured: true,
+      gridVariant: 'thirds',
+      showGridModal: false,
+      onGridSelect: () => {},
+      onGridModalClose: () => {},
+      showLevel: false,
+      showHistogram: false,
+      histogramData: [],
+      showFocusGuide: false,
+      cameraRef: { current: null },
+      peakPoints: [],
+      screenWidth: 400,
+      screenHeight: 800,
+      showFocusPeaking: true,
+      showSunPosition: false,
+      showBurstSuggestion: false,
+      burstSuggestionText: '',
+      onBurstSuggestionAccept: () => {},
+      onBurstSuggestionDismiss: () => {},
+      burstActive: false,
+      bubbles: [],
+      keypoints: [],
+      showKeypoints: false,
+      showScoreOverlay: false,
+      scoreOverlayResult: null,
+      challengeMode: false,
+      challengeSession: null,
+      onScoreDismiss: () => {},
+      sceneTag: null,
+      sceneTagVisible: false,
+      countdownActive: false,
+      countdownCount: 0,
+      onCountdownComplete: () => {},
+      lastCapturedUri: null,
+      bubbleItems: [],
+      showComparison: false,
+      lastCapturedScore: null,
+      lastCapturedScoreReason: null,
+      onComparisonClose: () => {},
+      // focusPeakingColor is optional — custom colour flows through to FocusPeakingOverlay
+      focusPeakingColor: '#FF00FF',
+    };
+    expect(_props.focusPeakingColor).toBe('#FF00FF');
+  });
+
+  it('focusPeakingColor defaults to undefined when not provided', () => {
+    const _props: import('../types').CameraOverlaysProps = {
+      apiConfigured: true,
+      gridVariant: 'thirds',
+      showGridModal: false,
+      onGridSelect: () => {},
+      onGridModalClose: () => {},
+      showLevel: false,
+      showHistogram: false,
+      histogramData: [],
+      showFocusGuide: false,
+      cameraRef: { current: null },
+      peakPoints: [],
+      screenWidth: 400,
+      screenHeight: 800,
+      showFocusPeaking: true,
+      showSunPosition: false,
+      showBurstSuggestion: false,
+      burstSuggestionText: '',
+      onBurstSuggestionAccept: () => {},
+      onBurstSuggestionDismiss: () => {},
+      burstActive: false,
+      bubbles: [],
+      keypoints: [],
+      showKeypoints: false,
+      showScoreOverlay: false,
+      scoreOverlayResult: null,
+      challengeMode: false,
+      challengeSession: null,
+      onScoreDismiss: () => {},
+      sceneTag: null,
+      sceneTagVisible: false,
+      countdownActive: false,
+      countdownCount: 0,
+      onCountdownComplete: () => {},
+      lastCapturedUri: null,
+      bubbleItems: [],
+      showComparison: false,
+      lastCapturedScore: null,
+      lastCapturedScoreReason: null,
+      onComparisonClose: () => {},
+      // focusPeakingColor intentionally omitted — should be undefined
+    };
+    expect(_props.focusPeakingColor).toBeUndefined();
+  });
+});

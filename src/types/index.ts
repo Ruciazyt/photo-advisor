@@ -558,26 +558,31 @@ export interface CameraOverlaysProps {
   showFocusPeaking: boolean;
   showSunPosition: boolean;
   showBurstSuggestion: boolean;
-  burstSuggestion: string;
-  onBurstAccept: () => void;
-  onBurstDismiss: () => void;
+  burstSuggestionText: string;
+  onBurstSuggestionAccept: () => void;
+  onBurstSuggestionDismiss: () => void;
+  burstActive: boolean;
   bubbles: BubbleItem[];
   keypoints: Keypoint[];
   showKeypoints: boolean;
-  showCompositionScore: boolean;
-  compositionScoreResult?: CompositionScoreResult;
+  showScoreOverlay: boolean;
+  scoreOverlayResult: CompositionScoreResult | null;
   challengeMode: boolean;
-  challengeSession: ChallengeSession;
-  onCompositionScoreDismiss: () => void;
+  challengeSession: ChallengeSession | null;
+  onScoreDismiss: () => void;
   sceneTag: string | null;
-  showSceneTag: boolean;
+  sceneTagVisible: boolean;
   countdownActive: boolean;
   countdownCount: number;
   onCountdownComplete: () => void;
-  comparisonImageUri: string | null;
-  comparisonVisible: boolean;
+  lastCapturedUri: string | null;
+  bubbleItems: BubbleItem[];
+  showComparison: boolean;
+  lastCapturedScore: number | null;
+  lastCapturedScoreReason: string | null;
   onComparisonClose: () => void;
-  loading: boolean;
+  focusPeakingColor?: string;
+  showToast?: (message: string) => void;
 }
 
 export interface CameraToolbarProps {
