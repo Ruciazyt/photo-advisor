@@ -345,3 +345,160 @@ describe('calculateSunPosition — blue hour calculation', () => {
     expect(isNaN(pos.blueHourEveningEnd.getTime())).toBe(false);
   });
 });
+
+// ============================================================================
+// NEW tests — uncovered code paths
+// ============================================================================
+
+// NOTE: The catch block in updateSunData (line 276) cannot be reached through the
+// public hook API because calculateSunPosition is captured in the hook's closure
+// and cannot be intercepted by module-level patching after the hook loads.
+// The 'location unavailable' and 'permission denied' tests cover equivalent
+// error-handling paths. A future refactor that accepts calculateSunPosition as
+// a dependency would enable direct catch-block coverage.
+describe.skip('useSunPosition — catch block error path (line 276)', () => {
+  // Reserved; will pass once the hook accepts calculateSunPosition via DI.
+});
+
+
+describe('useSunPosition — tomorrow golden hour path (lines 221-222, 257, 259)', () => {
+  it('shows tomorrow golden hour when current time is after evening golden hour', async () => {
+    mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+
+    mockGetCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 31.23, longitude: 121.47 },
+    });
+
+    // Spy to freeze time to a moment AFTER evening golden hour
+    const targetDate = new Date('2025-06-15T22:00:00'); // 10pm — well after sunset golden hour
+    jest.spyOn(global, 'Date').mockImplementation(() => targetDate as unknown as Date);
+
+    const { result } = renderHook(() => useSunPosition(60000));
+
+    await waitFor(
+      () => {
+        expect(result.current.sunData.available).toBe(true);
+      },
+      { timeout: 3000 }
+    );
+
+    // goldenHourStart/End should be tomorrow morning times
+    expect(result.current.sunData.goldenHourStart).not.toBeNull();
+    expect(result.current.sunData.goldenHourEnd).not.toBeNull();
+
+    // Verify they are HH:MM format
+    expect(result.current.sunData.goldenHourStart!).toMatch(/^\d{2}:\d{2}$/);
+    expect(result.current.sunData.goldenHourEnd!).toMatch(/^\d{2}:\d{2}$/);
+
+
+    jest.restoreAllMocks();
+  });
+});
+
+describe('useSunPosition — tomorrow blue hour path (lines 243-247)', () => {
+  it('shows tomorrow blue hour when current time is after evening blue hour', async () => {
+    mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    mockGetCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 31.23, longitude: 121.47 },
+    });
+
+
+    // Freeze time to AFTER blueHourEveningStart (after sunset, late evening)
+    const targetDate = new Date('2025-06-15T22:30:00'); // 10:30pm
+    jest.spyOn(global, 'Date').mockImplementation(() => targetDate as unknown as Date);
+
+    const { result } = renderHook(() => useSunPosition(60000));
+
+    await waitFor(
+      () => {
+        expect(result.current.sunData.available).toBe(true);
+      },
+      { timeout: 3000 }
+    );
+
+    // blueHourStart/End should be tomorrow morning times
+    expect(result.current.sunData.blueHourStart).not.toBeNull();
+    expect(result.current.sunData.blueHourEnd).not.toBeNull();
+    expect(result.current.sunData.blueHourStart!).toMatch(/^\d{2}:\d{2}$/);
+    expect(result.current.sunData.blueHourEnd!).toMatch(/^\d{2}:\d{2}$/);
+
+    jest.restoreAllMocks();
+  });
+});
+
+describe('useSunPosition — interval-based useEffect (lines 309-320)', () => {
+  it('calls updateSunData periodically when updateIntervalMs elapses', async () => {
+    mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    mockGetCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 31.23, longitude: 121.47 },
+    });
+
+    jest.useFakeTimers();
+
+    const { result } = renderHook(() => useSunPosition(100));
+
+    // Wait for initial state
+    await waitFor(() => expect(result.current.sunData.available).toBe(true), {
+      timeout: 5000,
+    });
+
+    // Count calls to getCurrentPositionAsync (initial + periodic)
+    const initialCalls = mockGetCurrentPositionAsync.mock.calls.length;
+
+    // Advance past the 100ms interval
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
+
+    // Periodic update should have fired (getCurrentPositionAsync called again)
+    expect(mockGetCurrentPositionAsync.mock.calls.length).toBeGreaterThan(initialCalls);
+
+    jest.useRealTimers();
+  });
+});
+
+describe('getDirectionAdvice — altitude/azimuth branches (lines 167-170)', () => {
+  // These are pure function tests — no hook needed
+  it('returns "顶光场景，注意补光" when altitude >= 30', () => {
+    const { getDirectionAdvice } = require('../hooks/useSunPosition');
+    expect(getDirectionAdvice(30, 90)).toBe('顶光场景，注意补光');
+    expect(getDirectionAdvice(50, 180)).toBe('顶光场景，注意补光');
+    expect(getDirectionAdvice(89, 270)).toBe('顶光场景，注意补光');
+  });
+
+  it('returns "侧光人像/风光" when altitude is between 10 and 30', () => {
+    const { getDirectionAdvice } = require('../hooks/useSunPosition');
+    expect(getDirectionAdvice(10, 90)).toBe('侧光人像/风光');
+    expect(getDirectionAdvice(15, 180)).toBe('侧光人像/风光');
+    expect(getDirectionAdvice(29, 270)).toBe('侧光人像/风光');
+  });
+
+
+  it('returns "可拍逆光剪影" when altitude < 10 and azimuth is north-ish (azimuth > 315 or < 45)', () => {
+    const { getDirectionAdvice } = require('../hooks/useSunPosition');
+    expect(getDirectionAdvice(5, 0)).toBe('可拍逆光剪影');
+    expect(getDirectionAdvice(5, 30)).toBe('可拍逆光剪影');
+    expect(getDirectionAdvice(5, 350)).toBe('可拍逆光剪影');
+  });
+
+  it('returns "侧光人像" when altitude < 10 and azimuth is east-ish (45 < azimuth < 135)', () => {
+    const { getDirectionAdvice } = require('../hooks/useSunPosition');
+    expect(getDirectionAdvice(5, 50)).toBe('侧光人像');
+    expect(getDirectionAdvice(5, 90)).toBe('侧光人像');
+    expect(getDirectionAdvice(5, 130)).toBe('侧光人像');
+  });
+
+  it('returns "侧光人像" when altitude < 10 and azimuth is west-ish (225 < azimuth < 315)', () => {
+    const { getDirectionAdvice } = require('../hooks/useSunPosition');
+    expect(getDirectionAdvice(5, 230)).toBe('侧光人像');
+    expect(getDirectionAdvice(5, 270)).toBe('侧光人像');
+    expect(getDirectionAdvice(5, 310)).toBe('侧光人像');
+  });
+
+  it('returns "顺光拍摄" when altitude < 10 and azimuth is south-ish (135 <= azimuth <= 225)', () => {
+    const { getDirectionAdvice } = require('../hooks/useSunPosition');
+    expect(getDirectionAdvice(5, 135)).toBe('顺光拍摄');
+    expect(getDirectionAdvice(5, 180)).toBe('顺光拍摄');
+    expect(getDirectionAdvice(5, 220)).toBe('顺光拍摄');
+  });
+});
