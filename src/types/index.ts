@@ -341,6 +341,7 @@ export interface AppSettings {
   showFocusGuide: boolean;
   showBubbleChat: boolean;
   imageQualityPreset: ImageQualityPreset;
+  focusPeakingColor: string;
 }
 
 // ============================================================

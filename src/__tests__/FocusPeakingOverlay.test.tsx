@@ -145,6 +145,40 @@ describe('FocusPeakingOverlay', () => {
     expect(bgColor).toBe('#00FF00');
   });
 
+  it('renders with custom peaking color #4444FF (blue)', () => {
+    const peaks = [{ x: 0.5, y: 0.5, strength: 1.0 }];
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={peaks}
+        screenWidth={400}
+        screenHeight={600}
+        color="#4444FF"
+      />
+    );
+    const json = toJSON() as any;
+    const dot = json.children[0];
+    const bgColor = dot.props.style.find((s: any) => s && s.backgroundColor !== undefined)?.backgroundColor;
+    expect(bgColor).toBe('#4444FF');
+  });
+
+  it('renders with custom peaking color #FFFF44 (yellow)', () => {
+    const peaks = [{ x: 0.5, y: 0.5, strength: 1.0 }];
+    const { toJSON } = render(
+      <FocusPeakingOverlay
+        visible={true}
+        peaks={peaks}
+        screenWidth={400}
+        screenHeight={600}
+        color="#FFFF44"
+      />
+    );
+    const json = toJSON() as any;
+    const dot = json.children[0];
+    const bgColor = dot.props.style.find((s: any) => s && s.backgroundColor !== undefined)?.backgroundColor;
+    expect(bgColor).toBe('#FFFF44');
+  });
+
   it('renders up to MAX_PEAKS (80) dots without crashing', () => {
     const manyPeaks = Array.from({ length: 80 }, (_, i) => ({
       x: (i % 10) / 10,

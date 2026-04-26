@@ -114,6 +114,7 @@ export function CameraScreen() {
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [showFocusPeaking, setShowFocusPeaking] = useState(false);
+  const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
@@ -288,6 +289,7 @@ export function CameraScreen() {
       setShowLevel(settings.showLevel);
       setShowFocusGuide(settings.showFocusGuide);
       setShowFocusPeaking(settings.showFocusPeaking);
+      setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
       setShowSunOverlay(settings.showSunPosition);
       setShowBubbleChat(settings.showBubbleChat ?? true);
     });
@@ -341,6 +343,7 @@ export function CameraScreen() {
           lastCapturedUri={lastCapturedUri} bubbleItems={bubbleItems} showComparison={showComparison}
           lastCapturedScore={lastCapturedScore} lastCapturedScoreReason={lastCapturedScoreReason}
           onComparisonClose={() => setShowComparison(false)}
+          focusPeakingColor={focusPeakingColor}
         />
         <CameraTopBar
           gridVariant={gridVariant} showGridModal={showGridModal} onGridPress={() => setShowGridModal(true)}

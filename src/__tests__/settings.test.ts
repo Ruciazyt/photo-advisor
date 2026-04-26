@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS = {
   showFocusGuide: true,
   showBubbleChat: true,
   imageQualityPreset: 'balanced',
+  focusPeakingColor: '#FF4444',
 };
 
 describe('settings service', () => {
@@ -55,6 +56,11 @@ describe('settings service', () => {
     it('returns default timerDuration when not set', async () => {
       const settings = await loadAppSettings();
       expect(settings.timerDuration).toBe(3);
+    });
+
+    it('defaults focusPeakingColor to #FF4444', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingColor).toBe('#FF4444');
     });
   });
 
@@ -167,6 +173,19 @@ describe('settings service', () => {
       expect(settings.showLevel).toBe(false);
       expect(settings.showFocusPeaking).toBe(true);
       expect(settings.defaultGridVariant).toBe('diagonal');
+    });
+
+    it('saves and loads focusPeakingColor', async () => {
+      await saveAppSettings({ focusPeakingColor: '#44FF44' });
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingColor).toBe('#44FF44');
+    });
+
+    it('defaults focusPeakingColor when stored settings lack it (backwards compat)', async () => {
+      // Simulate old settings without focusPeakingColor
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingColor).toBe('#FF4444');
     });
   });
 });

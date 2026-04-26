@@ -60,6 +60,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showFocusGuide, setShowFocusGuide] = useState(true);
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
+  const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -80,6 +81,7 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowFocusGuide(settings.showFocusGuide);
       setShowBubbleChat(settings.showBubbleChat ?? true);
       setImageQualityPreset(settings.imageQualityPreset);
+      setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
     });
   }, []);
 
@@ -553,6 +555,37 @@ export function SettingsScreen({ onSaved }: Props) {
               );
             })}
           </View>
+
+          {/* Focus Peaking Color */}
+          <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+            <View style={styles.prefInfo}>
+              <Text style={[styles.prefTitle, { color: colors.text }]}>对焦峰值颜色</Text>
+              <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>对焦边缘高亮颜色</Text>
+            </View>
+          </View>
+          <View style={styles.colorSwatchRow}>
+            {(['#FF4444', '#44FF44', '#4444FF', '#FFFF44', '#FFFFFF'] as string[]).map((c) => {
+              const isSelected = focusPeakingColor === c;
+              return (
+                <TouchableOpacity
+                  key={c}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: c, borderColor: isSelected ? colors.accent : colors.border },
+                    isSelected && styles.colorSwatchSelected,
+                  ]}
+                  onPress={async () => {
+                    setFocusPeakingColor(c);
+                    await saveAppSettings({ focusPeakingColor: c });
+                  }}
+                  activeOpacity={0.7}
+                  accessibilityLabel={`颜色 ${c}${isSelected ? '，已选中' : ''}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                />
+              );
+            })}
+          </View>
         </View>
 
         <View style={[styles.versionSection, { borderTopColor: colors.border }]}>
@@ -864,6 +897,21 @@ cameraPrefsSection: {
   qualityOptionText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  colorSwatchRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingBottom: 12,
+    paddingLeft: 4,
+  },
+  colorSwatch: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+  },
+  colorSwatchSelected: {
+    borderWidth: 3,
   },
 versionSection: {
     marginTop: 32,

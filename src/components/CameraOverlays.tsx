@@ -73,6 +73,8 @@ export interface CameraOverlaysProps {
   lastCapturedScore: number | null;
   lastCapturedScoreReason: string | null;
   onComparisonClose: () => void;
+  // Focus peaking color
+  focusPeakingColor?: string;
 }
 
 export function CameraOverlays({
@@ -115,6 +117,7 @@ export function CameraOverlays({
   lastCapturedScore,
   lastCapturedScoreReason,
   onComparisonClose,
+  focusPeakingColor,
 }: CameraOverlaysProps) {
   return (
     <>
@@ -137,6 +140,7 @@ export function CameraOverlays({
         peaks={peakPoints}
         screenWidth={screenWidth}
         screenHeight={screenHeight}
+        color={focusPeakingColor}
       />
       <SunPositionOverlay visible={showSunOverlay} />
 
