@@ -94,6 +94,7 @@ const mockColors = {
   starGreen: '#8BC34A',
   starYellow: '#FFC107',
   starOrange: '#FF9800',
+  bubbleText: '#FFFFFF',
 };
 
 const makeFavs = (count: number, overrides: Partial<import('../services/favorites').FavoriteItem> = {}) => {

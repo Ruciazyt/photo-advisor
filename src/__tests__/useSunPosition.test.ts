@@ -371,7 +371,7 @@ describe('useSunPosition — tomorrow golden hour path (lines 221-222, 257, 259)
 
     // Spy to freeze time to a moment AFTER evening golden hour
     const targetDate = new Date('2025-06-15T22:00:00'); // 10pm — well after sunset golden hour
-    jest.spyOn(global, 'Date').mockImplementation(() => targetDate as unknown as Date);
+    jest.spyOn(globalThis, 'Date').mockImplementation(() => targetDate as unknown as Date);
 
     const { result } = renderHook(() => useSunPosition(60000));
 
@@ -405,7 +405,7 @@ describe('useSunPosition — tomorrow blue hour path (lines 243-247)', () => {
 
     // Freeze time to AFTER blueHourEveningStart (after sunset, late evening)
     const targetDate = new Date('2025-06-15T22:30:00'); // 10:30pm
-    jest.spyOn(global, 'Date').mockImplementation(() => targetDate as unknown as Date);
+    jest.spyOn(globalThis, 'Date').mockImplementation(() => targetDate as unknown as Date);
 
     const { result } = renderHook(() => useSunPosition(60000));
 
