@@ -7,6 +7,7 @@ import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { ShootLogScreen } from './src/screens/ShootLogScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 type Tab = 'home' | 'camera' | 'favorites' | 'log' | 'settings';
 
@@ -132,7 +133,9 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }
