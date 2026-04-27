@@ -46,6 +46,10 @@ export function useBubbleChat({
   const [visibleItems, setVisibleItems] = useState<BubbleItem[]>([]);
   const [loading, setLoadingInternal] = useState(false);
 
+  // Tracks how many items have been revealed so far — used instead of
+  // visibleItems.length to avoid a stale-closure / dependency-cycle bug.
+  const revealedCountRef = useRef(0);
+
   // Keep latest loading flag accessible in setTimeout closures
   const loadingRef = useRef(loading);
   loadingRef.current = loading;
@@ -54,7 +58,7 @@ export function useBubbleChat({
   useEffect(() => {
     if (allItems.length === 0) return;
 
-    const newItems = allItems.slice(visibleItems.length);
+    const newItems = allItems.slice(revealedCountRef.current);
     if (newItems.length === 0) return;
 
     const timeouts: ReturnType<typeof setTimeout>[] = [];
@@ -69,6 +73,7 @@ export function useBubbleChat({
           if (prev.find(i => i.id === item.id)) return prev;
           return [...prev, item];
         });
+        revealedCountRef.current += 1;
         onBubbleAppear?.(item.text);
       }, delay);
       timeouts.push(t);
@@ -77,7 +82,8 @@ export function useBubbleChat({
     return () => {
       timeouts.forEach(clearTimeout);
     };
-  }, [allItems, visibleItems.length, staggerDelayMs, onBubbleAppear]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allItems, staggerDelayMs, onBubbleAppear]);
 
   /**
    * State machine for bubble chat visibility:
@@ -94,10 +100,13 @@ export function useBubbleChat({
       // from a previous batch cannot later add stale items after new items arrive.
       setAllItems([]);
       setVisibleItems([]);
+      revealedCountRef.current = 0;
     }
   }, []);
 
   const setItems = useCallback((items: BubbleItem[]) => {
+    revealedCountRef.current = 0;
+    setVisibleItems([]); // clear stale visible items for a clean slate
     setAllItems(items);
   }, []);
 

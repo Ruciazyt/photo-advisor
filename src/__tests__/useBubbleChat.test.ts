@@ -351,4 +351,147 @@ describe('useBubbleChat', () => {
     expect(allCbTexts).not.toContain('batch A item 1');
     expect(allCbTexts).toEqual(['batch A item 0', 'batch B item 0', 'batch B item 1', 'batch B item 2']);
   });
+
+  // --- Bug-fix tests: revealedCountRef eliminates stale-closure issues ---
+
+  it('setItems with new items (after prior complete reveal) re-staggers only the new items', () => {
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 100 })
+    );
+
+    // First batch fully reveals
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'A', position: 'top-left' as const },
+        { id: 1, text: 'B', position: 'top-right' as const },
+      ]);
+    });
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    cb.mockClear();
+
+    // Second setItems with NEW items (C, D) — only new items stagger
+    act(() => {
+      result.current.setItems([
+        { id: 2, text: 'C', position: 'bottom-left' as const },
+        { id: 3, text: 'D', position: 'bottom-right' as const },
+      ]);
+    });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1); // only C revealed
+    expect(result.current.visibleItems[0].text).toBe('C');
+    expect(cb).toHaveBeenCalledWith('C');
+    expect(cb).not.toHaveBeenCalledWith('A');
+    expect(cb).not.toHaveBeenCalledWith('B');
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    expect(cb).toHaveBeenCalledTimes(2); // C and D, not A/B
+  });
+
+  it('setItems after handleDismissAll still staggers all items (counter resets)', () => {
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 100 })
+    );
+
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'item 0', position: 'top-left' as const },
+        { id: 1, text: 'item 1', position: 'top-right' as const },
+      ]);
+    });
+    act(() => { jest.advanceTimersByTime(200); });
+    expect(result.current.visibleItems).toHaveLength(2);
+
+    // Dismiss all, then set the same items again — they should re-stagger
+    act(() => { result.current.handleDismissAll(); });
+    expect(result.current.visibleItems).toHaveLength(0);
+    cb.mockClear();
+
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'item 0', position: 'top-left' as const },
+        { id: 1, text: 'item 1', position: 'top-right' as const },
+      ]);
+    });
+
+    // Items re-stagger from scratch (counter was reset by setItems)
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+    expect(cb).toHaveBeenCalledWith('item 0');
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    expect(cb).toHaveBeenCalledTimes(2);
+  });
+
+  it('rapid setItems calls do not cause duplicate reveals', () => {
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 100 })
+    );
+
+    // Fire several setItems calls before any timer fires
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'A', position: 'top-left' as const },
+      ]);
+    });
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'A', position: 'top-left' as const },
+        { id: 1, text: 'B', position: 'top-right' as const },
+      ]);
+    });
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'A', position: 'top-left' as const },
+        { id: 1, text: 'B', position: 'top-right' as const },
+        { id: 2, text: 'C', position: 'bottom-left' as const },
+      ]);
+    });
+
+    // Before any timer fires, visible should be empty
+    expect(result.current.visibleItems).toHaveLength(0);
+
+    // After all timers fire, only 3 unique items appear (no duplicates)
+    act(() => { jest.advanceTimersByTime(400); });
+    expect(result.current.visibleItems).toHaveLength(3);
+    const ids = result.current.visibleItems.map(i => i.id);
+    expect(ids).toEqual([0, 1, 2]);
+    // Each callback fired exactly once
+    expect(cb).toHaveBeenCalledTimes(3);
+  });
+
+  it('setLoading(true) followed by setLoading(false) does not cause stale item reveals', () => {
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 100 })
+    );
+
+    // Put hook in loading state, then bring it back down with no items
+    act(() => { result.current.setLoading(true); });
+    act(() => { result.current.setLoading(false); });
+
+    // Now set fresh items and verify normal stagger
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'fresh 0', position: 'top-left' as const },
+        { id: 1, text: 'fresh 1', position: 'top-right' as const },
+      ]);
+    });
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+    expect(cb).toHaveBeenCalledWith('fresh 0');
+
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    expect(cb).toHaveBeenCalledTimes(2);
+    // No stale callbacks from before the loading cycle
+    const calledTexts = cb.mock.calls.map(c => c[0]);
+    expect(calledTexts).toEqual(['fresh 0', 'fresh 1']);
+  });
 });
