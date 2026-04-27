@@ -495,3 +495,225 @@ describe('useBubbleChat', () => {
     expect(calledTexts).toEqual(['fresh 0', 'fresh 1']);
   });
 });
+
+// --- Additional refactor-specific tests ---
+
+describe('useBubbleChat — empty / edge cases', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('setItems with empty array does not crash and keeps visibleItems empty', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 50 }));
+    act(() => {
+      result.current.setItems([]);
+    });
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(result.current.visibleItems).toEqual([]);
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('setItems with empty array after items were visible clears everything', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 50 }));
+    act(() => {
+      result.current.setItems([{ id: 0, text: 'x', position: 'top-left' as const }]);
+    });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+
+    act(() => { result.current.setItems([]); });
+    expect(result.current.visibleItems).toHaveLength(0);
+  });
+
+  it('setItems called multiple times with empty array is idempotent', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 50 }));
+    act(() => { result.current.setItems([]); });
+    act(() => { result.current.setItems([]); });
+    act(() => { result.current.setItems([]); });
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(result.current.visibleItems).toEqual([]);
+  });
+
+  it('setLoading(false) when already not loading does not change state', () => {
+    const { result } = renderHook(() => useBubbleChat());
+    expect(result.current.loading).toBe(false);
+    act(() => { result.current.setLoading(false); });
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('handleDismiss on an already-dismissed item is a no-op (no crash)', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 50 }));
+    act(() => {
+      result.current.setItems([{ id: 0, text: 'x', position: 'top-left' as const }]);
+    });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+
+    act(() => { result.current.handleDismiss(0); });
+    expect(result.current.visibleItems).toHaveLength(0);
+
+    // Dismiss same id again — should be safe no-op
+    act(() => { result.current.handleDismiss(0); });
+    expect(result.current.visibleItems).toHaveLength(0);
+  });
+
+  it('handleDismiss with non-existent id does not affect visibleItems', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 50 }));
+    act(() => {
+      result.current.setItems([{ id: 0, text: 'x', position: 'top-left' as const }]);
+    });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+
+    act(() => { result.current.handleDismiss(999); });
+    expect(result.current.visibleItems).toHaveLength(1);
+  });
+});
+
+// --- Streaming text chunking ---
+
+describe('useBubbleChat — streaming text chunking', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('reveals items in order despite out-of-order timer firing', () => {
+    // Simulates the case where network timing causes setItems to be called
+    // with items whose async timeouts fire in non-deterministic order.
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 50 })
+    );
+
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'chunk 0', position: 'top-left' as const },
+        { id: 1, text: 'chunk 1', position: 'top-right' as const },
+        { id: 2, text: 'chunk 2', position: 'bottom-left' as const },
+      ]);
+    });
+
+    // Advance past all timers at once
+    act(() => { jest.advanceTimersByTime(300); });
+
+    expect(result.current.visibleItems).toHaveLength(3);
+    const texts = result.current.visibleItems.map(i => i.text);
+    expect(texts).toEqual(['chunk 0', 'chunk 1', 'chunk 2']);
+    // Each item's callback fired exactly once in order
+    expect(cb).toHaveBeenCalledTimes(3);
+    expect(cb.mock.calls.map(c => c[0])).toEqual(['chunk 0', 'chunk 1', 'chunk 2']);
+  });
+
+  it('partial streaming: early setLoading(true) stops further reveals', () => {
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 50 })
+    );
+
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'stream 0', position: 'top-left' as const },
+        { id: 1, text: 'stream 1', position: 'top-right' as const },
+        { id: 2, text: 'stream 2', position: 'bottom-left' as const },
+        { id: 3, text: 'stream 3', position: 'bottom-right' as const },
+      ]);
+    });
+
+    // Only first item has fired
+    act(() => { jest.advanceTimersByTime(50); });
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith('stream 0');
+
+    // Loading interrupts before second item
+    act(() => { result.current.setLoading(true); });
+
+    // Jump far ahead — no new items should appear
+    act(() => { jest.advanceTimersByTime(500); });
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(result.current.visibleItems).toHaveLength(0);
+  });
+
+  it('streaming resumes correctly after loading completes', () => {
+    const cb = jest.fn();
+    const { result } = renderHook(() =>
+      useBubbleChat({ onBubbleAppear: cb, staggerDelayMs: 50 })
+    );
+
+    // Start and interrupt
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'A', position: 'top-left' as const },
+        { id: 1, text: 'B', position: 'top-right' as const },
+      ]);
+    });
+    act(() => { jest.advanceTimersByTime(50); }); // A revealed
+    expect(cb).toHaveBeenCalledWith('A');
+
+    act(() => { result.current.setLoading(true); }); // interrupt
+    act(() => { result.current.setLoading(false); }); // resume
+
+    // New batch
+    act(() => {
+      result.current.setItems([
+        { id: 10, text: 'C', position: 'top-left' as const },
+        { id: 11, text: 'D', position: 'top-right' as const },
+      ]);
+    });
+
+    act(() => { jest.advanceTimersByTime(50); }); // C revealed
+    expect(cb).toHaveBeenCalledWith('C');
+    expect(cb).not.toHaveBeenCalledWith('B'); // B never came
+
+    act(() => { jest.advanceTimersByTime(50); }); // D revealed
+    expect(cb).toHaveBeenCalledWith('D');
+  });
+
+  it('duplicate dismissal is safe when same item id is in visibleItems', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 50 }));
+
+    act(() => {
+      result.current.setItems([{ id: 0, text: 'dup', position: 'top-left' as const }]);
+    });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+
+    // Dismiss once
+    act(() => { result.current.handleDismiss(0); });
+    expect(result.current.visibleItems).toHaveLength(0);
+
+    // Manually re-add item back via setItems (simulating re-trigger)
+    act(() => {
+      result.current.setItems([{ id: 0, text: 'dup', position: 'top-left' as const }]);
+    });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(result.current.visibleItems).toHaveLength(1);
+
+    // Dismiss again
+    act(() => { result.current.handleDismiss(0); });
+    expect(result.current.visibleItems).toHaveLength(0);
+  });
+
+  it('staggerDelayMs=0 reveals all items immediately', () => {
+    const { result } = renderHook(() => useBubbleChat({ staggerDelayMs: 0 }));
+
+    act(() => {
+      result.current.setItems([
+        { id: 0, text: 'instant 0', position: 'top-left' as const },
+        { id: 1, text: 'instant 1', position: 'top-right' as const },
+      ]);
+    });
+
+    // With delay=0, all items should be visible synchronously (after the useEffect runs)
+    act(() => { jest.advanceTimersByTime(0); });
+    expect(result.current.visibleItems).toHaveLength(2);
+    expect(result.current.visibleItems.map(i => i.text)).toEqual(['instant 0', 'instant 1']);
+  });
+});
