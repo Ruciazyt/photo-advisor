@@ -632,6 +632,28 @@ describe('SettingsScreen', () => {
     });
   });
 
+  // 48. AI suggestion bubble toggle calls saveAppSettings with showBubbleChat
+  it('AI suggestion bubble toggle calls saveAppSettings with showBubbleChat', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('AI 建议气泡')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('AI 建议气泡'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showBubbleChat: false });
+    });
+  });
+
+  // 49. color swatch press saves focusPeakingColor via saveAppSettings
+  it('color swatch press saves focusPeakingColor via saveAppSettings', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('颜色 #44FF44')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('颜色 #44FF44'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ focusPeakingColor: '#44FF44' });
+    });
+  });
+
   // 47. toggle press updates settings via onPress callback
   it('toggle press triggers onPress and saves updated setting', async () => {
     (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
