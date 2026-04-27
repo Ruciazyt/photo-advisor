@@ -551,20 +551,20 @@ export interface CameraOverlaysProps {
   showHistogram: boolean;
   histogramData: number[];
   showFocusGuide: boolean;
+  showFocusPeaking: boolean;
   cameraRef: React.RefObject<CameraView | null>;
   peakPoints: PeakPoint[];
   screenWidth: number;
   screenHeight: number;
-  showFocusPeaking: boolean;
-  showSunPosition: boolean;
+  showToast?: (message: string) => void;
+  showSunOverlay: boolean;
   showBurstSuggestion: boolean;
   burstSuggestionText: string;
   onBurstSuggestionAccept: () => void;
   onBurstSuggestionDismiss: () => void;
   burstActive: boolean;
-  bubbles: BubbleItem[];
-  keypoints: Keypoint[];
   showKeypoints: boolean;
+  keypoints: Keypoint[];
   showScoreOverlay: boolean;
   scoreOverlayResult: CompositionScoreResult | null;
   challengeMode: boolean;
@@ -582,7 +582,6 @@ export interface CameraOverlaysProps {
   lastCapturedScoreReason: string | null;
   onComparisonClose: () => void;
   focusPeakingColor?: string;
-  showToast?: (message: string) => void;
 }
 
 export interface CameraToolbarProps {
@@ -592,26 +591,60 @@ export interface CameraToolbarProps {
 }
 
 export interface CameraTopBarProps {
+  // Grid
   gridVariant: GridVariant;
   showGridModal: boolean;
   onGridPress: () => void;
   onGridSelect: (v: GridVariant) => void;
   onGridModalClose: () => void;
+  // Histogram
   showHistogram: boolean;
   onHistogramToggle: () => void;
   onHistogramPressIn: () => void;
   onHistogramPressOut: () => void;
-  showSunPosition: boolean;
-  onSunPositionToggle: () => void;
-  showFocusPeaking: boolean;
-  onFocusPeakingToggle: () => void;
+  // Level
   showLevel: boolean;
   onLevelToggle: () => void;
+  // Sun
+  showSunOverlay: boolean;
+  onSunToggle: () => void;
+  // Focus guide
   showFocusGuide: boolean;
   onFocusGuideToggle: () => void;
-  showSceneRecognition: boolean;
-  onSceneRecognitionToggle: () => void;
-  onSettings: () => void;
+  // Focus peaking
+  showFocusPeaking: boolean;
+  onFocusPeakingToggle: () => void;
+  // Voice
+  voiceEnabled: boolean;
+  onVoiceToggle: () => void;
+  // RAW
+  rawMode: boolean;
+  rawSupported: boolean;
+  onRawToggle: () => void;
+  // Challenge
+  challengeMode: boolean;
+  onChallengeToggle: () => void;
+  // Timer
+  timerDuration: number;
+  countdownActive: boolean;
+  onTimerPress: () => void;
+  onCancelCountdown: () => void;
+  // Favorites
+  lastCapturedUri: string | null;
+  onSaveToFavorites: () => void;
+  // Share
+  suggestions: string[];
+  lastCapturedScore: number | null;
+  lastCapturedScoreReason: string | null;
+  // Compare
+  showKeypoints: boolean;
+  onComparePress: () => void;
+  // Burst
+  burstActive: boolean;
+  burstCount: number;
+  // Toast
+  toastOpacity: import('react-native-reanimated').SharedValue<number>;
+  toastMessage: string;
 }
 
 export interface ComparisonOverlayProps {
