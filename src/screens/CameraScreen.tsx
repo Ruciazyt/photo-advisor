@@ -8,7 +8,7 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useTheme } from '../contexts/ThemeContext';
 import { BubbleOverlay } from '../components/BubbleOverlay';
 import { KeypointOverlay } from '../components/KeypointOverlay';
-import type { Keypoint } from '../types';
+import type { Keypoint, FocusPeakingSensitivity } from '../types';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
 import { GridVariant } from '../components/GridOverlay';
 import { GridSelectorModal } from '../components/GridSelectorModal';
@@ -116,6 +116,7 @@ export function CameraScreen() {
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [showFocusPeaking, setShowFocusPeaking] = useState(false);
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
+  const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
@@ -208,9 +209,9 @@ export function CameraScreen() {
 
   // Focus peaking — use useAnimationFrameTimer for 60fps-synced capture
   const doCapturePeaks = useCallback(async () => {
-    const points = await capturePeaks(cameraRef, screenWidth, screenHeight);
+    const points = await capturePeaks(cameraRef, screenWidth, screenHeight, focusPeakingSensitivity);
     if (points.length > 0) setPeakPoints(points);
-  }, [capturePeaks, cameraRef, screenWidth, screenHeight]);
+  }, [capturePeaks, cameraRef, screenWidth, screenHeight, focusPeakingSensitivity]);
   useAnimationFrameTimer({ intervalMs: 500, onTick: doCapturePeaks, enabled: showFocusPeaking });
   useEffect(() => { if (!showFocusPeaking) setPeakPoints([]); }, [showFocusPeaking]);
 
@@ -291,6 +292,7 @@ export function CameraScreen() {
       setShowFocusGuide(settings.showFocusGuide);
       setShowFocusPeaking(settings.showFocusPeaking);
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
+      setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
       setShowSunOverlay(settings.showSunPosition);
       setShowBubbleChat(settings.showBubbleChat ?? true);
     });

@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showBubbleChat: true,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
+  focusPeakingSensitivity: 'medium',
 };
 
 export async function loadAppSettings(): Promise<AppSettings> {

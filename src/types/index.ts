@@ -127,7 +127,8 @@ export interface UseFocusPeakingReturn {
   capturePeaks: (
     cameraRef: React.RefObject<CameraView | null>,
     previewWidth: number,
-    previewHeight: number
+    previewHeight: number,
+    sensitivity?: FocusPeakingSensitivity
   ) => Promise<PeakPoint[]>;
 }
 
@@ -329,6 +330,8 @@ export interface FavoriteItem {
 
 export type ImageQualityPreset = 'size' | 'balanced' | 'quality';
 
+export type FocusPeakingSensitivity = 'low' | 'medium' | 'high';
+
 export interface AppSettings {
   voiceEnabled: boolean;
   theme: 'dark' | 'light';
@@ -342,6 +345,7 @@ export interface AppSettings {
   showBubbleChat: boolean;
   imageQualityPreset: ImageQualityPreset;
   focusPeakingColor: string;
+  focusPeakingSensitivity: FocusPeakingSensitivity;
 }
 
 // ============================================================

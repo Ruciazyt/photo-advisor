@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS = {
   showBubbleChat: true,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
+  focusPeakingSensitivity: 'medium',
 };
 
 describe('settings service', () => {
@@ -186,6 +187,29 @@ describe('settings service', () => {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
       const settings = await loadAppSettings();
       expect(settings.focusPeakingColor).toBe('#FF4444');
+    });
+
+    it('defaults focusPeakingSensitivity to medium', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingSensitivity).toBe('medium');
+    });
+
+    it('saves and loads focusPeakingSensitivity', async () => {
+      await saveAppSettings({ focusPeakingSensitivity: 'high' });
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingSensitivity).toBe('high');
+    });
+
+    it('saves and loads focusPeakingSensitivity=low', async () => {
+      await saveAppSettings({ focusPeakingSensitivity: 'low' });
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingSensitivity).toBe('low');
+    });
+
+    it('defaults focusPeakingSensitivity when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.focusPeakingSensitivity).toBe('medium');
     });
   });
 });

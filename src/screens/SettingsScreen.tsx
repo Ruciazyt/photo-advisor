@@ -61,6 +61,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
+  const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -82,6 +83,7 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowBubbleChat(settings.showBubbleChat ?? true);
       setImageQualityPreset(settings.imageQualityPreset);
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
+      setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
     });
   }, []);
 
@@ -556,6 +558,42 @@ export function SettingsScreen({ onSaved }: Props) {
             })}
           </View>
 
+          {/* Focus Peaking Sensitivity */}
+          <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+            <View style={styles.prefInfo}>
+              <Text style={[styles.prefTitle, { color: colors.text }]}>对焦峰值灵敏度</Text>
+              <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>低=少边缘，高=多边缘</Text>
+            </View>
+          </View>
+          <View style={styles.sensitivityRow}>
+            {(['low', 'medium', 'high'] as const).map((s) => {
+              const labels: Record<string, string> = { low: '低', medium: '中', high: '高' };
+              const isSelected = focusPeakingSensitivity === s;
+              return (
+                <TouchableOpacity
+                  key={s}
+                  style={[
+                    styles.sensitivityOption,
+                    { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
+                    isSelected && styles.sensitivityOptionSelected,
+                  ]}
+                  onPress={async () => {
+                    setFocusPeakingSensitivity(s);
+                    await saveAppSettings({ focusPeakingSensitivity: s });
+                  }}
+                  activeOpacity={0.7}
+                  accessibilityLabel={`灵敏度 ${labels[s]}${isSelected ? '，已选中' : ''}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  <Text style={[styles.sensitivityOptionText, { color: isSelected ? colors.accent : colors.textSecondary }]}>
+                    {labels[s]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           {/* Focus Peaking Color */}
           <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
             <View style={styles.prefInfo}>
@@ -912,6 +950,26 @@ cameraPrefsSection: {
   },
   colorSwatchSelected: {
     borderWidth: 3,
+  },
+  sensitivityRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 12,
+    paddingLeft: 4,
+  },
+  sensitivityOption: {
+    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  sensitivityOptionSelected: {
+    backgroundColor: 'rgba(232,213,183,0.1)',
+  },
+  sensitivityOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 versionSection: {
     marginTop: 32,

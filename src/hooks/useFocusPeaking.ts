@@ -16,7 +16,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import jpeg from 'jpeg-js';
 
 // ---- Exported for testing ----
-export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS, samplePixels };
+export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS, samplePixels, sensitivityThreshold };
 
 // ---- Public interface ----
 
@@ -27,8 +27,19 @@ export type { PeakPoint, UseFocusPeakingReturn } from '../types';
 import type { PeakPoint, UseFocusPeakingReturn } from '../types';
 
 const SAMPLE_SIZE = 48; // Capture at this resolution for edge analysis
-const EDGE_THRESHOLD = 30; // Minimum gradient magnitude to count as a peak
+const EDGE_THRESHOLD = 30; // Minimum gradient magnitude to count as a peak (medium sensitivity)
 const MAX_PEAKS = 80; // Cap the number of returned points
+
+/** Map sensitivity level to edge detection threshold.
+ * Higher threshold = fewer, stronger edges shown (low sensitivity).
+ * Lower threshold = more edges shown (high sensitivity). */
+function sensitivityThreshold(sensitivity: 'low' | 'medium' | 'high'): number {
+  switch (sensitivity) {
+    case 'low':    return 50;  // Only very strong edges
+    case 'medium': return 30; // Balanced
+    case 'high':   return 15; // Many edges shown
+  }
+}
 
 function computeLuminance(r: number, g: number, b: number): number {
   return 0.299 * r + 0.587 * g + 0.114 * b;
@@ -113,7 +124,14 @@ export function sobelMagnitudes(lum: number[][], width: number, height: number):
  * Performance: O(n) max scan + O(peaks log peaks) sort — avoids spread-based Math.max
  * on 2304 elements every frame.
  */
-export function extractPeaks(mag: number[][], width: number, height: number): PeakPoint[] {
+export function extractPeaks(
+  mag: number[][],
+  width: number,
+  height: number,
+  sensitivity: 'low' | 'medium' | 'high' = 'medium'
+): PeakPoint[] {
+  const threshold = sensitivityThreshold(sensitivity);
+
   // Find raw max without array spread (avoids O(n) allocation + O(n) spread args)
   let rawMax = 1;
   for (let y = 0; y < height; y++) {
@@ -129,7 +147,7 @@ export function extractPeaks(mag: number[][], width: number, height: number): Pe
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       const v = mag[y][x];
-      if (v < EDGE_THRESHOLD) continue;
+      if (v < threshold) continue;
 
       // Inline non-maximum suppression — avoid spread + Math.max on neighbours array
       const v0 = mag[y - 1][x - 1];
@@ -167,7 +185,8 @@ export function useFocusPeaking(): UseFocusPeakingReturn {
     async (
       cameraRef: React.RefObject<CameraView | null>,
       previewWidth: number,
-      previewHeight: number
+      previewHeight: number,
+      sensitivity: 'low' | 'medium' | 'high' = 'medium'
     ): Promise<PeakPoint[]> => {
       if (!cameraRef.current) return [];
 
@@ -198,7 +217,7 @@ export function useFocusPeaking(): UseFocusPeakingReturn {
         }
 
         const mag = sobelMagnitudes(lum, width, height);
-        const peaks = extractPeaks(mag, width, height);
+        const peaks = extractPeaks(mag, width, height, sensitivity);
 
         // Map to screen coordinates (flip y because camera frame is top-down,
         // but screen coordinates have y=0 at top — already consistent)
