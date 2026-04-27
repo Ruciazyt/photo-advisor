@@ -40,12 +40,18 @@ jest.mock('../components/FocusGuideOverlay', () => ({
     return visible ? <View testID="focus-guide" /> : null;
   },
 }));
-jest.mock('../components/FocusPeakingOverlay', () => ({
-  FocusPeakingOverlay: ({ visible }: { visible: boolean }) => {
-    const { View } = require('react-native');
-    return visible ? <View testID="focus-peaking" /> : null;
-  },
-}));
+jest.mock('../components/FocusPeakingOverlay', () => {
+  const mockFn = jest.fn();
+  return {
+    __esModule: true,
+    FocusPeakingOverlay: ({ visible, color }: { visible: boolean; color?: string }) => {
+      const { View } = require('react-native');
+      mockFn({ visible, color });
+      return visible ? <View testID="focus-peaking" data-color={color} /> : null;
+    },
+    _getFocusPeakingMock: () => mockFn,
+  };
+});
 jest.mock('../components/SunPositionOverlay', () => ({
   SunPositionOverlay: ({ visible }: { visible: boolean }) => {
     const { View } = require('react-native');
@@ -82,12 +88,24 @@ jest.mock('../components/CountdownOverlay', () => ({
     return <View testID="countdown-overlay" />;
   },
 }));
-jest.mock('../components/ComparisonOverlay', () => ({
-  ComparisonOverlay: ({ visible }: { visible: boolean }) => {
-    const { View } = require('react-native');
-    return visible ? <View testID="comparison-overlay" /> : null;
-  },
-}));
+jest.mock('../components/ComparisonOverlay', () => {
+  const mockFn = jest.fn();
+  return {
+    __esModule: true,
+    ComparisonOverlay: ({ visible, score, scoreReason }: { visible: boolean; score?: number; scoreReason?: string }) => {
+      const { View } = require('react-native');
+      mockFn({ visible, score, scoreReason });
+      return visible ? (
+        <View
+          testID="comparison-overlay"
+          data-score={score}
+          data-score-reason={scoreReason}
+        />
+      ) : null;
+    },
+    _getComparisonMock: () => mockFn,
+  };
+});
 
 const mockCameraRef = { current: null } as React.RefObject<any>;
 
@@ -264,5 +282,49 @@ describe('CameraOverlays', () => {
   it('renders golden grid variant correctly', () => {
     const { getByTestId } = render(<CameraOverlays {...defaultProps} gridVariant="golden" />);
     expect(getByTestId('grid-golden')).toBeTruthy();
+  });
+
+  it('passes focusPeakingColor to FocusPeakingOverlay', () => {
+    const { _getFocusPeakingMock } = require('../components/FocusPeakingOverlay');
+    render(
+      <CameraOverlays {...defaultProps} showFocusPeaking={true} focusPeakingColor="#ff0000" />
+    );
+    const calls = _getFocusPeakingMock().mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.color).toBe('#ff0000');
+  });
+
+  it('passes score and scoreReason to ComparisonOverlay', () => {
+    const { _getComparisonMock } = require('../components/ComparisonOverlay');
+    render(
+      <CameraOverlays
+        {...defaultProps}
+        showComparison={true}
+        lastCapturedUri="file://test.jpg"
+        lastCapturedScore={85}
+        lastCapturedScoreReason="Rule of thirds aligned"
+      />
+    );
+    const calls = _getComparisonMock().mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.score).toBe(85);
+    expect(lastCall.scoreReason).toBe('Rule of thirds aligned');
+  });
+
+  it('passes undefined score when lastCapturedScore is null', () => {
+    const { _getComparisonMock } = require('../components/ComparisonOverlay');
+    render(
+      <CameraOverlays
+        {...defaultProps}
+        showComparison={true}
+        lastCapturedUri="file://test.jpg"
+        lastCapturedScore={null}
+        lastCapturedScoreReason={null}
+      />
+    );
+    const calls = _getComparisonMock().mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.score).toBeUndefined();
+    expect(lastCall.scoreReason).toBeUndefined();
   });
 });
