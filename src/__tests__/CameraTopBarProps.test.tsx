@@ -1,9 +1,20 @@
 import type { CameraTopBarProps } from '../types';
+import type { SharedValue } from 'react-native-reanimated';
+
+// Mock SharedValue for type-level test assertions
+const mockToastOpacity: SharedValue<number> = {
+  value: 0,
+  get() { return this.value; },
+  set(v) { this.value = typeof v === 'function' ? (v as (val: number) => number)(this.value) : v; },
+  addListener() {},
+  removeListener() {},
+  modify() {},
+};
 
 // Helper to create a minimal valid props object for type-level assertions
 function makeCameraTopBarProps(overrides: Partial<CameraTopBarProps> = {}): CameraTopBarProps {
   return {
-    gridVariant: 'grid-3x3',
+    gridVariant: 'thirds',
     showGridModal: false,
     onGridPress: () => {},
     onGridSelect: () => {},
@@ -39,6 +50,9 @@ function makeCameraTopBarProps(overrides: Partial<CameraTopBarProps> = {}): Came
     showKeypoints: false,
     onComparePress: () => {},
     burstActive: false,
+    burstCount: 0,
+    toastOpacity: mockToastOpacity,
+    toastMessage: '',
     ...overrides,
   };
 }
@@ -46,13 +60,13 @@ function makeCameraTopBarProps(overrides: Partial<CameraTopBarProps> = {}): Came
 describe('CameraTopBarProps', () => {
   it('accepts all valid grid props', () => {
     const props = makeCameraTopBarProps({
-      gridVariant: 'grid-golden',
+      gridVariant: 'golden',
       showGridModal: true,
       onGridPress: () => {},
       onGridSelect: () => {},
       onGridModalClose: () => {},
     });
-    expect(props.gridVariant).toBe('grid-golden');
+    expect(props.gridVariant).toBe('golden');
     expect(props.showGridModal).toBe(true);
   });
 
