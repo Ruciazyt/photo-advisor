@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -281,7 +282,7 @@ export function CameraScreen() {
     keypointsHandleDismiss(id);
   }, [handleDismiss, keypointsHandleDismiss]);
 
-  useEffect(() => {
+  const loadSettingsOnFocus = useCallback(() => {
     loadAppSettings().then((settings) => {
       setVoiceEnabled(settings.voiceEnabled);
       setTimerDuration(settings.timerDuration);
@@ -295,6 +296,8 @@ export function CameraScreen() {
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
+
+  useFocusEffect(loadSettingsOnFocus);
 
   const handleAskAI = useCallback(async () => {
     if (countdownActive || loading || burstActive) return;
