@@ -713,4 +713,38 @@ describe('SettingsScreen', () => {
       expect(saveAppSettings).toHaveBeenCalledWith({ showShakeDetector: true });
     });
   });
+
+  // 52. shake detector toggle is rendered with label "摇一摇关闭建议"
+  it('shake detector toggle is rendered with correct label', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
+    const shakeToggle = getByLabelText('摇一摇关闭建议');
+    expect(shakeToggle.props.accessibilityRole).toBe('switch');
+  });
+
+  // 53. shake detector toggle calls saveAppSettings with showShakeDetector
+  it('shake detector toggle calls saveAppSettings with showShakeDetector', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('摇一摇关闭建议'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showShakeDetector: true });
+    });
+  });
+
+  // 54. shake detector toggle reflects checked=true when loaded from settings
+  it('shake detector toggle reflects checked=true when enabled in settings', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false, theme: 'dark', timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: false, showLevel: true, showFocusPeaking: false,
+      showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
+      showShakeDetector: true, imageQualityPreset: 'balanced',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
+    const shakeToggle = getByLabelText('摇一摇关闭建议');
+    expect(shakeToggle.props.accessibilityState).toMatchObject({ checked: true });
+  });
 });
