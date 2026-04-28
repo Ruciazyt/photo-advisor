@@ -11,7 +11,7 @@ jest.mock('../components/ConfigWarning', () => ({
   },
 }));
 jest.mock('../components/GridOverlay', () => ({
-  GridOverlay: ({ variant }: { variant: string }) => {
+  GridOverlay: ({ variant, onGridActivate }: { variant: string; onGridActivate?: Function }) => {
     const { View } = require('react-native');
     return <View testID={`grid-${variant}`} />;
   },

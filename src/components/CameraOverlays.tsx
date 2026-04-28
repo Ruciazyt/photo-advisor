@@ -120,6 +120,7 @@ export function CameraOverlays({
   lastCapturedScoreReason,
   onComparisonClose,
   focusPeakingColor,
+  onGridActivate,
 }: CameraOverlaysProps) {
   return (
     <>
