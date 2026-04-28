@@ -29,6 +29,8 @@ export interface CameraOverlaysProps {
   showGridModal: boolean;
   onGridSelect: (v: GridVariant) => void;
   onGridModalClose: () => void;
+  /** Fires when user taps the active grid overlay directly (not the selector modal) */
+  onGridActivate?: (v: GridVariant) => void;
   // Level
   showLevel: boolean;
   // Histogram
@@ -123,7 +125,7 @@ export function CameraOverlays({
     <>
       <ConfigWarning visible={!apiConfigured} />
 
-      <GridOverlay variant={gridVariant} />
+      <GridOverlay variant={gridVariant} onGridActivate={onGridActivate} />
 
       <GridSelectorModal
         visible={showGridModal}
