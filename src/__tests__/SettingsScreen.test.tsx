@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { act, render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 // Suppress act() warnings from @expo/vector-icons Icon component (async state updates in third-party code)
@@ -648,7 +648,9 @@ describe('SettingsScreen', () => {
     (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('颜色 #44FF44')).toBeTruthy(); });
-    fireEvent.press(getByLabelText('颜色 #44FF44'));
+    await act(async () => {
+      fireEvent.press(getByLabelText('颜色 #44FF44'));
+    });
     await waitFor(() => {
       expect(saveAppSettings).toHaveBeenCalledWith({ focusPeakingColor: '#44FF44' });
     });
