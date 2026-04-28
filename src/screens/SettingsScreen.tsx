@@ -34,6 +34,8 @@ import {
 import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { speak } from '../hooks/useVoiceFeedback';
 import { AccessibleToggle } from '../components/AccessibleToggle';
+import { ExportSection } from '../components/ExportSection';
+import { exportAllData, importFromFile, clearAllData } from '../services/export';
 
 interface Props {
   onSaved?: () => void;
@@ -87,6 +89,29 @@ export function SettingsScreen({ onSaved }: Props) {
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
       setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
     });
+  }, []);
+
+  const handleClearAll = useCallback(async () => {
+    Alert.alert(
+      '清空所有数据',
+      '此操作不可恢复，收藏夹和拍摄日志将被永久删除。确定要清空吗？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '清空',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAllData();
+              Alert.alert('已清空', '所有数据已被删除');
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : String(err);
+              Alert.alert('清空失败', msg);
+            }
+          },
+        },
+      ]
+    );
   }, []);
 
   const currentVersion = getAppVersion();
@@ -628,6 +653,29 @@ export function SettingsScreen({ onSaved }: Props) {
             })}
           </View>
         </View>
+
+        <ExportSection
+          onExport={async () => {
+            try {
+              const ok = await exportAllData();
+              if (!ok) Alert.alert('分享不可用', '当前设备不支持数据分享');
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : String(err);
+              Alert.alert('导出失败', msg);
+            }
+          }}
+          onImport={async () => {
+            try {
+              const result = await importFromFile();
+              if (!result) return;
+              Alert.alert('导入完成', `新增 ${result.imported} 条，跳过 ${result.skipped} 条已存在记录`);
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : String(err);
+              Alert.alert('导入失败', msg);
+            }
+          }}
+          onClearAll={handleClearAll}
+        />
 
         <View style={[styles.versionSection, { borderTopColor: colors.border }]}>
           <View style={styles.versionRow}>
