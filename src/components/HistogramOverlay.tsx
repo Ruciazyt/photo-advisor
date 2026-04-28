@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
 
 interface HistogramOverlayProps {
   histogramData?: number[];
@@ -103,6 +104,8 @@ const staticStyles = StyleSheet.create({
 
 export function HistogramOverlay({ histogramData, visible }: HistogramOverlayProps) {
   const { colors } = useTheme();
+  const { announce } = useAccessibilityAnnouncement();
+  const announcedRef = useRef(false);
 
   // Theme-dependent styles — useMemo to avoid re-creation
   const labelStyle = useMemo(() => [staticStyles.label, { color: colors.textSecondary }], [colors.textSecondary]);
@@ -166,13 +169,39 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
     };
   }, [histogramData]);
 
+  // Announce exposure warnings to screen readers when they appear
+  useEffect(() => {
+    if (!visible) {
+      announcedRef.current = false;
+      return;
+    }
+    if (!announcedRef.current) {
+      if (warnings.under && warnings.over) {
+        announce('直方图警告：欠曝和过曝同时检测到，画面曝光可能严重失衡', 'assertive');
+      } else if (warnings.under) {
+        announce('直方图警告：欠曝，画面偏暗，建议增加曝光', 'assertive');
+      } else if (warnings.over) {
+        announce('直方图警告：过曝，画面高光溢出，建议降低曝光', 'assertive');
+      } else {
+        announce('直方图曝光正常', 'polite');
+      }
+      announcedRef.current = true;
+    }
+  }, [visible, warnings.under, warnings.over, announce]);
+
   if (!visible) return null;
 
   return (
     <View
       style={[staticStyles.container, { backgroundColor: colors.histogramBg, borderColor: colors.histogramBorder, borderWidth: 1 }]}
       pointerEvents="none"
-      accessibilityLabel="直方图曝光分析"
+      accessibilityLabel={warnings.under && warnings.over
+        ? '直方图曝光分析：欠曝和过曝同时检测到'
+        : warnings.under
+        ? '直方图曝光分析：欠曝警告'
+        : warnings.over
+        ? '直方图曝光分析：过曝警告'
+        : '直方图曝光分析：曝光正常'}
       accessibilityRole="image"
     >
       <View style={staticStyles.headerRow}>
