@@ -656,6 +656,38 @@ describe('SettingsScreen', () => {
     });
   });
 
+  // 50. sensitivity selector saves focusPeakingSensitivity via saveAppSettings
+  it('sensitivity selector saves focusPeakingSensitivity via saveAppSettings', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    // Default sensitivity is 'medium' — verify it's marked as selected
+    await waitFor(() => {
+      expect(getByLabelText('灵敏度 中，已选中')).toBeTruthy();
+    });
+    // Press '高' (high) sensitivity option
+    await act(async () => {
+      fireEvent.press(getByLabelText('灵敏度 高'));
+    });
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ focusPeakingSensitivity: 'high' });
+    });
+    // Verify the previously-selected '中' is no longer selected
+    expect(getByLabelText('灵敏度 中').props.accessibilityState).not.toMatchObject({ selected: true });
+  });
+
+  // 51. sensitivity selector 'low' option saves focusPeakingSensitivity
+  it('sensitivity low option saves focusPeakingSensitivity', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('灵敏度 中，已选中')).toBeTruthy(); });
+    await act(async () => {
+      fireEvent.press(getByLabelText('灵敏度 低'));
+    });
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ focusPeakingSensitivity: 'low' });
+    });
+  });
+
   // 47. toggle press updates settings via onPress callback
   it('toggle press triggers onPress and saves updated setting', async () => {
     (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
