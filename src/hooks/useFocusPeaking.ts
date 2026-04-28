@@ -16,7 +16,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import jpeg from 'jpeg-js';
 
 // ---- Exported for testing ----
-export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS, samplePixels, sensitivityThreshold };
+export { SAMPLE_SIZE, EDGE_THRESHOLD, MAX_PEAKS, samplePixels, sensitivityThreshold, computeAdaptiveThreshold };
 
 // ---- Public interface ----
 
@@ -43,6 +43,47 @@ function sensitivityThreshold(sensitivity: 'low' | 'medium' | 'high'): number {
 
 function computeLuminance(r: number, g: number, b: number): number {
   return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+/** Sensitivity offset multipliers for the adaptive threshold (mean + offset * stdDev). */
+const SENSITIVITY_OFFSET: Record<'low' | 'medium' | 'high', number> = {
+  low: 1.5,
+  medium: 1.0,
+  high: 0.5,
+};
+
+/**
+ * Compute an adaptive edge detection threshold based on scene luminance statistics.
+ * Converts RGBA pixels to grayscale luminance, then returns:
+ *   threshold = mean + (sensitivity_offset * stdDev)
+ * Exported for unit testing.
+ */
+export function computeAdaptiveThreshold(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  sensitivity: 'low' | 'medium' | 'high'
+): { threshold: number; stdDev: number; mean: number } {
+  const count = width * height;
+  if (count === 0) return { threshold: 0, stdDev: 0, mean: 0 };
+  // Compute mean luminance
+  let sum = 0;
+  for (let i = 0; i < count; i++) {
+    sum += pixels[i];
+  }
+  const mean = sum / count;
+  // Compute standard deviation
+  let sumSq = 0;
+  for (let i = 0; i < count; i++) {
+    const delta = pixels[i] - mean;
+    sumSq += delta * delta;
+  }
+  const stdDev = Math.sqrt(sumSq / count);
+
+  const offset = SENSITIVITY_OFFSET[sensitivity];
+  const threshold = mean + offset * stdDev;
+
+  return { threshold, stdDev, mean };
 }
 
 /**
@@ -128,9 +169,15 @@ export function extractPeaks(
   mag: number[][],
   width: number,
   height: number,
-  sensitivity: 'low' | 'medium' | 'high' = 'medium'
+  sensitivity: 'low' | 'medium' | 'high' = 'medium',
+  adaptiveThresholdOverride?: number
 ): PeakPoint[] {
-  const threshold = sensitivityThreshold(sensitivity);
+  const baseThreshold = sensitivityThreshold(sensitivity);
+  // If an adaptive threshold was computed, use the higher of the two
+  // to ensure we only show edges that exceed scene-adaptive noise floor
+  const threshold = adaptiveThresholdOverride !== undefined
+    ? Math.max(baseThreshold, adaptiveThresholdOverride)
+    : baseThreshold;
 
   // Find raw max without array spread (avoids O(n) allocation + O(n) spread args)
   let rawMax = 1;
@@ -207,6 +254,9 @@ export function useFocusPeaking(): UseFocusPeakingReturn {
         const { pixels, width, height } = await samplePixels(resized.uri, SAMPLE_SIZE);
         if (!pixels || pixels.length === 0) return [];
 
+        // Compute adaptive luminance threshold for this scene
+        const { threshold: adaptiveThreshold } = computeAdaptiveThreshold(pixels, width, height, sensitivity);
+
         // Build luminance 2D array
         const lum: number[][] = [];
         for (let y = 0; y < height; y++) {
@@ -217,7 +267,7 @@ export function useFocusPeaking(): UseFocusPeakingReturn {
         }
 
         const mag = sobelMagnitudes(lum, width, height);
-        const peaks = extractPeaks(mag, width, height, sensitivity);
+        const peaks = extractPeaks(mag, width, height, sensitivity, adaptiveThreshold);
 
         // Map to screen coordinates (flip y because camera frame is top-down,
         // but screen coordinates have y=0 at top — already consistent)

@@ -679,3 +679,73 @@ describe('samplePixels', () => {
     await expect(samplePixels('file://test.jpg', 48)).rejects.toThrow('File read error');
   });
 });
+// ---------------------------------------------------------------------------
+// computeAdaptiveThreshold
+// ---------------------------------------------------------------------------
+
+import { computeAdaptiveThreshold } from '../hooks/useFocusPeaking';
+
+describe('computeAdaptiveThreshold', () => {
+  it('returns zero values for empty input (0 count)', () => {
+    const result = computeAdaptiveThreshold(new Uint8Array(0), 0, 0, 'medium');
+    expect(result.threshold).toBe(0);
+    expect(result.stdDev).toBe(0);
+    expect(result.mean).toBe(0);
+  });
+
+  it('computes correct mean for uniform luminance', () => {
+    // All pixels = 128 → mean = 128, stdDev = 0
+    const pixels = new Uint8Array(new Array(100).fill(128));
+    const result = computeAdaptiveThreshold(pixels, 10, 10, 'medium');
+    expect(result.mean).toBeCloseTo(128, 1);
+    expect(result.stdDev).toBeCloseTo(0, 1);
+    // threshold = mean + 1.0*stdDev = 128
+    expect(result.threshold).toBeCloseTo(128, 1);
+  });
+
+  it('computes correct standard deviation for known values', () => {
+    // Values: [0, 255] → mean = 127.5, variance = [(0-127.5)² + (255-127.5)²]/2 = 32512.5
+    // stdDev = sqrt(32512.5) ≈ 180.31
+    const pixels = new Uint8Array([0, 255]);
+    const result = computeAdaptiveThreshold(pixels, 2, 1, 'medium');
+    expect(result.mean).toBeCloseTo(127.5, 1);
+    expect(result.stdDev).toBeGreaterThan(0);
+    // threshold = mean + 1.0*stdDev
+    expect(result.threshold).toBeCloseTo(result.mean + result.stdDev, 1);
+  });
+
+  it('applies low sensitivity offset of 1.5', () => {
+    // All pixels = 100 → stdDev = 0 → threshold = 100 + 1.5*0 = 100
+    const pixels = new Uint8Array(new Array(100).fill(100));
+    const result = computeAdaptiveThreshold(pixels, 10, 10, 'low');
+    expect(result.threshold).toBeCloseTo(100, 1);
+  });
+
+  it('applies medium sensitivity offset of 1.0', () => {
+    const pixels = new Uint8Array(new Array(100).fill(100));
+    const result = computeAdaptiveThreshold(pixels, 10, 10, 'medium');
+    expect(result.threshold).toBeCloseTo(100, 1);
+  });
+
+  it('applies high sensitivity offset of 0.5', () => {
+    const pixels = new Uint8Array(new Array(100).fill(100));
+    const result = computeAdaptiveThreshold(pixels, 10, 10, 'high');
+    expect(result.threshold).toBeCloseTo(100, 1);
+  });
+
+  it('low sensitivity produces higher threshold than high sensitivity for non-uniform scene', () => {
+    // Create a scene with mixed luminance: half 50, half 200
+    const pixels = new Uint8Array(100);
+    for (let i = 0; i < 50; i++) pixels[i] = 50;
+    for (let i = 50; i < 100; i++) pixels[i] = 200;
+    const low = computeAdaptiveThreshold(pixels, 10, 10, 'low');
+    const high = computeAdaptiveThreshold(pixels, 10, 10, 'high');
+    expect(low.threshold).toBeGreaterThan(high.threshold);
+  });
+
+  it('returns threshold greater than mean for non-uniform scenes', () => {
+    const pixels = new Uint8Array([0, 128, 255]);
+    const result = computeAdaptiveThreshold(pixels, 3, 1, 'medium');
+    expect(result.threshold).toBeGreaterThan(result.mean);
+  });
+});
