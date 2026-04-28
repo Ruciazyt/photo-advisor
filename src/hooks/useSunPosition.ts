@@ -173,7 +173,10 @@ export function getDirectionAdvice(altitude: number, azimuth: number): string {
   return '顶光场景，注意补光';
 }
 
-export function useSunPosition(updateIntervalMs = 60000) {
+export function useSunPosition(
+  updateIntervalMs = 60000,
+  calculateSunPositionFn: typeof calculateSunPosition = calculateSunPosition
+) {
   const [sunData, setSunData] = useState<SunData>({
     available: false,
     goldenHourStart: null,
@@ -196,7 +199,7 @@ export function useSunPosition(updateIntervalMs = 60000) {
   const updateSunData = useCallback(async (coords: LocationCoords) => {
     const now = new Date();
     try {
-      const pos = calculateSunPosition(coords.latitude, coords.longitude, now);
+      const pos = calculateSunPositionFn(coords.latitude, coords.longitude, now);
 
       const altitude = pos.altitude;
       const azimuth = pos.azimuth;
@@ -227,7 +230,7 @@ export function useSunPosition(updateIntervalMs = 60000) {
         // Next golden hour is tomorrow morning
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowPos = calculateSunPosition(coords.latitude, coords.longitude, tomorrow);
+        const tomorrowPos = calculateSunPositionFn(coords.latitude, coords.longitude, tomorrow);
         goldenHourStart = formatTime(tomorrowPos.goldenHourMorningStart);
         goldenHourEnd = formatTime(tomorrowPos.goldenHourMorningEnd);
       }
@@ -242,7 +245,7 @@ export function useSunPosition(updateIntervalMs = 60000) {
       } else {
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowPos = calculateSunPosition(coords.latitude, coords.longitude, tomorrow);
+        const tomorrowPos = calculateSunPositionFn(coords.latitude, coords.longitude, tomorrow);
         blueHourStart = formatTime(tomorrowPos.blueHourMorningStart);
         blueHourEnd = formatTime(tomorrowPos.blueHourMorningEnd);
       }

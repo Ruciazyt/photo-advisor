@@ -356,8 +356,27 @@ describe('calculateSunPosition — blue hour calculation', () => {
 // The 'location unavailable' and 'permission denied' tests cover equivalent
 // error-handling paths. A future refactor that accepts calculateSunPosition as
 // a dependency would enable direct catch-block coverage.
-describe.skip('useSunPosition — catch block error path (line 276)', () => {
-  // Reserved; will pass once the hook accepts calculateSunPosition via DI.
+describe('useSunPosition — catch block error path (line 276)', () => {
+  it('calls setSunData with unavailable when calculateSunPosition throws', async () => {
+    mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    mockGetCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 31.23, longitude: 121.47 },
+    });
+
+    const { result } = renderHook(() =>
+      useSunPosition(60000, () => {
+        throw new Error('sun calc failed');
+      })
+    );
+
+    await waitFor(
+      () => {
+        expect(result.current.sunData.advice).toBe('太阳计算不可用');
+      },
+      { timeout: 3000 }
+    );
+    expect(result.current.sunData.available).toBe(false);
+  });
 });
 
 
