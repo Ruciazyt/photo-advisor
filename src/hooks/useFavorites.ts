@@ -21,7 +21,11 @@ export function useFavorites() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    refresh().catch(() => {
+      // refresh already sets loading=false on success;
+      // on rejection we ensure loading is also cleared
+      setLoading(false);
+    });
   }, [refresh]);
 
   const saveFavorite = useCallback(
