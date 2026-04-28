@@ -59,6 +59,7 @@ export type GridVariant = 'thirds' | 'golden' | 'diagonal' | 'spiral' | 'none';
 
 export interface GridOverlayProps {
   variant?: GridVariant;
+  onGridActivate?: (v: GridVariant) => void;
 }
 
 export interface GridSelectorModalProps {
@@ -698,6 +699,8 @@ export interface FocusRingProps {
   x: number;
   y: number;
   onComplete: () => void;
+  borderColor: string;
+  innerBorderColor: string;
 }
 
 export interface FocusGuideOverlayProps {
@@ -734,6 +737,7 @@ export interface ShareButtonProps {
   score?: number;
   gridVariant?: string;
   onShareEnd?: () => void;
+  scoreReason?: string;
 }
 
 export interface StreamingDrawerProps {
