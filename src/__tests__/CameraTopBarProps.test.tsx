@@ -299,7 +299,7 @@ describe('CameraTopBarProps', () => {
 // ============================================================
 
 describe('CameraOverlaysProps', () => {
-  const minimalOverlayProps: Required<CameraOverlaysProps> = {
+  const minimalOverlayProps: Partial<CameraOverlaysProps> & { apiConfigured: boolean; gridVariant: GridVariant; showGridModal: boolean; onGridSelect: (v: GridVariant) => void; onGridModalClose: () => void; showLevel: boolean; showHistogram: boolean; histogramData: number[]; showFocusGuide: boolean; showFocusPeaking: boolean; cameraRef: React.RefObject<CameraView | null>; peakPoints: PeakPoint[]; screenWidth: number; screenHeight: number; showSunOverlay: boolean; showBurstSuggestion: boolean; burstSuggestionText: string; onBurstSuggestionAccept: () => void; onBurstSuggestionDismiss: () => void; burstActive: boolean; showKeypoints: boolean; keypoints: Keypoint[]; showScoreOverlay: boolean; scoreOverlayResult: CompositionScoreResult | null; challengeMode: boolean; challengeSession: ChallengeSession | null; onScoreDismiss: () => void; sceneTag: string | null; sceneTagVisible: boolean; countdownActive: boolean; countdownCount: number; onCountdownComplete: () => void; lastCapturedUri: string | null; bubbleItems: BubbleItem[]; showComparison: boolean; lastCapturedScore: number | null; lastCapturedScoreReason: string | null; onComparisonClose: () => void; } = {
     apiConfigured: true,
     gridVariant: 'thirds' as GridVariant,
     showGridModal: false,
