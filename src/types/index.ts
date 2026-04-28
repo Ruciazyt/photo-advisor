@@ -344,6 +344,7 @@ export interface AppSettings {
   showSunPosition: boolean;
   showFocusGuide: boolean;
   showBubbleChat: boolean;
+  showShakeDetector: boolean;
   imageQualityPreset: ImageQualityPreset;
   focusPeakingColor: string;
   focusPeakingSensitivity: FocusPeakingSensitivity;

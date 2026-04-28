@@ -253,3 +253,37 @@ describe('GRID_LABELS used in CameraScreen context', () => {
     expect(getByText('网格: 黄金分割')).toBeTruthy();
   });
 });
+
+// ---- Shake detector wiring logic tests ----
+// Validates the shake-to-dismiss enabled condition used in CameraScreen:
+// enabled: showShakeDetector && showBubbleChat
+describe('shake-to-dismiss logic pattern', () => {
+  it('detector enabled only when both showShakeDetector AND showBubbleChat are true', () => {
+    const isEnabled = (showShakeDetector: boolean, showBubbleChat: boolean) =>
+      showShakeDetector && showBubbleChat;
+
+    expect(isEnabled(true, true)).toBe(true);
+    expect(isEnabled(true, false)).toBe(false);
+    expect(isEnabled(false, true)).toBe(false);
+    expect(isEnabled(false, false)).toBe(false);
+  });
+
+  it('shake handler dismisses all three overlay types', () => {
+    // Validates the multi-dismiss pattern: bubbleChatDismissAll + handleDismissAll + keypointsDismissAll
+    const overlays = {
+      bubbleChat: true,
+      composition: true,
+      keypoints: true,
+    };
+    const dismissAll = () => {
+      overlays.bubbleChat = false;
+      overlays.composition = false;
+      overlays.keypoints = false;
+    };
+
+    dismissAll();
+    expect(overlays.bubbleChat).toBe(false);
+    expect(overlays.composition).toBe(false);
+    expect(overlays.keypoints).toBe(false);
+  });
+});

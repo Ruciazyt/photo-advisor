@@ -63,7 +63,7 @@ jest.mock('../services/update', () => ({
 }));
 
 jest.mock('../services/settings', () => ({
-  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, imageQualityPreset: 'balanced' })),
+  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, imageQualityPreset: 'balanced' })),
   saveAppSettings: jest.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (loadApiConfig as jest.Mock).mockResolvedValue(null);
-    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, imageQualityPreset: 'balanced' });
+    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, imageQualityPreset: 'balanced' });
     (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
   });
 
@@ -282,6 +282,8 @@ describe('SettingsScreen', () => {
       showFocusPeaking: false,
       showSunPosition: false,
       showFocusGuide: false,
+      showBubbleChat: true,
+      showShakeDetector: false,
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => {
@@ -452,6 +454,8 @@ describe('SettingsScreen', () => {
       showFocusPeaking: true,
       showSunPosition: true,
       showFocusGuide: false,
+      showBubbleChat: true,
+      showShakeDetector: false,
     });
     const { getByText } = render(<SettingsScreen />);
     await waitFor(() => {
@@ -696,6 +700,17 @@ describe('SettingsScreen', () => {
     fireEvent.press(getByLabelText('直方图'));
     await waitFor(() => {
       expect(saveAppSettings).toHaveBeenCalledWith({ showHistogram: true });
+    });
+  });
+
+  // 52. shake detector toggle calls saveAppSettings with showShakeDetector
+  it('shake detector toggle calls saveAppSettings with showShakeDetector', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('摇一摇关闭建议'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showShakeDetector: true });
     });
   });
 });

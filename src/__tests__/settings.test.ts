@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS = {
   showSunPosition: false,
   showFocusGuide: true,
   showBubbleChat: true,
+  showShakeDetector: false,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',

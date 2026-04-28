@@ -59,6 +59,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showSunPosition, setShowSunPosition] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(true);
   const [showBubbleChat, setShowBubbleChat] = useState(true);
+  const [showShakeDetector, setShowShakeDetector] = useState(false);
   const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
   const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
@@ -81,6 +82,7 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowSunPosition(settings.showSunPosition);
       setShowFocusGuide(settings.showFocusGuide);
       setShowBubbleChat(settings.showBubbleChat ?? true);
+      setShowShakeDetector(settings.showShakeDetector ?? false);
       setImageQualityPreset(settings.imageQualityPreset);
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
       setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
@@ -502,6 +504,7 @@ export function SettingsScreen({ onSaved }: Props) {
             { label: '太阳位置', desc: '显示太阳方向与黄金时段', state: showSunPosition, setter: setShowSunPosition, saveKey: 'showSunPosition' },
             { label: '对焦辅助', desc: '显示对焦引导框', state: showFocusGuide, setter: setShowFocusGuide, saveKey: 'showFocusGuide' },
             { label: 'AI 建议气泡', desc: '显示 AI 构图建议气泡', state: showBubbleChat, setter: setShowBubbleChat, saveKey: 'showBubbleChat' },
+            { label: '摇一摇关闭建议', desc: '摇动设备关闭所有 AI 建议气泡', state: showShakeDetector, setter: setShowShakeDetector, saveKey: 'showShakeDetector' },
           ].map(({ label, desc, state, setter, saveKey }) => (
             <View key={saveKey} style={[styles.toggleRow, { borderTopColor: colors.border }]}>
               <View style={styles.prefInfo}>

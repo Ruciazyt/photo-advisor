@@ -28,6 +28,7 @@ import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { useCompositionScore } from '../hooks/useCompositionScore';
 import { useSceneRecognition } from '../hooks/useSceneRecognition';
 import { useToast } from '../hooks/useToast';
+import { useShakeDetector } from '../hooks/useShakeDetector';
 import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { loadApiConfig } from '../services/api';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
@@ -83,6 +84,23 @@ export function CameraScreen() {
     staggerDelayMs: 250,
   });
 
+  // Shake detector — dismiss all AI suggestion overlays on shake
+  const bubbleChatDismissAllRef = useRef(bubbleChatDismissAll);
+  bubbleChatDismissAllRef.current = bubbleChatDismissAll;
+  const handleDismissAllRef = useRef(handleDismissAll);
+  handleDismissAllRef.current = handleDismissAll;
+  const keypointsDismissAllRef = useRef(keypointsHandleDismissAll);
+  keypointsDismissAllRef.current = keypointsHandleDismissAll;
+
+  useShakeDetector({
+    onShake: () => {
+      bubbleChatDismissAllRef.current();
+      handleDismissAllRef.current();
+      keypointsDismissAllRef.current();
+    },
+    enabled: showShakeDetector && showBubbleChat,
+  });
+
   // Sync loading state from useSuggestions to useBubbleChat
   useEffect(() => {
     bubbleChatSetLoading(loading);
@@ -119,6 +137,7 @@ export function CameraScreen() {
   const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const [showBubbleChat, setShowBubbleChat] = useState(true);
+  const [showShakeDetector, setShowShakeDetector] = useState(false);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
@@ -295,6 +314,7 @@ export function CameraScreen() {
       setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
       setShowSunOverlay(settings.showSunPosition);
       setShowBubbleChat(settings.showBubbleChat ?? true);
+      setShowShakeDetector(settings.showShakeDetector ?? false);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
