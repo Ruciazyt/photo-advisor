@@ -10,7 +10,7 @@ import { useShakeDetector } from '../hooks/useShakeDetector';
 import { Accelerometer } from 'expo-sensors';
 
 describe('useShakeDetector', () => {
-  let mockHandler: ((event: { acceleration: { x: number; y: number; z: number } }) => void) | null = null;
+  let mockHandler: ((event: { x: number; y: number; z: number }) => void) | null = null;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -49,10 +49,8 @@ describe('useShakeDetector', () => {
     const onShake = jest.fn();
     renderHook(() => useShakeDetector({ onShake, enabled: true }));
 
-    // Normal standing still: magnitude ≈ 1g (gravity)
-    // Use null values to simulate unavailable data — should be gracefully ignored
     if (mockHandler) {
-      act(() => { mockHandler!({ acceleration: { x: null as any, y: 0.5, z: 0.5 } }); });
+      act(() => { mockHandler!({ x: null as unknown as number, y: 0.5, z: 0.5 }); });
     }
     expect(onShake).not.toHaveBeenCalled();
   });
@@ -67,12 +65,12 @@ describe('useShakeDetector', () => {
     const aboveThreshold = { x: 2.0, y: 0.5, z: 0.5 }; // magnitude ≈ 2.12 > 1.8
 
     // First two samples — not enough consecutive
-    act(() => { mockHandler!({ acceleration: aboveThreshold }); });
-    act(() => { mockHandler!({ acceleration: aboveThreshold }); });
+    act(() => { mockHandler!({ x: aboveThreshold.x, y: aboveThreshold.y, z: aboveThreshold.z }); });
+    act(() => { mockHandler!({ x: aboveThreshold.x, y: aboveThreshold.y, z: aboveThreshold.z }); });
     expect(onShake).not.toHaveBeenCalled();
 
     // Third sample — triggers shake
-    act(() => { mockHandler!({ acceleration: aboveThreshold }); });
+    act(() => { mockHandler!({ x: aboveThreshold.x, y: aboveThreshold.y, z: aboveThreshold.z }); });
     expect(onShake).toHaveBeenCalledTimes(1);
   });
 
@@ -85,12 +83,12 @@ describe('useShakeDetector', () => {
     const above = { x: 2.0, y: 0.5, z: 0.5 }; // magnitude > 1.8
     const below = { x: 0, y: 0, z: 1 };          // magnitude = 1 (just gravity)
 
-    act(() => { mockHandler!({ acceleration: above }); }); // c=1
-    act(() => { mockHandler!({ acceleration: above }); }); // c=2
-    act(() => { mockHandler!({ acceleration: below }); }); // c=0 (reset)
-    act(() => { mockHandler!({ acceleration: above }); }); // c=1
-    act(() => { mockHandler!({ acceleration: above }); }); // c=2
-    act(() => { mockHandler!({ acceleration: above }); }); // c=3 → shake
+    act(() => { mockHandler!({ ...above }); }); // c=1
+    act(() => { mockHandler!({ ...above }); }); // c=2
+    act(() => { mockHandler!({ ...below }); }); // c=0 (reset)
+    act(() => { mockHandler!({ ...above }); }); // c=1
+    act(() => { mockHandler!({ ...above }); }); // c=2
+    act(() => { mockHandler!({ ...above }); }); // c=3 → shake
 
     expect(onShake).toHaveBeenCalledTimes(1);
   });
@@ -103,11 +101,11 @@ describe('useShakeDetector', () => {
 
     const above = { x: 3.0, y: 0, z: 0 }; // magnitude = 3 > 1.8
 
-    act(() => { mockHandler!({ acceleration: above }); });
+    act(() => { mockHandler!(above); });
     expect(onShake).toHaveBeenCalledTimes(1);
 
     // Second shake within 500ms — should be debounced
-    act(() => { mockHandler!({ acceleration: above }); });
+    act(() => { mockHandler!(above); });
     expect(onShake).toHaveBeenCalledTimes(1);
   });
 
@@ -120,12 +118,12 @@ describe('useShakeDetector', () => {
 
     const above = { x: 3.0, y: 0, z: 0 };
 
-    act(() => { mockHandler!({ acceleration: above }); });
+    act(() => { mockHandler!(above); });
     expect(onShake).toHaveBeenCalledTimes(1);
 
     act(() => { jest.advanceTimersByTime(400); }); // > 300ms
 
-    act(() => { mockHandler!({ acceleration: above }); });
+    act(() => { mockHandler!(above); });
     expect(onShake).toHaveBeenCalledTimes(2);
 
     jest.useRealTimers();
@@ -136,7 +134,7 @@ describe('useShakeDetector', () => {
     renderHook(() => useShakeDetector({ onShake, enabled: true }));
 
     act(() => {
-      mockHandler!({ acceleration: { x: null as any, y: null as any, z: null as any } });
+      mockHandler!({ x: null as unknown as number, y: null as unknown as number, z: null as unknown as number });
     });
     expect(onShake).not.toHaveBeenCalled();
   });
@@ -149,11 +147,11 @@ describe('useShakeDetector', () => {
     );
 
     // magnitude ≈ 2.12 — below 2.5, should not trigger
-    act(() => { mockHandler!({ acceleration: { x: 1.5, y: 1.5, z: 0 } }); });
+    act(() => { mockHandler!({ x: 1.5, y: 1.5, z: 0 }); });
     expect(onShake).not.toHaveBeenCalled();
 
     // magnitude ≈ 2.83 — above 2.5, should trigger
-    act(() => { mockHandler!({ acceleration: { x: 2.0, y: 2.0, z: 0 } }); });
+    act(() => { mockHandler!({ x: 2.0, y: 2.0, z: 0 }); });
     expect(onShake).toHaveBeenCalledTimes(1);
   });
 
@@ -162,7 +160,7 @@ describe('useShakeDetector', () => {
     (Accelerometer.addListener as jest.Mock).mockReturnValue({ remove: removeMock });
 
     const { rerender } = renderHook(
-      ({ enabled }) => useShakeDetector({ onShake: jest.fn(), enabled }),
+      ({ enabled }: { enabled: boolean }) => useShakeDetector({ onShake: jest.fn(), enabled }),
       { initialProps: { enabled: true } }
     );
 
@@ -210,19 +208,19 @@ describe('useShakeDetector', () => {
     const below = { x: 0, y: 0, z: 1 };
 
     // First shake sequence
-    act(() => { mockHandler!({ acceleration: above }); }); // c=1
-    act(() => { mockHandler!({ acceleration: above }); }); // c=2 → shake
+    act(() => { mockHandler!(above); }); // c=1
+    act(() => { mockHandler!(above); }); // c=2 → shake
     expect(onShake).toHaveBeenCalledTimes(1);
 
     // Advance 150ms — less than resetIntervalMs
     act(() => { jest.advanceTimersByTime(150); });
 
     // Below-threshold resets counter
-    act(() => { mockHandler!({ acceleration: below }); }); // c=0
+    act(() => { mockHandler!(below); }); // c=0
 
     // Another shake within 200ms — still within debounce window
-    act(() => { mockHandler!({ acceleration: above }); }); // c=1
-    act(() => { mockHandler!({ acceleration: above }); }); // c=2 → but debounced!
+    act(() => { mockHandler!(above); }); // c=1
+    act(() => { mockHandler!(above); }); // c=2 → but debounced!
 
     expect(onShake).toHaveBeenCalledTimes(1); // still 1
 
@@ -230,8 +228,8 @@ describe('useShakeDetector', () => {
     act(() => { jest.advanceTimersByTime(60); }); // total 210ms > 200ms
 
     // Now a fresh shake should work
-    act(() => { mockHandler!({ acceleration: above }); }); // c=1
-    act(() => { mockHandler!({ acceleration: above }); }); // c=2 → onShake
+    act(() => { mockHandler!(above); }); // c=1
+    act(() => { mockHandler!(above); }); // c=2 → onShake
     expect(onShake).toHaveBeenCalledTimes(2);
 
     jest.useRealTimers();
