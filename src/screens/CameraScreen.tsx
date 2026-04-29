@@ -302,6 +302,13 @@ export function CameraScreen() {
     keypointsHandleDismiss(id);
   }, [handleDismiss, keypointsHandleDismiss]);
 
+  // Cycle grid variant when user taps the grid overlay directly
+  const handleGridActivate = useCallback((variant: GridVariant) => {
+    const order: GridVariant[] = ['thirds', 'golden', 'diagonal', 'spiral', 'none'];
+    const nextIndex = (order.indexOf(variant) + 1) % order.length;
+    setGridVariant(order[nextIndex]);
+  }, []);
+
   const loadSettingsOnFocus = useCallback(() => {
     loadAppSettings().then((settings) => {
       setVoiceEnabled(settings.voiceEnabled);
@@ -354,6 +361,7 @@ export function CameraScreen() {
         <CameraOverlays
           apiConfigured={apiConfigured} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
+          onGridActivate={handleGridActivate}
           showLevel={showLevel} showHistogram={showHistogram} histogramData={histogramData}
           showFocusGuide={showFocusGuide} showFocusPeaking={showFocusPeaking} cameraRef={cameraRef} peakPoints={peakPoints}
           screenWidth={screenWidth} screenHeight={screenHeight} showSunOverlay={showSunOverlay}

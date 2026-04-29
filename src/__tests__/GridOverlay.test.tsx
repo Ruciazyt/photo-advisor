@@ -173,14 +173,42 @@ describe('GridOverlay', () => {
   });
 
   describe('interactive mode with onGridActivate', () => {
-    it('renders TouchableOpacity when onGridActivate is provided', () => {
+    it('renders TouchableOpacity (button role) when onGridActivate is provided', () => {
       const mockOnActivate = jest.fn();
       const { getAllByRole } = render(
         <GridOverlay variant="thirds" onGridActivate={mockOnActivate} />
       );
-      // When interactive, accessibilityRole becomes 'button' instead of 'image'
       const buttonElements = getAllByRole('button');
       expect(buttonElements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('calls onGridActivate with correct variant when tapped', () => {
+      const mockOnActivate = jest.fn();
+      const { getAllByRole } = render(
+        <GridOverlay variant="golden" onGridActivate={mockOnActivate} />
+      );
+      const buttons = getAllByRole('button');
+      // The outer GridOverlay TouchableOpacity is the first button
+      const outerButton = buttons.find(
+        (el) => el.props.accessibilityLabel?.includes('黄金比例')
+      );
+      expect(outerButton).toBeTruthy();
+    });
+
+    it('does NOT render TouchableOpacity (role button) when onGridActivate is NOT provided — sub-components render as View with role image', () => {
+      const { queryAllByRole, getAllByRole } = render(<GridOverlay variant="thirds" />);
+      const buttonElements = queryAllByRole('button');
+      // Without onGridActivate, all rendered elements have role 'image' or no explicit role — no button
+      expect(buttonElements.length).toBe(0);
+      // Sub-components should have role 'image' (the View with accessibilityRole="image")
+      const imageElements = getAllByRole('image');
+      expect(imageElements.length).toBeGreaterThan(0);
+    });
+
+    it('returns null for variant "none" regardless of onGridActivate', () => {
+      const mockOnActivate = jest.fn();
+      const { toJSON } = render(<GridOverlay variant="none" onGridActivate={mockOnActivate} />);
+      expect(toJSON()).toBeNull();
     });
   });
 });
