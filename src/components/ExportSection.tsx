@@ -37,7 +37,7 @@ export const ExportSection = memo(function ExportSection({
           accessibilityLabel="导出数据"
           accessibilityRole="button"
         >
-          <Ionicons name="upload-outline" size={20} color={colors.accent} />
+          <Ionicons name="cloud-upload-outline" size={20} color={colors.accent} />
           <Text style={[styles.buttonText, { color: colors.text }]}>导出数据</Text>
         </TouchableOpacity>
 

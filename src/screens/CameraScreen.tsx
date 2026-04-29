@@ -84,6 +84,13 @@ export function CameraScreen() {
     staggerDelayMs: 250,
   });
 
+  // Keypoints state must be declared before keypointsDismissAllRef
+  const { keypoints, showKeypoints, setKeypoints, setShowKeypoints, handleDismiss: keypointsHandleDismiss, handleDismissAll: keypointsHandleDismissAll } = useKeypoints();
+
+  // showBubbleChat and showShakeDetector must be declared before useShakeDetector
+  const [showBubbleChat, setShowBubbleChat] = useState(true);
+  const [showShakeDetector, setShowShakeDetector] = useState(false);
+
   // Shake detector — dismiss all AI suggestion overlays on shake
   const bubbleChatDismissAllRef = useRef(bubbleChatDismissAll);
   bubbleChatDismissAllRef.current = bubbleChatDismissAll;
@@ -127,7 +134,6 @@ export function CameraScreen() {
   } = useBurstMode({ setSuggestions });
 
   const [apiConfigured, setApiConfigured] = useState(false);
-  const { keypoints, showKeypoints, setKeypoints, setShowKeypoints, handleDismiss: keypointsHandleDismiss, handleDismissAll: keypointsHandleDismissAll } = useKeypoints();
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
   const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
@@ -136,8 +142,6 @@ export function CameraScreen() {
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
   const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
-  const [showBubbleChat, setShowBubbleChat] = useState(true);
-  const [showShakeDetector, setShowShakeDetector] = useState(false);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);

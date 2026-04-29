@@ -121,6 +121,8 @@ export function ShareButton({
       // Wrap in a Promise so we handle both consistently.
       new Promise<void>((resolve) => {
         try {
+          // Image.getSize may return void (callback-based) or a Promise in some RN versions.
+          // Cast to `unknown` then check for thenable to handle both cases safely.
           const result = Image.getSize(
             photoUri,
             (width, height) => {
@@ -131,10 +133,9 @@ export function ShareButton({
               if (!cancelled) setCardAspectRatio(photoAspectRatio);
               resolve();
             },
-          );
-          // If getSize returned a Promise (expo-image / new RN), chain onto it
-          if (result && typeof result.then === 'function') {
-            result.then(
+          ) as unknown;
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
+            (result as Promise<unknown>).then(
               () => {},
               () => {},
             );

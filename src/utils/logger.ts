@@ -1,4 +1,5 @@
-import { __DEV__ } from 'react-native';
+// __DEV__ is a React Native global, not a module export
+declare const __DEV__: boolean;
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

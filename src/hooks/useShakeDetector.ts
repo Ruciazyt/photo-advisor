@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
-import type { Subscription } from 'expo-sensors';
+import type { EventSubscription as Subscription } from 'expo-modules-core';
 
 export interface UseShakeDetectorOptions {
   /** Called when a shake is detected */
@@ -61,8 +61,8 @@ export function useShakeDetector({
   const subscriptionRef = useRef<Subscription | null>(null);
 
   const handleAccelerometerData = useCallback(
-    (event: { acceleration: AccelerometerMeasurement }) => {
-      const { x, y, z } = event.acceleration;
+    (event: AccelerometerMeasurement) => {
+      const { x, y, z } = event;
       if (x == null || y == null || z == null) return;
 
       // Magnitude of acceleration vector (1g = standing still due to gravity)

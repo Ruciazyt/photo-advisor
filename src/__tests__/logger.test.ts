@@ -1,10 +1,5 @@
 import { logger } from '../utils/logger';
 
-// Mock react-native __DEV__
-jest.mock('react-native', () => ({
-  __DEV__: true,
-}));
-
 describe('logger', () => {
   let consoleDebugSpy: jest.SpyInstance;
   let consoleInfoSpy: jest.SpyInstance;
@@ -112,9 +107,11 @@ describe('logger', () => {
 
   describe('silence in production', () => {
     it('should not log when __DEV__ is false', () => {
+      // React Native sets __DEV__ as a writable global property on the global object
+      // Use Object.defineProperty to override it for this test
+      Object.defineProperty(globalThis, '__DEV__', { value: false });
+      // Re-require logger so it picks up the new __DEV__ value
       jest.resetModules();
-      const module = require('react-native');
-      Object.defineProperty(module, '__DEV__', { value: false });
       const { logger: prodLogger } = require('../utils/logger');
 
       prodLogger.debug('should not appear');
@@ -126,6 +123,9 @@ describe('logger', () => {
       expect(consoleInfoSpy).not.toHaveBeenCalled();
       expect(consoleWarnSpy).not.toHaveBeenCalled();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+      // Restore __DEV__ to true for subsequent tests
+      Object.defineProperty(globalThis, '__DEV__', { value: true });
     });
   });
 });

@@ -17,16 +17,6 @@ jest.mock('expo-sharing', () => ({
   shareAsync: jest.fn(() => Promise.resolve()),
 }));
 
-// Mock expo-image's getSize which returns a Promise (not the callback-based RN Image.getSize)
-jest.mock('expo-image', () => ({
-  getSize: jest.fn((uri, success, _failure) => {
-    // Simulate a portrait 3:4 photo (1080w x 1440h = 0.75 aspect ratio)
-    // Returns undefined to trigger fallback, but we call success via process.nextTick
-    process.nextTick(() => success(1080, 1440));
-    return undefined;
-  }),
-}));
-
 // Mock react-native-view-shot
 jest.mock('react-native-view-shot', () => ({
   captureRef: jest.fn(() => Promise.resolve('file:///captured.jpg')),
@@ -48,18 +38,29 @@ describe('ShareButton', () => {
     gridVariant: 'thirds',
   };
 
-  it('renders the share button', () => {
+  it('renders the share button', async () => {
+    // Mock Image.getSize to return Promise (matching RN 0.76+ TurboModule behavior)
+    // This overrides jest-expo's callback-based ImageLoader.getSize mock
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     const { getByText } = render(<ShareButton {...defaultProps} />);
     expect(getByText('分享')).toBeTruthy();
   });
 
-  it('does not call sharePhoto when photoUri is empty', () => {
+  it('does not call sharePhoto when photoUri is empty', async () => {
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     const { getByText } = render(<ShareButton {...defaultProps} photoUri="" />);
     fireEvent.press(getByText('分享'));
     expect(mockSharePhoto).not.toHaveBeenCalled();
   });
 
   it('calls sharePhoto with correct options when pressed', async () => {
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     const { getByText } = render(<ShareButton {...defaultProps} />);
     fireEvent.press(getByText('分享'));
 
@@ -80,6 +81,9 @@ describe('ShareButton', () => {
   });
 
   it('does not share again while already sharing', async () => {
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     // Override mockSharePhoto to delay resolution (simulates ongoing share)
     mockSharePhoto.mockImplementation(
       () => new Promise(resolve => setTimeout(() => resolve({ success: true }), 500))
@@ -98,16 +102,22 @@ describe('ShareButton', () => {
   });
 
   it('shows error toast when share fails', async () => {
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     mockSharePhoto.mockResolvedValue({ success: false, error: '分享失败' });
     const { getByText, findByText } = render(<ShareButton {...defaultProps} />);
     fireEvent.press(getByText('分享'));
 
-    // Toast should eventually show分享失败
+    // Toast should eventually show 分享失败
     const toast = await findByText('分享失败', {}, { timeout: 3000 });
     expect(toast).toBeTruthy();
   });
 
   it('passes score and gridVariant to sharePhoto', async () => {
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     const { getByText } = render(
       <ShareButton
         photoUri="file:///test/photo.jpg"
@@ -131,6 +141,9 @@ describe('ShareButton', () => {
   });
 
   it('forwards scoreReason to ShareCard', async () => {
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
+
     const captureRef = require('react-native-view-shot').captureRef;
     captureRef.mockResolvedValue('file:///captured-with-reason.jpg');
 
