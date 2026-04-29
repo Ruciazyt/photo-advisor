@@ -35,7 +35,7 @@ jest.mock('expo-location', () => ({
 }));
 
 // Import useSunPosition AFTER mocks are set up
-let useSunPosition: (updateIntervalMs?: number) => {
+let useSunPosition: (updateIntervalMs?: number, calculateSunPositionFn?: typeof calculateSunPosition) => {
   sunData: SunData;
   requestLocation: () => Promise<void>;
 };
