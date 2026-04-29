@@ -7,6 +7,8 @@ import * as MediaLibrary from 'expo-media-library';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../services/api';
 import { Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
 
+import { logger } from '../utils/logger';
+
 export type { Keypoint };
 
 import type { ImageQualityPreset } from '../types';
@@ -125,17 +127,17 @@ export function useCameraCapture({
           [{ resize: { width: resizeWidth } }],
           { compress, format: SaveFormat.JPEG }
         );
-        console.log('[takePicture] resized:', resized.uri, resized.width, 'x', resized.height);
+        logger.for('takePicture').debug('resized:', resized.uri, resized.width, 'x', resized.height);
         base64 = await FileSystem.readAsStringAsync(resized.uri, { encoding: 'base64' });
-        console.log('[takePicture] resized base64 length:', base64.length);
+        logger.for('takePicture').debug('resized base64 length:', base64.length);
       } catch (e) {
-        console.log('[takePicture] resize failed, using original:', e);
+        logger.for('takePicture').warn('resize failed, using original:', e);
       }
 
       if (!base64 || base64.length < 1000) {
-        console.log('[takePicture] reading from original photo.uri');
+        logger.for('takePicture').debug('reading from original photo.uri');
         base64 = await FileSystem.readAsStringAsync(originalUri, { encoding: 'base64' });
-        console.log('[takePicture] original base64 length:', base64.length);
+        logger.for('takePicture').debug('original base64 length:', base64.length);
       }
 
       if (!base64 || base64.length < 1000) return null;
@@ -262,7 +264,7 @@ export function useCameraCapture({
         await MediaLibrary.saveToLibraryAsync(manipulated.uri);
       }
     } catch (e) {
-      console.log('[savePhotoToGallery] failed:', e);
+      logger.for('savePhotoToGallery').warn('failed:', e);
     }
   }, []);
 

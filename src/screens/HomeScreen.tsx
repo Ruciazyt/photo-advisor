@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../services/api';
 import { StreamingDrawer } from '../components/StreamingDrawer';
+import { logger } from '../utils/logger';
 
 export function HomeScreen() {
   const { colors } = useTheme();
@@ -124,22 +125,22 @@ export function HomeScreen() {
           [{ resize: { width: 1024 } }],
           { compress: 0.8, format: SaveFormat.JPEG }
         );
-        console.log('[pickImage] resized uri:', resized.uri, resized.width, 'x', resized.height);
+        logger.for('pickImage').debug('resized uri:', resized.uri, resized.width, 'x', resized.height);
         base64 = await FileSystem.readAsStringAsync(resized.uri, {
           encoding: 'base64',
         });
-        console.log('[pickImage] resized base64 length:', base64.length);
+        logger.for('pickImage').debug('resized base64 length:', base64.length);
       } catch (resizeErr) {
-        console.log('[pickImage] resize failed, using original, err:', resizeErr);
+        logger.for('pickImage').warn('resize failed, using original, err:', resizeErr);
       }
       
       // Fallback: if resize failed or base64 is too small, read original
       if (!base64 || base64.length < 1000) {
-        console.log('[pickImage] reading from original uri, current length:', base64?.length);
+        logger.for('pickImage').debug('reading from original uri, current length:', base64?.length);
         base64 = await FileSystem.readAsStringAsync(uri, {
           encoding: 'base64',
         });
-        console.log('[pickImage] original base64 length:', base64.length);
+        logger.for('pickImage').debug('original base64 length:', base64.length);
       }
       
       if (!base64 || base64.length < 100) {
