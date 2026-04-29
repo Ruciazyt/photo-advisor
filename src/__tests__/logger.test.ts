@@ -1,55 +1,131 @@
 import { logger } from '../utils/logger';
 
-// Mock react-native's __DEV__ for testing
-let originalDev: boolean;
-
-beforeEach(() => {
-  // __DEV__ is a compile-time constant in react-native, so we can't truly override it.
-  // We test the public API surface instead.
-});
+// Mock react-native __DEV__
+jest.mock('react-native', () => ({
+  __DEV__: true,
+}));
 
 describe('logger', () => {
-  describe('logger.for(tag)', () => {
-    it('creates a namespaced logger with debug, info, warn, error', () => {
-      const l = logger.for('TestModule');
-      expect(typeof l.debug).toBe('function');
-      expect(typeof l.info).toBe('function');
-      expect(typeof l.warn).toBe('function');
-      expect(typeof l.error).toBe('function');
+  let consoleDebugSpy: jest.SpyInstance;
+  let consoleInfoSpy: jest.SpyInstance;
+  let consoleWarnSpy: jest.SpyInstance;
+  let consoleErrorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleDebugSpy.mockRestore();
+    consoleInfoSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
+  describe('global logger', () => {
+    it('should call console.debug for debug level', () => {
+      logger.debug('test message');
+      expect(consoleDebugSpy).toHaveBeenCalled();
     });
 
-    it('namespaced logger has consistent output shape', () => {
-      const l1 = logger.for('A');
-      const l2 = logger.for('A');
-      expect(Object.keys(l1)).toEqual(['debug', 'info', 'warn', 'error']);
-      expect(Object.keys(l2)).toEqual(['debug', 'info', 'warn', 'error']);
+    it('should call console.info for info level', () => {
+      logger.info('test message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+    });
+
+    it('should call console.warn for warn level', () => {
+      logger.warn('test message');
+      expect(consoleWarnSpy).toHaveBeenCalled();
+    });
+
+    it('should call console.error for error level', () => {
+      logger.error('test message');
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    it('should include [PhotoAdvisor] tag in output', () => {
+      logger.debug('test');
+      expect(consoleDebugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[PhotoAdvisor]'),
+        expect.any(String)
+      );
+    });
+
+    it('should concatenate args into message', () => {
+      logger.debug('message', 'arg1', 123, true);
+      const calls = consoleDebugSpy.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const [_tag, msg] = calls[0];
+      expect(msg).toContain('message');
+      expect(msg).toContain('arg1');
+      expect(msg).toContain('123');
+      expect(msg).toContain('true');
+    });
+
+    it('should handle no args gracefully', () => {
+      logger.debug('just a string');
+      expect(consoleDebugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[PhotoAdvisor]'),
+        'just a string'
+      );
     });
   });
 
-  describe('global logger shortcut', () => {
-    it('exports debug, info, warn, error', () => {
-      expect(typeof logger.debug).toBe('function');
-      expect(typeof logger.info).toBe('function');
-      expect(typeof logger.warn).toBe('function');
-      expect(typeof logger.error).toBe('function');
+  describe('namespaced logger (logger.for)', () => {
+    it('should create namespaced logger with tag', () => {
+      const ns = logger.for('takePicture');
+      ns.debug('test');
+      expect(consoleDebugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[PhotoAdvisor]:takePicture'),
+        expect.any(String)
+      );
+    });
+
+    it('should support all log levels on namespaced logger', () => {
+      const ns = logger.for('testModule');
+      ns.debug('d');
+      ns.info('i');
+      ns.warn('w');
+      ns.error('e');
+      expect(consoleDebugSpy).toHaveBeenCalled();
+      expect(consoleInfoSpy).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    it('should concatenate multiple args in namespaced logger', () => {
+      const ns = logger.for('pickImage');
+      ns.debug('resized uri:', 'file://test.png', 1024, 'x', 768);
+      const calls = consoleDebugSpy.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const [_tag, msg] = calls[0];
+      expect(msg).toContain('resized uri:');
+      expect(msg).toContain('file://test.png');
+      expect(msg).toContain('1024');
+      expect(msg).toContain('x');
+      expect(msg).toContain('768');
     });
   });
 
-  describe('API surface', () => {
-    it('accepts message and args', () => {
-      // In __DEV__ these would call console.*; we just verify no throw
-      expect(() => logger.debug('hello')).not.toThrow();
-      expect(() => logger.info('hello', 1, 'a')).not.toThrow();
-      expect(() => logger.warn('hello', { key: 'value' })).not.toThrow();
-      expect(() => logger.error('hello', null, undefined)).not.toThrow();
-    });
+  describe('silence in production', () => {
+    it('should not log when __DEV__ is false', () => {
+      jest.resetModules();
+      const module = require('react-native');
+      Object.defineProperty(module, '__DEV__', { value: false });
+      const { logger: prodLogger } = require('../utils/logger');
 
-    it('for() logger accepts message and args', () => {
-      const l = logger.for('SomeTag');
-      expect(() => l.debug('msg')).not.toThrow();
-      expect(() => l.info('msg', 1, 2)).not.toThrow();
-      expect(() => l.warn('msg')).not.toThrow();
-      expect(() => l.error('msg')).not.toThrow();
+      prodLogger.debug('should not appear');
+      prodLogger.info('should not appear');
+      prodLogger.warn('should not appear');
+      prodLogger.error('should not appear');
+
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
   });
 });

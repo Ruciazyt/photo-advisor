@@ -1,5 +1,6 @@
 import { Linking, Alert } from 'react-native';
 import type { ReleaseInfo } from '../types';
+import { logger } from '../utils/logger';
 
 import pkg from '../../app.json';
 const APP_VERSION: string = pkg.expo.version;
@@ -38,7 +39,7 @@ export const checkForUpdate = async (): Promise<ReleaseInfo | null> => {
     });
 
     if (!response.ok) {
-      console.error('[update] Failed to fetch release info:', response.status);
+      logger.for('update').error('Failed to fetch release info:', response.status);
       return null;
     }
 
@@ -70,7 +71,7 @@ export const checkForUpdate = async (): Promise<ReleaseInfo | null> => {
       body,
     };
   } catch (error) {
-    console.error('[update] Error checking for update:', error);
+    logger.for('update').error('Error checking for update:', error);
     return null;
   }
 };
@@ -109,7 +110,7 @@ export const downloadAndInstall = async (url: string): Promise<void> => {
       Alert.alert('错误', '无法打开下载链接');
     }
   } catch (error) {
-    console.error('[update] Error opening download URL:', error);
+    logger.for('update').error('Error opening download URL:', error);
     Alert.alert('错误', '下载失败，请稍后重试');
   }
 };
@@ -118,6 +119,6 @@ export const openReleasePage = async (url: string): Promise<void> => {
   try {
     await Linking.openURL(url);
   } catch (error) {
-    console.error('[update] Error opening release page:', error);
+    logger.for('update').error('Error opening release page:', error);
   }
 };
