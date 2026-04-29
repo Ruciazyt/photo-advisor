@@ -11,7 +11,7 @@
  *     - "📸 由拍摄参谋生成" footer
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Image, Text, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import type { ShareOptions } from '../types';
@@ -45,6 +45,8 @@ export interface ShareCardProps {
   gridVariant?: string;
   /** Optional one-line score reason (e.g. '主体偏左，建议右移') */
   scoreReason?: string;
+  /** Aspect ratio of the source photo (width / height). Defaults to 3/4 (portrait). */
+  photoAspectRatio?: number;
 }
 
 /**
@@ -58,6 +60,7 @@ export function ShareCard({
   score,
   gridVariant = 'thirds',
   scoreReason,
+  photoAspectRatio = 3 / 4,
 }: ShareCardProps) {
   const { colors, theme } = useTheme();
   const meta = GRID_META[gridVariant] ?? GRID_META['thirds'];
@@ -69,7 +72,15 @@ export function ShareCard({
   const textSecondary = isDark ? '#AAAAAA' : '#666666';
   const accentColor = colors.accent ?? '#E8D5B7';
 
+  const cardWidth = SCREEN_W;
+  const cardHeight = cardWidth / photoAspectRatio;
+
   const panelStyles = useMemo(() => StyleSheet.create({
+    card: {
+      width: cardWidth,
+      height: cardHeight,
+      backgroundColor: '#000',
+    },
     panel: {
       position: 'absolute',
       bottom: 0,
@@ -151,11 +162,11 @@ export function ShareCard({
   }), [panelBg, panelBorder, textPrimary, textSecondary, accentColor]);
 
   return (
-    <View style={styles.card}>
+    <View style={panelStyles.card}>
       {/* Photo */}
       <Image
         source={{ uri: photoUri }}
-        style={styles.photo}
+        style={StyleSheet.absoluteFill}
         resizeMode="cover"
       />
 
@@ -203,15 +214,4 @@ export function ShareCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    width: SCREEN_W,
-    // Height is determined by parent via ref measurement;
-    // default to a reasonable portrait aspect ratio
-    aspectRatio: 3 / 4,
-    backgroundColor: '#000',
-  },
-  photo: {
-    ...StyleSheet.absoluteFillObject,
-  },
-});
+

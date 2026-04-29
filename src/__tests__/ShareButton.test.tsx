@@ -3,12 +3,28 @@
  */
 
 import React from 'react';
-import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { ShareButton } from '../components/ShareButton';
 
 // Mock the share service
 jest.mock('../services/share', () => ({
   sharePhoto: jest.fn(),
+}));
+
+// Mock expo-sharing to add missing isAvailableAsync (not in jest-expo's ExpoSharing mock)
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
+
+// Mock expo-image's getSize which returns a Promise (not the callback-based RN Image.getSize)
+jest.mock('expo-image', () => ({
+  getSize: jest.fn((uri, success, _failure) => {
+    // Simulate a portrait 3:4 photo (1080w x 1440h = 0.75 aspect ratio)
+    // Returns undefined to trigger fallback, but we call success via process.nextTick
+    process.nextTick(() => success(1080, 1440));
+    return undefined;
+  }),
 }));
 
 // Mock react-native-view-shot

@@ -740,6 +740,8 @@ export interface ShareButtonProps {
   gridVariant?: string;
   onShareEnd?: () => void;
   scoreReason?: string;
+  /** Aspect ratio of the photo (width/height). Defaults to 3/4 portrait. */
+  photoAspectRatio?: number;
 }
 
 export interface StreamingDrawerProps {

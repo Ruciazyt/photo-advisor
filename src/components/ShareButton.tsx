@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Image, TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay, runOnJS } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -24,6 +24,8 @@ interface ShareButtonProps {
   scoreReason?: string;
   /** Callback when share completes */
   onShareEnd?: () => void;
+  /** Aspect ratio of the photo (width/height). Used to correctly size the ShareCard capture. */
+  photoAspectRatio?: number;
 }
 
 // Module-level static styles (no theme dependency)
@@ -97,6 +99,7 @@ export function ShareButton({
   gridVariant,
   scoreReason,
   onShareEnd,
+  photoAspectRatio = 3 / 4,
 }: ShareButtonProps) {
   const { colors } = useTheme();
   const [sharing, setSharing] = useState(false);
@@ -105,6 +108,47 @@ export function ShareButton({
 
   // Ref for the off-screen ShareCard used as capture source for view-shot
   const shareCardRef = useRef<View>(null);
+
+  // Track actual photo dimensions to size the ShareCard correctly
+  const [cardAspectRatio, setCardAspectRatio] = useState(photoAspectRatio);
+
+  useEffect(() => {
+    if (!photoUri) return;
+    let cancelled = false;
+
+    const loadAspectRatio = () => {
+      // Image.getSize may be callback-based or Promise-based depending on the runtime.
+      // Wrap in a Promise so we handle both consistently.
+      new Promise<void>((resolve) => {
+        try {
+          const result = Image.getSize(
+            photoUri,
+            (width, height) => {
+              if (!cancelled) setCardAspectRatio(width / height);
+              resolve();
+            },
+            () => {
+              if (!cancelled) setCardAspectRatio(photoAspectRatio);
+              resolve();
+            },
+          );
+          // If getSize returned a Promise (expo-image / new RN), chain onto it
+          if (result && typeof result.then === 'function') {
+            result.then(
+              () => {},
+              () => {},
+            );
+          }
+        } catch {
+          if (!cancelled) setCardAspectRatio(photoAspectRatio);
+          resolve();
+        }
+      });
+    };
+
+    loadAspectRatio();
+    return () => { cancelled = true; };
+  }, [photoUri]);
 
   const buttonStyles = useMemo(() => StyleSheet.create({
     button: {
@@ -189,6 +233,7 @@ export function ShareButton({
           score={score}
           gridVariant={gridVariant}
           scoreReason={scoreReason}
+          photoAspectRatio={cardAspectRatio}
         />
       </View>
 
