@@ -63,7 +63,7 @@ jest.mock('../services/update', () => ({
 }));
 
 jest.mock('../services/settings', () => ({
-  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, imageQualityPreset: 'balanced' })),
+  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced' })),
   saveAppSettings: jest.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (loadApiConfig as jest.Mock).mockResolvedValue(null);
-    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, imageQualityPreset: 'balanced' });
+    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced' });
     (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
   });
 
@@ -746,5 +746,40 @@ describe('SettingsScreen', () => {
     await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
     const shakeToggle = getByLabelText('摇一摇关闭建议');
     expect(shakeToggle.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  // 55. showKeypoints toggle is rendered with label "关键点标记"
+  it('showKeypoints toggle is rendered with label "关键点标记"', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('关键点标记')).toBeTruthy(); });
+    const keypointsToggle = getByLabelText('关键点标记');
+    expect(keypointsToggle.props.accessibilityRole).toBe('switch');
+    expect(keypointsToggle.props.accessibilityState).toMatchObject({ checked: false });
+  });
+
+  // 56. showKeypoints toggle calls saveAppSettings with showKeypoints
+  it('showKeypoints toggle calls saveAppSettings with showKeypoints', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('关键点标记')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('关键点标记'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showKeypoints: true });
+    });
+  });
+
+  // 57. showKeypoints toggle reflects checked=true when enabled in settings
+  it('showKeypoints toggle reflects checked=true when enabled in settings', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false, theme: 'dark', timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: false, showLevel: true, showFocusPeaking: false,
+      showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
+      showShakeDetector: false, showKeypoints: true, imageQualityPreset: 'balanced',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('关键点标记')).toBeTruthy(); });
+    const keypointsToggle = getByLabelText('关键点标记');
+    expect(keypointsToggle.props.accessibilityState).toMatchObject({ checked: true });
   });
 });

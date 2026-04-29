@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS = {
   showFocusGuide: true,
   showBubbleChat: true,
   showShakeDetector: false,
+  showKeypoints: false,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',

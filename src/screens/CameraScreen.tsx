@@ -315,6 +315,7 @@ export function CameraScreen() {
       setShowSunOverlay(settings.showSunPosition);
       setShowBubbleChat(settings.showBubbleChat ?? true);
       setShowShakeDetector(settings.showShakeDetector ?? false);
+      setShowKeypoints(settings.showKeypoints ?? false);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
