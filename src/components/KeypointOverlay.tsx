@@ -81,6 +81,9 @@ const staticStyles = StyleSheet.create({
   },
 });
 
+// Rule-of-thirds intersection points exported for unit testing
+export { POSITION_COORDS };
+
 export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {
   const { colors } = useTheme();
 
