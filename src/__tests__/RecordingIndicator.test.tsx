@@ -3,8 +3,10 @@
  */
 
 import React from 'react';
+import { beforeEach } from '@jest/globals';
 import { render } from '@testing-library/react-native';
 import { RecordingIndicator } from '../components/RecordingIndicator';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Mock Reanimated v4 (local mock avoids native worklets initialization error)
 jest.mock('react-native-reanimated');
@@ -25,6 +27,8 @@ jest.mock('../contexts/ThemeContext', () => ({
       bubbleText: '#fff',
       countdownBg: 'rgba(0,0,0,0.6)',
       countdownText: '#ffffff',
+      overlayBg: 'rgba(0,0,0,0.55)',
+      text: '#fff',
     },
     setTheme: jest.fn(),
     toggleTheme: jest.fn(),
@@ -32,6 +36,122 @@ jest.mock('../contexts/ThemeContext', () => ({
 }));
 
 describe('RecordingIndicator', () => {
+  let mockUseTheme: jest.MockedFunction<typeof useTheme>;
+
+  beforeEach(() => {
+    mockUseTheme = useTheme as jest.MockedFunction<typeof useTheme>;
+  });
+
+  it('uses overlayBg from theme for container background when theme is dark', () => {
+    mockUseTheme.mockReturnValueOnce({
+      theme: 'dark',
+      colors: {
+        primary: '#000',
+        accent: '#e8d5b7',
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        gridAccent: 'rgba(232,213,183,0.45)',
+        bubbleBg: 'rgba(0,0,0,0.75)',
+        bubbleText: '#fff',
+        countdownBg: 'rgba(0,0,0,0.6)',
+        countdownText: '#ffffff',
+        overlayBg: 'rgba(0,0,0,0.55)',
+        text: '#fff',
+      },
+      setTheme: jest.fn(),
+      toggleTheme: jest.fn(),
+    });
+    const { toJSON } = render(
+      <RecordingIndicator isRecording={true} durationSeconds={10} />
+    );
+    const json = JSON.stringify(toJSON());
+    expect(json).toContain('rgba(0,0,0,0.55)');
+  });
+
+  it('uses text color from theme for REC and timer text when theme is dark', () => {
+    mockUseTheme.mockReturnValueOnce({
+      theme: 'dark',
+      colors: {
+        primary: '#000',
+        accent: '#e8d5b7',
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        gridAccent: 'rgba(232,213,183,0.45)',
+        bubbleBg: 'rgba(0,0,0,0.75)',
+        bubbleText: '#fff',
+        countdownBg: 'rgba(0,0,0,0.6)',
+        countdownText: '#ffffff',
+        overlayBg: 'rgba(0,0,0,0.55)',
+        text: '#fff',
+      },
+      setTheme: jest.fn(),
+      toggleTheme: jest.fn(),
+    });
+    const { getByText } = render(
+      <RecordingIndicator isRecording={true} durationSeconds={10} />
+    );
+    const recText = getByText('REC');
+    expect(recText).toBeTruthy();
+    expect(JSON.stringify(recText.props.style)).toContain('#fff');
+  });
+
+  it('uses overlayBg from theme for container background when theme is light', () => {
+    mockUseTheme.mockReturnValueOnce({
+      theme: 'light',
+      colors: {
+        primary: '#fff',
+        accent: '#b7a07a',
+        success: '#16a34a',
+        error: '#dc2626',
+        warning: '#d97706',
+        gridAccent: 'rgba(183,160,122,0.45)',
+        bubbleBg: 'rgba(255,255,255,0.9)',
+        bubbleText: '#000',
+        countdownBg: 'rgba(0,0,0,0.6)',
+        countdownText: '#ffffff',
+        overlayBg: 'rgba(255,255,255,0.85)',
+        text: '#000',
+      },
+      setTheme: jest.fn(),
+      toggleTheme: jest.fn(),
+    });
+    const { toJSON } = render(
+      <RecordingIndicator isRecording={true} durationSeconds={10} />
+    );
+    const json = JSON.stringify(toJSON());
+    expect(json).toContain('rgba(255,255,255,0.85)');
+  });
+
+  it('uses text color from theme for REC and timer text when theme is light', () => {
+    mockUseTheme.mockReturnValueOnce({
+      theme: 'light',
+      colors: {
+        primary: '#fff',
+        accent: '#b7a07a',
+        success: '#16a34a',
+        error: '#dc2626',
+        warning: '#d97706',
+        gridAccent: 'rgba(183,160,122,0.45)',
+        bubbleBg: 'rgba(255,255,255,0.9)',
+        bubbleText: '#000',
+        countdownBg: 'rgba(0,0,0,0.6)',
+        countdownText: '#ffffff',
+        overlayBg: 'rgba(255,255,255,0.85)',
+        text: '#000',
+      },
+      setTheme: jest.fn(),
+      toggleTheme: jest.fn(),
+    });
+    const { getByText } = render(
+      <RecordingIndicator isRecording={true} durationSeconds={10} />
+    );
+    const recText = getByText('REC');
+    expect(recText).toBeTruthy();
+    expect(JSON.stringify(recText.props.style)).toContain('#000');
+  });
+
   it('renders nothing when isRecording is false', () => {
     const { toJSON } = render(
       <RecordingIndicator isRecording={false} durationSeconds={0} />

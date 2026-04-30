@@ -18,11 +18,11 @@ export function RecordingIndicator({ isRecording, durationSeconds }: RecordingIn
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   return (
-    <View style={[styles.container, { backgroundColor: 'rgba(0,0,0,0.55)' }]} pointerEvents="none">
+    <View style={[styles.container, { backgroundColor: colors.overlayBg }]} pointerEvents="none">
       <View style={styles.badge}>
         <Text style={styles.dot}>🔴</Text>
-        <Text style={[styles.recText, { color: '#fff' }]}>REC</Text>
-        <Text style={[styles.timer, { color: '#fff' }]}>{timeStr}</Text>
+        <Text style={[styles.recText, { color: colors.text }]}>REC</Text>
+        <Text style={[styles.timer, { color: colors.text }]}>{timeStr}</Text>
       </View>
     </View>
   );
