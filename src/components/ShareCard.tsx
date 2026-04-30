@@ -73,7 +73,7 @@ export function ShareCard({
   const accentColor = colors.accent ?? '#E8D5B7';
 
   const cardWidth = SCREEN_W;
-  const cardHeight = cardWidth / photoAspectRatio;
+  const cardHeight = cardWidth * photoAspectRatio;
 
   const panelStyles = useMemo(() => StyleSheet.create({
     card: {

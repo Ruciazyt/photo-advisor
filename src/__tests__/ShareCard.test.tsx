@@ -179,6 +179,27 @@ describe('ShareCard', () => {
     expect(queryByText('💡 AI 建议')).toBeNull();
   });
 
+  it('renders with landscape photoAspectRatio (16/9) without crashing', () => {
+    const { UNSAFE_getByType } = render(
+      <ShareCard {...defaultProps} photoAspectRatio={16 / 9} />
+    );
+    expect(UNSAFE_getByType(ShareCard)).toBeTruthy();
+  });
+
+  it('renders with portrait photoAspectRatio (3/4) without crashing', () => {
+    const { UNSAFE_getByType } = render(
+      <ShareCard {...defaultProps} photoAspectRatio={3 / 4} />
+    );
+    expect(UNSAFE_getByType(ShareCard)).toBeTruthy();
+  });
+
+  it('renders with square photoAspectRatio (1/1) without crashing', () => {
+    const { UNSAFE_getByType } = render(
+      <ShareCard {...defaultProps} photoAspectRatio={1 / 1} />
+    );
+    expect(UNSAFE_getByType(ShareCard)).toBeTruthy();
+  });
+
   it('uses default grid label for unknown variant', () => {
     render(<ShareCard {...defaultProps} gridVariant="unknown" gridType="自定义" />);
     expect(screen.getByText('自定义')).toBeTruthy();
