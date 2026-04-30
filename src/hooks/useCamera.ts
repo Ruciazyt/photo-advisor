@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import type { CameraView } from 'expo-camera';
 import { CameraType, useCameraPermissions } from 'expo-camera';
 import type { PermissionResponse } from 'expo-modules-core';
 import { CameraMode } from '../types';
@@ -48,6 +49,16 @@ export interface UseCameraReturn {
   timerDuration: TimerDuration;
   /** Set the timer duration directly */
   setTimerDuration: (d: TimerDuration) => void;
+  /** Camera hardware mode ('picture' or 'video') */
+  mode: 'picture' | 'video';
+  /** Ref to the CameraView instance */
+  cameraRef: React.RefObject<CameraView | null>;
+  /** Whether video recording is in progress */
+  isRecording: boolean;
+  /** Start video recording */
+  startRecording: () => Promise<void>;
+  /** Stop video recording */
+  stopRecording: () => Promise<void>;
 }
 
 export function useCamera({
@@ -62,6 +73,27 @@ export function useCamera({
   const [rawSupported, setRawSupported] = useState(false);
   const [selectedMode, setSelectedModeState] = useState<CameraMode>(initialMode);
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
+  const [isRecording, setIsRecording] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
+
+  // Compute hardware mode from selectedMode
+  const mode: 'picture' | 'video' = selectedMode === 'video' ? 'video' : 'picture';
+
+  const startRecording = useCallback(async () => {
+    if (!cameraRef.current || isRecording) return;
+    setIsRecording(true);
+    try {
+      await cameraRef.current.recordAsync();
+    } finally {
+      setIsRecording(false);
+    }
+  }, [isRecording]);
+
+  const stopRecording = useCallback(async () => {
+    if (!cameraRef.current || !isRecording) return;
+    cameraRef.current.stopRecording();
+    setIsRecording(false);
+  }, [isRecording]);
 
   // Initialize raw support check on mount
   useEffect(() => {
@@ -110,5 +142,10 @@ export function useCamera({
     cycleTimerDuration,
     timerDuration,
     setTimerDuration,
+    mode,
+    cameraRef,
+    isRecording,
+    startRecording,
+    stopRecording,
   };
 }

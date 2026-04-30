@@ -35,6 +35,7 @@ import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { CameraTopBar } from '../components/CameraTopBar';
 import { CameraControls } from '../components/CameraControls';
 import { CameraOverlays } from '../components/CameraOverlays';
+import { RecordingIndicator } from '../components/RecordingIndicator';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
 import { useBurstMode } from '../hooks/useBurstMode';
@@ -62,7 +63,6 @@ function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: s
 
 export function CameraScreen() {
   const { colors } = useTheme();
-  const cameraRef = useRef<CameraView>(null);
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
   const preAnalysisStartedRef = useRef(false);
@@ -144,6 +144,7 @@ export function CameraScreen() {
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
 
   const { opacity: toastOpacity, toastMessage, showToast } = useToast();
@@ -169,6 +170,11 @@ export function CameraScreen() {
     cycleTimerDuration,
     timerDuration,
     setTimerDuration,
+    mode,
+    cameraRef,
+    isRecording,
+    startRecording,
+    stopRecording,
   } = useCamera({ initialMode: 'photo' });
   const { sceneTag, recognize: recognizeSceneTag } = useSceneRecognition();
   const { width: screenWidth, height: screenHeight } = require('react-native').useWindowDimensions();
@@ -333,6 +339,18 @@ export function CameraScreen() {
 
   useFocusEffect(loadSettingsOnFocus);
 
+  // Track recording duration while isRecording is true
+  useEffect(() => {
+    if (!isRecording) {
+      setRecordingDuration(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setRecordingDuration((d) => d + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
   const handleAskAI = useCallback(async () => {
     if (countdownActive || loading || burstActive) return;
     setLoading(true);
@@ -361,7 +379,7 @@ export function CameraScreen() {
 
   return (
     <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
-      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} onCameraReady={() => setCameraReady(true)}>
+      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)}>
         <CameraOverlays
           apiConfigured={apiConfigured} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
@@ -405,6 +423,7 @@ export function CameraScreen() {
           toastOpacity={toastOpacity} toastMessage={toastMessage}
         />
         <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
+        <RecordingIndicator isRecording={isRecording} durationSeconds={recordingDuration} />
       </CameraView>
       <BubbleOverlay hidden={!showBubbleChat} visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); keypointsHandleDismissAll(); }} />
       <TimerSelectorModal
