@@ -120,6 +120,101 @@ describe('CameraToolbar', () => {
     expect(switchIcon).toBeTruthy();
   });
 
+  it('renders with video mode selected and not recording', () => {
+    const onStartRecording = jest.fn();
+    const { getByText } = render(
+      <CameraToolbar
+        {...defaultProps}
+        selectedMode="video"
+        isRecording={false}
+        onStartRecording={onStartRecording}
+      />
+    );
+    // Should show circle-fill icon for start recording
+    expect(getByText('circle-fill')).toBeTruthy();
+  });
+
+  it('renders with video mode selected and recording', () => {
+    const onStopRecording = jest.fn();
+    const { getByText } = render(
+      <CameraToolbar
+        {...defaultProps}
+        selectedMode="video"
+        isRecording={true}
+        onStopRecording={onStopRecording}
+      />
+    );
+    // Should show stop-fill icon for stop recording
+    expect(getByText('stop-fill')).toBeTruthy();
+  });
+
+  it('calls onStartRecording when capture button pressed in video mode (not recording)', () => {
+    const onStartRecording = jest.fn();
+    const onStopRecording = jest.fn();
+    const { getByText } = render(
+      <CameraToolbar
+        {...defaultProps}
+        selectedMode="video"
+        isRecording={false}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
+      />
+    );
+    const captureBtn = getByText('circle-fill').parent;
+    fireEvent.press(captureBtn!);
+    expect(onStartRecording).toHaveBeenCalledTimes(1);
+    expect(onStopRecording).not.toHaveBeenCalled();
+  });
+
+  it('calls onStopRecording when capture button pressed in video mode (recording)', () => {
+    const onStartRecording = jest.fn();
+    const onStopRecording = jest.fn();
+    const { getByText } = render(
+      <CameraToolbar
+        {...defaultProps}
+        selectedMode="video"
+        isRecording={true}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
+      />
+    );
+    const captureBtn = getByText('stop-fill').parent;
+    fireEvent.press(captureBtn!);
+    expect(onStopRecording).toHaveBeenCalledTimes(1);
+    expect(onStartRecording).not.toHaveBeenCalled();
+  });
+
+  it('does not call onAskAI when in video mode regardless of recording state', () => {
+    const onAskAI = jest.fn();
+    const onStartRecording = jest.fn();
+    const onStopRecording = jest.fn();
+    const { getByText, rerender } = render(
+      <CameraToolbar
+        {...defaultProps}
+        onAskAI={onAskAI}
+        selectedMode="video"
+        isRecording={false}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
+      />
+    );
+    fireEvent.press(getByText('circle-fill').parent!);
+    expect(onAskAI).not.toHaveBeenCalled();
+
+    rerender(
+      <CameraToolbar
+        {...defaultProps}
+        onAskAI={onAskAI}
+        selectedMode="video"
+        isRecording={true}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
+      />
+    );
+    fireEvent.press(getByText('stop-fill').parent!);
+    expect(onAskAI).not.toHaveBeenCalled();
+  });
+
   it('multiple rapid presses are handled correctly', () => {
     const onGallery = jest.fn();
     const { getByTestId } = render(<CameraToolbar {...defaultProps} onGallery={onGallery} />);
@@ -128,5 +223,33 @@ describe('CameraToolbar', () => {
     fireEvent.press(galleryBtn);
     fireEvent.press(galleryBtn);
     expect(onGallery).toHaveBeenCalledTimes(3);
+  });
+
+  it('video mode rapid start/stop presses are handled correctly', () => {
+    const onStartRecording = jest.fn();
+    const onStopRecording = jest.fn();
+    const { getByText, rerender } = render(
+      <CameraToolbar
+        {...defaultProps}
+        selectedMode="video"
+        isRecording={false}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
+      />
+    );
+    fireEvent.press(getByText('circle-fill').parent!);
+    expect(onStartRecording).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <CameraToolbar
+        {...defaultProps}
+        selectedMode="video"
+        isRecording={true}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
+      />
+    );
+    fireEvent.press(getByText('stop-fill').parent!);
+    expect(onStopRecording).toHaveBeenCalledTimes(1);
   });
 });
