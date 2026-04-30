@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { GridVariant, ImageQualityPreset } from '../types';
+import type { GridVariant, ImageQualityPreset, TimerDuration } from '../types';
 
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -63,6 +63,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [showShakeDetector, setShowShakeDetector] = useState(false);
   const [showKeypoints, setShowKeypoints] = useState(false);
+  const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
   const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
@@ -87,7 +88,8 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowBubbleChat(settings.showBubbleChat ?? true);
       setShowShakeDetector(settings.showShakeDetector ?? false);
       setShowKeypoints(settings.showKeypoints ?? false);
-      setImageQualityPreset(settings.imageQualityPreset);
+      setTimerDuration(settings.timerDuration ?? 3);
+      setImageQualityPreset(settings.imageQualityPreset ?? 'balanced');
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
       setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
     });
@@ -551,6 +553,43 @@ export function SettingsScreen({ onSaved }: Props) {
               />
             </View>
           ))}
+
+          {/* Timer Duration */}
+          <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+            <View style={styles.prefInfo}>
+              <Text style={[styles.prefTitle, { color: colors.text }]}>倒计时时长</Text>
+              <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>自拍倒计时延迟秒数</Text>
+            </View>
+          </View>
+          <View style={styles.qualityPresetRow}>
+            {([3, 5, 10] as TimerDuration[]).map((d) => {
+              const labels: Record<TimerDuration, string> = { 3: '3s', 5: '5s', 10: '10s' };
+              const isSelected = timerDuration === d;
+              return (
+                <TouchableOpacity
+                  key={d}
+                  style={[
+                    styles.qualityOption,
+                    { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
+                    isSelected && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
+                  ]}
+                  onPress={async () => {
+                    setTimerDuration(d);
+                    await saveAppSettings({ timerDuration: d });
+                  }}
+                  activeOpacity={0.7}
+                  accessibilityLabel={`${labels[d]}${isSelected ? '，已选中' : ''}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityHint={isSelected ? '当前倒计时时长' : `切换到${labels[d]}`}
+                >
+                  <Text style={[styles.qualityOptionText, { color: isSelected ? colors.accent : colors.textSecondary }]}>
+                    {labels[d]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
           {/* Image Quality Preset */}
           <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>

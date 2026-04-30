@@ -782,4 +782,49 @@ describe('SettingsScreen', () => {
     const keypointsToggle = getByLabelText('关键点标记');
     expect(keypointsToggle.props.accessibilityState).toMatchObject({ checked: true });
   });
+
+  // 58. timer duration section is rendered with all 3 options
+  it('timer duration section is rendered with all 3 options', async () => {
+    const { getByText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByText('倒计时时长')).toBeTruthy(); });
+    expect(getByText('3s')).toBeTruthy();
+    expect(getByText('5s')).toBeTruthy();
+    expect(getByText('10s')).toBeTruthy();
+  });
+
+  // 59. timer duration 3s is selected by default
+  it('timer duration 3s is selected by default', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('3s，已选中')).toBeTruthy(); });
+    expect(getByLabelText('3s，已选中')).toBeTruthy();
+    expect(getByLabelText('5s').props.accessibilityState).toMatchObject({ selected: false });
+    expect(getByLabelText('10s').props.accessibilityState).toMatchObject({ selected: false });
+  });
+
+  // 60. selects timer duration 5s and saves timerDuration
+  it('selects timer duration 5s and saves timerDuration', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('3s，已选中')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('5s'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ timerDuration: 5 });
+    });
+    expect(getByLabelText('5s，已选中')).toBeTruthy();
+  });
+
+  // 61. loads saved timerDuration=10 from settings
+  it('loads saved timerDuration=10 from settings and marks it selected', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false, theme: 'dark', timerDuration: 10,
+      defaultGridVariant: 'thirds',
+      showHistogram: false, showLevel: true, showFocusPeaking: false,
+      showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
+      showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('10s，已选中')).toBeTruthy(); });
+    expect(getByLabelText('10s，已选中')).toBeTruthy();
+    expect(getByLabelText('3s').props.accessibilityState).toMatchObject({ selected: false });
+  });
 });

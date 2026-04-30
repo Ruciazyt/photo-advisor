@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1777510466798" clover="3.2.0">
-  <project timestamp="1777510466798" name="All files">
-    <metrics statements="2653" coveredstatements="2444" conditionals="1525" coveredconditionals="1247" methods="614" coveredmethods="544" elements="4792" coveredelements="4235" complexity="0" loc="2653" ncloc="2653" packages="7" files="73" classes="73"/>
+<coverage generated="1777531367976" clover="3.2.0">
+  <project timestamp="1777531367976" name="All files">
+    <metrics statements="2654" coveredstatements="2445" conditionals="1545" coveredconditionals="1267" methods="614" coveredmethods="544" elements="4813" coveredelements="4256" complexity="0" loc="2654" ncloc="2654" packages="7" files="73" classes="73"/>
     <package name="components">
-      <metrics statements="745" coveredstatements="686" conditionals="519" coveredconditionals="415" methods="207" coveredmethods="178"/>
+      <metrics statements="746" coveredstatements="687" conditionals="539" coveredconditionals="435" methods="207" coveredmethods="178"/>
       <file name="AccessibleToggle.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/AccessibleToggle.tsx">
         <metrics statements="5" coveredstatements="5" conditionals="6" coveredconditionals="6" methods="2" coveredmethods="2"/>
         <line num="27" count="1271" type="stmt"/>
@@ -65,8 +65,8 @@
       </file>
       <file name="CameraControls.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CameraControls.tsx">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="21" count="6" type="stmt"/>
-        <line num="33" count="1" type="stmt"/>
+        <line num="27" count="6" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
       </file>
       <file name="CameraOverlays.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CameraOverlays.tsx">
         <metrics statements="2" coveredstatements="1" conditionals="16" coveredconditionals="16" methods="2" coveredmethods="1"/>
@@ -74,13 +74,14 @@
         <line num="134" count="0" type="stmt"/>
       </file>
       <file name="CameraToolbar.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CameraToolbar.tsx">
-        <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
-        <line num="14" count="9" type="stmt"/>
-        <line num="16" count="9" type="stmt"/>
-        <line num="22" count="9" type="stmt"/>
-        <line num="28" count="9" type="stmt"/>
-        <line num="34" count="9" type="stmt"/>
-        <line num="67" count="9" type="stmt"/>
+        <metrics statements="7" coveredstatements="7" conditionals="20" coveredconditionals="20" methods="2" coveredmethods="2"/>
+        <line num="18" count="17" type="stmt"/>
+        <line num="20" count="17" type="stmt"/>
+        <line num="22" count="17" type="stmt"/>
+        <line num="28" count="17" type="stmt"/>
+        <line num="34" count="17" type="stmt"/>
+        <line num="40" count="17" type="stmt"/>
+        <line num="83" count="17" type="stmt"/>
       </file>
       <file name="CameraTopBar.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/CameraTopBar.tsx">
         <metrics statements="6" coveredstatements="6" conditionals="69" coveredconditionals="53" methods="2" coveredmethods="2"/>
@@ -880,12 +881,12 @@
         <line num="47" count="5" type="stmt"/>
         <line num="48" count="5" type="stmt"/>
         <line num="51" count="5" type="stmt"/>
-        <line num="65" count="431" type="cond" truecount="2" falsecount="0"/>
-        <line num="67" count="431" type="stmt"/>
-        <line num="71" count="431" type="stmt"/>
-        <line num="77" count="431" type="cond" truecount="2" falsecount="0"/>
-        <line num="78" count="424" type="stmt"/>
-        <line num="81" count="431" type="stmt"/>
+        <line num="65" count="455" type="cond" truecount="2" falsecount="0"/>
+        <line num="67" count="455" type="stmt"/>
+        <line num="71" count="455" type="stmt"/>
+        <line num="77" count="455" type="cond" truecount="2" falsecount="0"/>
+        <line num="78" count="448" type="stmt"/>
+        <line num="81" count="455" type="stmt"/>
       </file>
       <file name="useAnimationFrameTimer.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/hooks/useAnimationFrameTimer.ts">
         <metrics statements="14" coveredstatements="14" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
