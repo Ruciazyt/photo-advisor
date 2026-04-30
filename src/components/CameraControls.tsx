@@ -9,6 +9,9 @@ interface CameraControlsProps {
   onGallery: () => void;
   onAskAI: () => void;
   onSwitchCamera: () => void;
+  isRecording?: boolean;
+  onStartRecording?: () => void;
+  onStopRecording?: () => void;
 }
 
 export function CameraControls({
@@ -17,6 +20,9 @@ export function CameraControls({
   onGallery,
   onAskAI,
   onSwitchCamera,
+  isRecording,
+  onStartRecording,
+  onStopRecording,
 }: CameraControlsProps) {
   return (
     <View style={styles.wrapper}>
@@ -25,6 +31,10 @@ export function CameraControls({
         onGallery={onGallery}
         onAskAI={onAskAI}
         onSwitchCamera={onSwitchCamera}
+        selectedMode={selectedMode}
+        isRecording={isRecording}
+        onStartRecording={onStartRecording}
+        onStopRecording={onStopRecording}
       />
     </View>
   );

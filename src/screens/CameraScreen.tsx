@@ -422,7 +422,16 @@ export function CameraScreen() {
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
         />
-        <CameraControls selectedMode={selectedMode} onModeChange={setSelectedMode} onGallery={handleGallery} onAskAI={handleAskAI} onSwitchCamera={switchCamera} />
+        <CameraControls
+          selectedMode={selectedMode}
+          onModeChange={setSelectedMode}
+          onGallery={handleGallery}
+          onAskAI={handleAskAI}
+          onSwitchCamera={switchCamera}
+          isRecording={isRecording}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+        />
         <RecordingIndicator isRecording={isRecording} durationSeconds={recordingDuration} />
       </CameraView>
       <BubbleOverlay hidden={!showBubbleChat} visibleItems={visibleItems} loading={loading} onDismiss={(id) => { bubbleChatDismiss(id); handleDismissWithKeypoints(id); }} onDismissAll={() => { bubbleChatDismissAll(); handleDismissAll(); keypointsHandleDismissAll(); }} />

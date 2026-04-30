@@ -8,10 +8,16 @@ interface CameraToolbarProps {
   onGallery: () => void;
   onAskAI: () => void;
   onSwitchCamera: () => void;
+  selectedMode?: 'photo' | 'scan' | 'video' | 'portrait';
+  isRecording?: boolean;
+  onStartRecording?: () => void;
+  onStopRecording?: () => void;
 }
 
-export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraToolbarProps) {
+export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera, selectedMode, isRecording, onStartRecording, onStopRecording }: CameraToolbarProps) {
   const { colors } = useTheme();
+
+  const isVideoMode = selectedMode === 'video';
 
   const galleryA11y = useAccessibilityButton({
     label: '相册',
@@ -19,9 +25,9 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraTool
     role: 'button',
   });
 
-  const askAIA11y = useAccessibilityButton({
-    label: 'AI摄影',
-    hint: '点击拍摄照片',
+  const captureA11y = useAccessibilityButton({
+    label: isVideoMode ? (isRecording ? '停止录制' : '开始录制') : 'AI摄影',
+    hint: isVideoMode ? (isRecording ? '停止视频录制' : '开始视频录制') : '点击拍摄照片',
     role: 'button',
   });
 
@@ -56,6 +62,16 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraTool
       borderWidth: 4,
       borderColor: colors.border,
     },
+    captureBtnVideo: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: colors.error,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 4,
+      borderColor: '#FFFFFF',
+    },
     captureBtnInner: {
       width: 58,
       height: 58,
@@ -76,14 +92,22 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera }: CameraTool
         <Ionicons name="images-outline" size={28} color={colors.text} />
       </TouchableOpacity>
 
-      {/* Center: Ask AI */}
+      {/* Center: Ask AI / Recording */}
       <TouchableOpacity
-        style={styles.captureBtn}
-        onPress={onAskAI}
+        style={[styles.captureBtn, isVideoMode && styles.captureBtnVideo]}
+        onPress={isVideoMode ? (isRecording ? onStopRecording : onStartRecording) : onAskAI}
         activeOpacity={0.7}
-        {...askAIA11y}
+        {...captureA11y}
       >
-        <View style={styles.captureBtnInner} />
+        {isVideoMode ? (
+          <Ionicons
+            name={(isRecording ? 'stop-fill' : 'circle-fill') as any}
+            size={isRecording ? 32 : 36}
+            color="#FFFFFF"
+          />
+        ) : (
+          <View style={styles.captureBtnInner} />
+        )}
       </TouchableOpacity>
 
       {/* Right: Switch Camera */}
