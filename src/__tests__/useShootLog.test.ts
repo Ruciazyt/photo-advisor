@@ -14,12 +14,16 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 const mockLoadLog = jest.fn();
 const mockAddEntry = jest.fn();
 const mockClearLog = jest.fn();
+const mockDeleteEntry = jest.fn();
+const mockDeleteEntries = jest.fn();
 const mockGenerateId = jest.fn();
 
 jest.mock('../services/shootLog', () => ({
   loadLog: (...args: unknown[]) => mockLoadLog(...args),
   addEntry: (...args: unknown[]) => mockAddEntry(...args),
   clearLog: (...args: unknown[]) => mockClearLog(...args),
+  deleteEntry: (...args: unknown[]) => mockDeleteEntry(...args),
+  deleteEntries: (...args: unknown[]) => mockDeleteEntries(...args),
   generateId: (...args: unknown[]) => mockGenerateId(...args),
 }));
 
@@ -29,6 +33,8 @@ describe('useShootLog', () => {
     mockLoadLog.mockResolvedValue([]);
     mockAddEntry.mockResolvedValue(undefined);
     mockClearLog.mockResolvedValue(undefined);
+    mockDeleteEntry.mockResolvedValue(undefined);
+    mockDeleteEntries.mockResolvedValue(undefined);
     mockGenerateId.mockReturnValue('shoot_test_123');
   });
 
@@ -374,6 +380,101 @@ describe('useShootLog', () => {
       expect(result.current.totalShoots).toBe(0);
       expect(result.current.avgScore).toBe(0);
       expect(result.current.favoriteCount).toBe(0);
+    });
+  });
+
+  describe('deleteEntry', () => {
+    const createEntry = (overrides: Partial<ShootLogEntry> = {}): ShootLogEntry => ({
+      id: 'shoot_1',
+      date: '2026-04-10T10:00:00.000Z',
+      gridType: '三分法',
+      wasFavorite: false,
+      suggestions: [],
+      ...overrides,
+    });
+
+    it('removes the specified entry from log', async () => {
+      mockLoadLog.mockResolvedValue([
+        createEntry({ id: 'shoot_1' }),
+        createEntry({ id: 'shoot_2' }),
+        createEntry({ id: 'shoot_3' }),
+      ]);
+
+      const { result } = renderHook(() => useShootLog());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.log).toHaveLength(3);
+
+      await act(async () => {
+        await result.current.deleteEntry('shoot_2');
+      });
+
+      expect(result.current.log).toHaveLength(2);
+      expect(result.current.log.find((e) => e.id === 'shoot_2')).toBeUndefined();
+      expect(result.current.log.find((e) => e.id === 'shoot_1')).toBeDefined();
+      expect(result.current.log.find((e) => e.id === 'shoot_3')).toBeDefined();
+    });
+
+    it('calls deleteEntry service', async () => {
+      mockLoadLog.mockResolvedValue([createEntry({ id: 'shoot_1' })]);
+
+      const { result } = renderHook(() => useShootLog());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        await result.current.deleteEntry('shoot_1');
+      });
+
+      expect(mockDeleteEntry).toHaveBeenCalledWith('shoot_1');
+    });
+  });
+
+  describe('deleteEntries', () => {
+    const createEntry = (overrides: Partial<ShootLogEntry> = {}): ShootLogEntry => ({
+      id: 'shoot_1',
+      date: '2026-04-10T10:00:00.000Z',
+      gridType: '三分法',
+      wasFavorite: false,
+      suggestions: [],
+      ...overrides,
+    });
+
+    it('removes multiple entries from log', async () => {
+      mockLoadLog.mockResolvedValue([
+        createEntry({ id: 'shoot_1' }),
+        createEntry({ id: 'shoot_2' }),
+        createEntry({ id: 'shoot_3' }),
+        createEntry({ id: 'shoot_4' }),
+      ]);
+
+      const { result } = renderHook(() => useShootLog());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.log).toHaveLength(4);
+
+      await act(async () => {
+        await result.current.deleteEntries(['shoot_1', 'shoot_3']);
+      });
+
+      expect(result.current.log).toHaveLength(2);
+      expect(result.current.log.find((e) => e.id === 'shoot_1')).toBeUndefined();
+      expect(result.current.log.find((e) => e.id === 'shoot_3')).toBeUndefined();
+      expect(result.current.log.find((e) => e.id === 'shoot_2')).toBeDefined();
+      expect(result.current.log.find((e) => e.id === 'shoot_4')).toBeDefined();
+    });
+
+    it('calls deleteEntries service', async () => {
+      mockLoadLog.mockResolvedValue([
+        createEntry({ id: 'shoot_1' }),
+        createEntry({ id: 'shoot_2' }),
+      ]);
+
+      const { result } = renderHook(() => useShootLog());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        await result.current.deleteEntries(['shoot_1', 'shoot_2']);
+      });
+
+      expect(mockDeleteEntries).toHaveBeenCalledWith(['shoot_1', 'shoot_2']);
     });
   });
 });

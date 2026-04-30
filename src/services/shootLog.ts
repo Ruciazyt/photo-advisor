@@ -29,6 +29,19 @@ export async function clearLog(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEY);
 }
 
+export async function deleteEntry(id: string): Promise<void> {
+  const existing = await loadLog();
+  const updated = existing.filter((e) => e.id !== id);
+  await saveLog(updated);
+}
+
+export async function deleteEntries(ids: string[]): Promise<void> {
+  const existing = await loadLog();
+  const idSet = new Set(ids);
+  const updated = existing.filter((e) => !idSet.has(e.id));
+  await saveLog(updated);
+}
+
 export function generateId(): string {
   return `shoot_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }

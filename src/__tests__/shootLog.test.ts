@@ -9,6 +9,8 @@ import {
   loadLog,
   addEntry,
   clearLog,
+  deleteEntry,
+  deleteEntries,
   generateId,
 } from '../services/shootLog';
 import type { ShootLogEntry } from '../services/shootLog';
@@ -82,6 +84,62 @@ describe('clearLog', () => {
     await clearLog();
     const stored = await AsyncStorage.getItem(STORAGE_KEY);
     expect(stored).toBeNull();
+  });
+});
+
+describe('deleteEntry', () => {
+  it('removes the correct entry', async () => {
+    const entry1 = makeEntry({ id: 'entry_1' });
+    const entry2 = makeEntry({ id: 'entry_2' });
+    const entry3 = makeEntry({ id: 'entry_3' });
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry1, entry2, entry3]));
+
+    await deleteEntry('entry_2');
+
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(stored ?? '[]') as ShootLogEntry[];
+    expect(parsed).toHaveLength(2);
+    expect(parsed.find((e) => e.id === 'entry_2')).toBeUndefined();
+    expect(parsed.find((e) => e.id === 'entry_1')).toBeDefined();
+    expect(parsed.find((e) => e.id === 'entry_3')).toBeDefined();
+  });
+
+  it('does nothing if id not found', async () => {
+    const entry = makeEntry({ id: 'entry_1' });
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry]));
+
+    await deleteEntry('nonexistent_id');
+
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(stored ?? '[]') as ShootLogEntry[];
+    expect(parsed).toHaveLength(1);
+  });
+});
+
+describe('deleteEntries', () => {
+  it('removes multiple entries', async () => {
+    const entry1 = makeEntry({ id: 'entry_1' });
+    const entry2 = makeEntry({ id: 'entry_2' });
+    const entry3 = makeEntry({ id: 'entry_3' });
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry1, entry2, entry3]));
+
+    await deleteEntries(['entry_1', 'entry_3']);
+
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(stored ?? '[]') as ShootLogEntry[];
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].id).toBe('entry_2');
+  });
+
+  it('does nothing with empty array', async () => {
+    const entry = makeEntry({ id: 'entry_1' });
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry]));
+
+    await deleteEntries([]);
+
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(stored ?? '[]') as ShootLogEntry[];
+    expect(parsed).toHaveLength(1);
   });
 });
 
