@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1777603310918" clover="3.2.0">
-  <project timestamp="1777603310918" name="All files">
+<coverage generated="1777610855414" clover="3.2.0">
+  <project timestamp="1777610855415" name="All files">
     <metrics statements="2697" coveredstatements="2479" conditionals="1579" coveredconditionals="1294" methods="631" coveredmethods="559" elements="4907" coveredelements="4332" complexity="0" loc="2697" ncloc="2697" packages="7" files="73" classes="73"/>
     <package name="components">
       <metrics statements="746" coveredstatements="687" conditionals="539" coveredconditionals="435" methods="207" coveredmethods="178"/>
@@ -262,9 +262,9 @@
       </file>
       <file name="FocusGuideOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/FocusGuideOverlay.tsx">
         <metrics statements="54" coveredstatements="40" conditionals="22" coveredconditionals="15" methods="17" coveredmethods="6"/>
-        <line num="23" count="3" type="stmt"/>
-        <line num="29" count="3" type="stmt"/>
-        <line num="30" count="3" type="stmt"/>
+        <line num="23" count="4" type="stmt"/>
+        <line num="29" count="4" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
         <line num="41" count="0" type="stmt"/>
         <line num="42" count="0" type="stmt"/>
         <line num="44" count="0" type="stmt"/>
@@ -315,7 +315,7 @@
         <line num="277" count="10" type="stmt"/>
         <line num="284" count="0" type="stmt"/>
         <line num="290" count="0" type="stmt"/>
-        <line num="299" count="3" type="stmt"/>
+        <line num="299" count="4" type="stmt"/>
       </file>
       <file name="FocusPeakingOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/FocusPeakingOverlay.tsx">
         <metrics statements="41" coveredstatements="41" conditionals="18" coveredconditionals="16" methods="8" coveredmethods="8"/>
@@ -363,8 +363,8 @@
       </file>
       <file name="FocusZoneButton.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/FocusZoneButton.tsx">
         <metrics statements="2" coveredstatements="2" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
-        <line num="15" count="84" type="stmt"/>
-        <line num="26" count="84" type="stmt"/>
+        <line num="15" count="95" type="stmt"/>
+        <line num="26" count="95" type="stmt"/>
       </file>
       <file name="GridOverlay.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/components/GridOverlay.tsx">
         <metrics statements="35" coveredstatements="32" conditionals="31" coveredconditionals="20" methods="7" coveredmethods="6"/>
@@ -845,21 +845,21 @@
       <metrics statements="15" coveredstatements="15" conditionals="6" coveredconditionals="6" methods="8" coveredmethods="6"/>
       <file name="ThemeContext.tsx" path="/home/zyt/.openclaw/workspace/photo-advisor/src/contexts/ThemeContext.tsx">
         <metrics statements="15" coveredstatements="15" conditionals="6" coveredconditionals="6" methods="8" coveredmethods="6"/>
-        <line num="13" count="12" type="stmt"/>
-        <line num="20" count="12" type="stmt"/>
-        <line num="23" count="35" type="cond" truecount="2" falsecount="0"/>
-        <line num="25" count="35" type="stmt"/>
-        <line num="26" count="19" type="stmt"/>
-        <line num="27" count="19" type="stmt"/>
-        <line num="31" count="35" type="stmt"/>
-        <line num="32" count="7" type="stmt"/>
-        <line num="33" count="7" type="stmt"/>
-        <line num="36" count="35" type="stmt"/>
-        <line num="37" count="4" type="cond" truecount="2" falsecount="0"/>
-        <line num="38" count="4" type="stmt"/>
-        <line num="41" count="35" type="cond" truecount="2" falsecount="0"/>
-        <line num="43" count="35" type="stmt"/>
-        <line num="51" count="276" type="stmt"/>
+        <line num="13" count="13" type="stmt"/>
+        <line num="20" count="13" type="stmt"/>
+        <line num="23" count="51" type="cond" truecount="2" falsecount="0"/>
+        <line num="25" count="51" type="stmt"/>
+        <line num="26" count="28" type="stmt"/>
+        <line num="27" count="28" type="stmt"/>
+        <line num="31" count="51" type="stmt"/>
+        <line num="32" count="10" type="stmt"/>
+        <line num="33" count="10" type="stmt"/>
+        <line num="36" count="51" type="stmt"/>
+        <line num="37" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="6" type="stmt"/>
+        <line num="41" count="51" type="cond" truecount="2" falsecount="0"/>
+        <line num="43" count="51" type="stmt"/>
+        <line num="51" count="291" type="stmt"/>
       </file>
     </package>
     <package name="hooks">
@@ -890,7 +890,7 @@
       </file>
       <file name="useAnimationFrameTimer.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/hooks/useAnimationFrameTimer.ts">
         <metrics statements="14" coveredstatements="14" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
-        <line num="5" count="2" type="stmt"/>
+        <line num="5" count="3" type="stmt"/>
         <line num="20" count="17" type="stmt"/>
         <line num="21" count="17" type="stmt"/>
         <line num="22" count="17" type="stmt"/>
@@ -1497,7 +1497,7 @@
       </file>
       <file name="useHaptics.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/hooks/useHaptics.ts">
         <metrics statements="20" coveredstatements="20" conditionals="2" coveredconditionals="2" methods="8" coveredmethods="8"/>
-        <line num="4" count="4" type="stmt"/>
+        <line num="4" count="5" type="stmt"/>
         <line num="11" count="39" type="stmt"/>
         <line num="17" count="39" type="stmt"/>
         <line num="18" count="10" type="stmt"/>
@@ -2873,8 +2873,8 @@
       <metrics statements="3" coveredstatements="3" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
       <file name="colors.ts" path="/home/zyt/.openclaw/workspace/photo-advisor/src/theme/colors.ts">
         <metrics statements="3" coveredstatements="3" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
-        <line num="1" count="13" type="stmt"/>
-        <line num="92" count="13" type="stmt"/>
+        <line num="1" count="14" type="stmt"/>
+        <line num="92" count="14" type="stmt"/>
         <line num="186" count="4" type="cond" truecount="2" falsecount="0"/>
       </file>
     </package>
