@@ -52,7 +52,7 @@ export function ShootLogScreen() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const styles = StyleSheet.create({
+  const styles = StyleSheet.create<Record<string, object>>({
     container: { flex: 1, backgroundColor: colors.primary },
     header: { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 16, alignItems: 'center' },
     title: { color: colors.accent, fontSize: 28, fontWeight: '700', letterSpacing: 2 },
@@ -83,7 +83,7 @@ export function ShootLogScreen() {
     locationText: { color: colors.textSecondary, fontSize: 12 },
     favoriteTag: { color: colors.error, fontSize: 12, fontWeight: '600' },
     timerBadge: { color: colors.textSecondary, fontSize: 12 },
-    scoreReasonText: { color: colors.textSecondary, fontSize: 12, style: 'italic', marginTop: 4 },
+    scoreReasonText: { color: colors.textSecondary, fontSize: 12, fontStyle: 'italic', marginTop: 4 },
     suggestionText: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
     checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.border, marginRight: 10, alignItems: 'center', justifyContent: 'center' },
     checkboxChecked: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, marginRight: 10, alignItems: 'center', justifyContent: 'center' },

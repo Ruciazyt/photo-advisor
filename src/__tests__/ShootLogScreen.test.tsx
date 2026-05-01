@@ -177,6 +177,8 @@ describe('ShootLogScreen', () => {
       loading: false,
       addEntry: jest.fn(),
       clearLog,
+      deleteEntry: jest.fn(),
+      deleteEntries: jest.fn(),
       totalShoots: 1,
       avgScore: 0,
       favoriteCount: 0,
