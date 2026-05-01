@@ -105,3 +105,5 @@ export { speak, useVoiceFeedback } from './useVoiceFeedback';
 
 // useCurrentLocation
 export { useCurrentLocation } from './useCurrentLocation';
+
+export { useDebounce } from './useDebounce';
