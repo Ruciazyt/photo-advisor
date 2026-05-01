@@ -58,6 +58,39 @@ describe('buildShareText', () => {
     expect(text).toContain('🥇');
   });
 
+  it('includes grid icon for diagonal', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '对角线',
+      gridVariant: 'diagonal',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('↗️');
+  });
+
+  it('includes grid icon for spiral', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '螺旋',
+      gridVariant: 'spiral',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('🌀');
+  });
+
+  it('includes grid icon for none', () => {
+    const opts: ShareOptions = {
+      photoUri: 'file:///test.jpg',
+      suggestions: [],
+      gridType: '无',
+      gridVariant: 'none',
+    };
+    const text = buildShareText(opts);
+    expect(text).toContain('⬜');
+  });
+
   it('includes star rating when score is provided', () => {
     const opts: ShareOptions = {
       photoUri: 'file:///test.jpg',
@@ -241,6 +274,22 @@ describe('sharePhoto', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Share cancelled');
+  });
+
+  it('returns error when manipulateAsync fails', async () => {
+    const ImageManipulator = require('expo-image-manipulator');
+    ImageManipulator.manipulateAsync.mockRejectedValue(
+      new Error('Image is corrupted or has unsupported format')
+    );
+
+    const result = await sharePhoto(baseOptions);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Image is corrupted or has unsupported format');
+    expect(mockSharing.shareAsync).not.toHaveBeenCalled();
+
+    // Reset so subsequent tests are unaffected
+    ImageManipulator.manipulateAsync.mockResolvedValue({ uri: 'file:///cache/reshared.jpg' });
   });
 
   it('works without score', async () => {
