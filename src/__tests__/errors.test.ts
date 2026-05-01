@@ -3,7 +3,7 @@
  */
 
 import { AppError, CameraError, StorageError, APIError, LocationError, MediaError, ConfigError,
-  ErrorCode, handleError, errorToString, toAppError, safeAsync, resultOf } from '../services/errors';
+  ErrorCode, handleError, errorToString, toAppError, safeAsync, resultOf, isAtLeastSeverity, toResult } from '../services/errors';
 
 jest.mock('react-native', () => ({
   Alert: { alert: jest.fn() },
@@ -305,5 +305,121 @@ describe('ErrorCode', () => {
   it('has media error codes', () => {
     expect(ErrorCode.MED_LOAD_FAILED).toBe('MED-LOAD-001');
     expect(ErrorCode.MED_SAVE_FAILED).toBe('MED-SAVE-001');
+  });
+
+  it('has config error codes', () => {
+    expect(ErrorCode.CFG_MISSING).toBe('CFG-001');
+    expect(ErrorCode.CFG_INVALID).toBe('CFG-002');
+  });
+});
+
+describe('isAtLeastSeverity', () => {
+  it('returns true when error severity equals minSeverity', () => {
+    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'warning');
+    expect(isAtLeastSeverity(err, 'warning')).toBe(true);
+  });
+
+  it('returns true when error severity exceeds minSeverity', () => {
+    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'error');
+    expect(isAtLeastSeverity(err, 'warning')).toBe(true);
+    expect(isAtLeastSeverity(err, 'info')).toBe(true);
+  });
+
+  it('returns true when error severity is critical', () => {
+    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'critical');
+    expect(isAtLeastSeverity(err, 'critical')).toBe(true);
+    expect(isAtLeastSeverity(err, 'error')).toBe(true);
+    expect(isAtLeastSeverity(err, 'warning')).toBe(true);
+    expect(isAtLeastSeverity(err, 'info')).toBe(true);
+    expect(isAtLeastSeverity(err, 'silent')).toBe(true);
+  });
+
+  it('returns false when error severity is lower than minSeverity', () => {
+    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'info');
+    expect(isAtLeastSeverity(err, 'warning')).toBe(false);
+    expect(isAtLeastSeverity(err, 'error')).toBe(false);
+    expect(isAtLeastSeverity(err, 'critical')).toBe(false);
+  });
+
+  it('returns false when error severity is silent and minSeverity is higher', () => {
+    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'silent');
+    expect(isAtLeastSeverity(err, 'info')).toBe(false);
+    expect(isAtLeastSeverity(err, 'warning')).toBe(false);
+  });
+
+  it('returns true when both are silent', () => {
+    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'silent');
+    expect(isAtLeastSeverity(err, 'silent')).toBe(true);
+  });
+});
+
+describe('toResult', () => {
+  it('returns ok:true with the resolved value when fn succeeds', async () => {
+    const fn = () => Promise.resolve(123);
+    const wrapped = toResult(fn);
+    const result = await wrapped();
+    expect(result).toEqual({ ok: true, value: 123 });
+  });
+
+  it('returns ok:false with AppError when fn throws AppError', async () => {
+    const err = new CameraError('cam error', ErrorCode.CAM_CAPTURE_FAILED);
+    const fn = () => Promise.reject(err);
+    const wrapped = toResult(fn, ErrorCode.CAM_CAPTURE_FAILED);
+    const result = await wrapped();
+    expect(result.ok).toBe(false);
+    expect((result as any).error).toBe(err);
+  });
+
+  it('returns ok:false with wrapped AppError when fn throws plain Error', async () => {
+    const fn = () => Promise.reject(new Error('plain'));
+    const wrapped = toResult(fn, ErrorCode.API_NETWORK_ERROR);
+    const result = await wrapped();
+    expect(result.ok).toBe(false);
+    expect((result as any).error).toBeInstanceOf(AppError);
+    expect((result as any).error.code).toBe(ErrorCode.API_NETWORK_ERROR);
+    expect((result as any).error.message).toBe('plain');
+  });
+
+  it('uses default code GEN_UNKNOWN when no code provided', async () => {
+    const fn = () => Promise.reject('string error');
+    const wrapped = toResult(fn);
+    const result = await wrapped();
+    expect(result.ok).toBe(false);
+    expect((result as any).error.code).toBe(ErrorCode.GEN_UNKNOWN);
+  });
+
+  it('resultOf is an alias for the Result pattern using toResult', async () => {
+    // resultOf wraps try/catch directly; toResult wraps a function
+    // Both should produce identical Result<T> output
+    const viaResultOf = await resultOf(() => Promise.resolve('hello'));
+    const viaToResult = await toResult(() => Promise.resolve('hello'))();
+    expect(viaResultOf).toEqual(viaToResult);
+  });
+});
+
+describe('errorToString', () => {
+  it('returns AppError message', () => {
+    const err = new AppError('app error msg', ErrorCode.GEN_UNKNOWN);
+    expect(errorToString(err)).toBe('app error msg');
+  });
+
+  it('returns plain Error message', () => {
+    expect(errorToString(new Error('plain error'))).toBe('plain error');
+  });
+
+  it('returns string as-is', () => {
+    expect(errorToString('just a string')).toBe('just a string');
+  });
+
+  it('returns fallback for null/undefined', () => {
+    expect(errorToString(null)).toBe('发生了一个未知错误');
+    expect(errorToString(undefined)).toBe('发生了一个未知错误');
+    expect(errorToString(null, 'custom fallback')).toBe('custom fallback');
+    expect(errorToString(undefined, 'custom fallback')).toBe('custom fallback');
+  });
+
+  it('returns fallback for non-object values', () => {
+    expect(errorToString(42)).toBe('发生了一个未知错误');
+    expect(errorToString(42, 'fallback for number')).toBe('fallback for number');
   });
 });
