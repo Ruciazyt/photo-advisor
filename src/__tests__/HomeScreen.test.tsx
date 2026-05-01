@@ -204,6 +204,8 @@ describe('HomeScreen', () => {
   it('handleSend with image and API configured calls streamChatCompletion', async () => {
     jest.setTimeout(10000);
     (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    const Image = require('react-native').Image;
+    jest.spyOn(Image, 'getSize').mockImplementation(() => Promise.resolve({ width: 1080, height: 1440 }));
     (ImagePicker.launchCameraAsync as jest.Mock).mockResolvedValue({
       canceled: false,
       assets: [{ uri: 'file:///test-photo.jpg' }],
