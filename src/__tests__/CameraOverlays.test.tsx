@@ -10,12 +10,18 @@ jest.mock('../components/ConfigWarning', () => ({
     return visible ? <View testID="config-warning" /> : null;
   },
 }));
-jest.mock('../components/GridOverlay', () => ({
-  GridOverlay: ({ variant, onGridActivate }: { variant: string; onGridActivate?: Function }) => {
-    const { View } = require('react-native');
-    return <View testID={`grid-${variant}`} />;
-  },
-}));
+jest.mock('../components/GridOverlay', () => {
+  const mockFn = jest.fn();
+  return {
+    __esModule: true,
+    GridOverlay: ({ variant, onGridActivate }: { variant: string; onGridActivate?: Function }) => {
+      const { View } = require('react-native');
+      mockFn({ variant, onGridActivate });
+      return <View testID={`grid-${variant}`} />;
+    },
+    _getGridOverlayMock: () => mockFn,
+  };
+});
 jest.mock('../components/GridSelectorModal', () => ({
   GridSelectorModal: ({ visible }: { visible: boolean }) => {
     const { View } = require('react-native');
@@ -68,6 +74,12 @@ jest.mock('../components/KeypointOverlay', () => ({
   KeypointOverlay: ({ visible }: { visible: boolean }) => {
     const { View } = require('react-native');
     return visible ? <View testID="keypoint-overlay" /> : null;
+  },
+}));
+jest.mock('../components/BubbleOverlay', () => ({
+  BubbleOverlay: ({ visibleItems }: { visibleItems: any[] }) => {
+    const { View } = require('react-native');
+    return visibleItems.length > 0 ? <View testID="bubble-overlay" /> : null;
   },
 }));
 jest.mock('../components/CompositionScoreOverlay', () => ({
@@ -272,6 +284,13 @@ describe('CameraOverlays', () => {
     expect(getByTestId('grid-modal')).toBeTruthy();
   });
 
+  it('hides grid modal when showGridModal is false', () => {
+    const { queryByTestId } = render(
+      <CameraOverlays {...defaultProps} showGridModal={false} />
+    );
+    expect(queryByTestId('grid-modal')).toBeNull();
+  });
+
   it('shows comparison overlay when showComparison is true', () => {
     const { getByTestId } = render(
       <CameraOverlays {...defaultProps} showComparison={true} lastCapturedUri="file://test.jpg" />
@@ -327,4 +346,29 @@ describe('CameraOverlays', () => {
     expect(lastCall.score).toBeUndefined();
     expect(lastCall.scoreReason).toBeUndefined();
   });
+
+  it('passes onGridActivate to GridOverlay', () => {
+    const { _getGridOverlayMock } = require('../components/GridOverlay');
+    const onGridActivate = jest.fn();
+    render(<CameraOverlays {...defaultProps} onGridActivate={onGridActivate} />);
+    const calls = _getGridOverlayMock().mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.onGridActivate).toBe(onGridActivate);
+  });
+
+  it('renders with non-empty bubbleItems without crashing', () => {
+    const bubbleItems = [
+      { id: 1, x: 100, y: 200, text: 'Good framing', direction: 'up' as const, score: 85 },
+    ];
+    const { getByTestId } = render(
+      <CameraOverlays
+        {...defaultProps}
+        showComparison={true}
+        lastCapturedUri="file://test.jpg"
+        bubbleItems={bubbleItems}
+      />
+    );
+    expect(getByTestId('comparison-overlay')).toBeTruthy();
+  });
+
 });

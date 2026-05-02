@@ -35,6 +35,7 @@ import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { speak } from '../hooks/useVoiceFeedback';
 import { AccessibleToggle } from '../components/AccessibleToggle';
 import { ExportSection } from '../components/ExportSection';
+import { FocusPeakingPreview } from '../components/FocusPeakingPreview';
 import { exportAllData, importFromFile, clearAllData } from '../services/export';
 
 interface Props {
@@ -694,6 +695,7 @@ export function SettingsScreen({ onSaved }: Props) {
               );
             })}
           </View>
+          <FocusPeakingPreview color={focusPeakingColor} sensitivity={focusPeakingSensitivity} />
         </View>
 
         <ExportSection
