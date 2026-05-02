@@ -28,6 +28,7 @@ import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { useCompositionScore } from '../hooks/useCompositionScore';
 import { useSceneRecognition } from '../hooks/useSceneRecognition';
 import { useToast } from '../hooks/useToast';
+import { useDoubleTap } from '../hooks/useDoubleTap';
 import { useShakeDetector } from '../hooks/useShakeDetector';
 import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { loadApiConfig } from '../services/api';
@@ -191,7 +192,7 @@ export function CameraScreen() {
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const doCapture = useCallback(async () => {
+  const doCapture = useCallback(async (skipAnalysis = false) => {
     lastCaptureIdRef.current += 1;
     const captureId = lastCaptureIdRef.current;
     setShowScoreOverlay(false);
@@ -218,6 +219,12 @@ export function CameraScreen() {
     capturedScoreReasonRef.current = reason;
     setLastCapturedScore(score);
     setLastCapturedScoreReason(reason);
+
+    // Fast capture mode: skip AI analysis
+    if (skipAnalysis) {
+      setLoading(false);
+      return;
+    }
 
     recognizeSceneTag(base64).then(() => { setSceneTagVisible(true); setTimeout(() => setSceneTagVisible(false), 4000); });
     const gridPromptMap: Record<GridVariant, string> = { thirds: '三分法网格', golden: '黄金分割网格', diagonal: '对角线网格', spiral: '螺旋线网格', none: '无网格' };
@@ -374,6 +381,12 @@ export function CameraScreen() {
     startCountdown(timerDuration);
   }, [countdownActive, loading, burstActive, startCountdown, timerDuration, gridVariant, capturePreviewFrame, runAnalysis]);
 
+  const handleQuickCapture = useCallback(() => {
+    if (countdownActive || loading || burstActive) return;
+    showToast('⚡ 快速拍摄');
+    doCapture(true);
+  }, [countdownActive, loading, burstActive, showToast]);
+
   if (!permission) return <View style={[staticStyles.container, { backgroundColor: colors.primary }]}><ActivityIndicator color={colors.accent} size="large" /></View>;
   if (!permission.granted) return <PermissionGate title="需要相机权限" icon="camera-outline" message="拍摄参谋需要访问您的相机来拍摄照片" buttonText="授权相机" onRequest={requestPermission} />;
 
@@ -428,6 +441,7 @@ export function CameraScreen() {
           onGallery={handleGallery}
           onAskAI={handleAskAI}
           onSwitchCamera={switchCamera}
+          onQuickCapture={handleQuickCapture}
           isRecording={isRecording}
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
