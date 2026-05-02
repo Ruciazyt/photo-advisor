@@ -67,6 +67,11 @@ export interface CameraTopBarProps {
   // Compare
   showKeypoints: boolean;
   onComparePress: () => void;
+  // Keypoints toggle
+  onKeypointsToggle: () => void;
+  // Shake detector toggle
+  showShakeDetector: boolean;
+  onShakeDetectorToggle: () => void;
   // Burst
   burstActive: boolean;
   burstCount: number;
@@ -107,6 +112,9 @@ export function CameraTopBar({  gridVariant,
   lastCapturedScoreReason,
   showKeypoints,
   onComparePress,
+  onKeypointsToggle,
+  showShakeDetector,
+  onShakeDetectorToggle,
   burstActive,
   burstCount,
   toastOpacity,
@@ -494,6 +502,36 @@ export function CameraTopBar({  gridVariant,
         accessibilityState={{ selected: showFocusPeaking }}
       >
         <Text style={[dynamicTopBarStyles.focusPeakingSelectorText, showFocusPeaking && dynamicTopBarStyles.focusPeakingSelectorTextActive]}>🎚️ 峰值</Text>
+      </TouchableOpacity>
+
+      {/* Keypoints Toggle */}
+      <TouchableOpacity
+        style={[dynamicTopBarStyles.focusPeakingSelector, showKeypoints && dynamicTopBarStyles.focusPeakingSelectorActive]}
+        onPress={onKeypointsToggle}
+        activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '关键点',
+          hint: showKeypoints ? '关闭关键点标记' : '打开关键点标记',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showKeypoints }}
+      >
+        <Text style={[dynamicTopBarStyles.focusPeakingSelectorText, showKeypoints && dynamicTopBarStyles.focusPeakingSelectorTextActive]}>🔺 关键点</Text>
+      </TouchableOpacity>
+
+      {/* Shake Detector Toggle */}
+      <TouchableOpacity
+        style={[dynamicTopBarStyles.focusPeakingSelector, showShakeDetector && dynamicTopBarStyles.focusPeakingSelectorActive]}
+        onPress={onShakeDetectorToggle}
+        activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '摇一摇',
+          hint: showShakeDetector ? '关闭摇一摇检测' : '打开摇一摇检测',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showShakeDetector }}
+      >
+        <Text style={[dynamicTopBarStyles.focusPeakingSelectorText, showShakeDetector && dynamicTopBarStyles.focusPeakingSelectorTextActive]}>📳 摇一摇</Text>
       </TouchableOpacity>
 
       {/* Voice Toggle */}

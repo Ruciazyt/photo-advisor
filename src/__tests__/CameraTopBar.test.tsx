@@ -70,6 +70,9 @@ const defaultProps: CameraTopBarProps = {
   lastCapturedScoreReason: null,
   showKeypoints: false,
   onComparePress: jest.fn(),
+  onKeypointsToggle: jest.fn(),
+  showShakeDetector: false,
+  onShakeDetectorToggle: jest.fn(),
   burstActive: false,
   burstCount: 0,
   toastOpacity: mockToastOpacity,
@@ -218,5 +221,19 @@ describe('CameraTopBar', () => {
     fireEvent.press(focusPeakingBtn);
     expect(onFocusGuideToggle).toHaveBeenCalledTimes(1);
     expect(onFocusPeakingToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders keypoints toggle button and calls onKeypointsToggle when pressed', () => {
+    const onKeypointsToggle = jest.fn();
+    const { getByText } = render(<CameraTopBar {...defaultProps} onKeypointsToggle={onKeypointsToggle} />);
+    fireEvent.press(getByText('🔺 关键点'));
+    expect(onKeypointsToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders shake detector toggle button and calls onShakeDetectorToggle when pressed', () => {
+    const onShakeDetectorToggle = jest.fn();
+    const { getByText } = render(<CameraTopBar {...defaultProps} onShakeDetectorToggle={onShakeDetectorToggle} />);
+    fireEvent.press(getByText('📳 摇一摇'));
+    expect(onShakeDetectorToggle).toHaveBeenCalledTimes(1);
   });
 });

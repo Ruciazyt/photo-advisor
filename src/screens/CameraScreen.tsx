@@ -431,9 +431,10 @@ export function CameraScreen() {
           lastCapturedUri={lastCapturedUri} onSaveToFavorites={handleSaveToFavorites}
           suggestions={suggestions} lastCapturedScore={lastCapturedScore}
           lastCapturedScoreReason={lastCapturedScoreReason}
-          showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)}
+          showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)} onKeypointsToggle={() => setShowKeypoints(v => !v)}
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
+          showShakeDetector={showShakeDetector} onShakeDetectorToggle={() => setShowShakeDetector(v => !v)}
         />
         <CameraControls
           selectedMode={selectedMode}
