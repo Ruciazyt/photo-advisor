@@ -60,7 +60,7 @@ const containerStyles = StyleSheet.create({
   },
 });
 
-function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => void }) {
+function SingleBubble({ item, onDismiss, onBubbleAppear }: { item: BubbleItem; onDismiss: () => void; onBubbleAppear?: (text: string) => void }) {
   const { colors } = useTheme();
   const opacity = useSharedValue(0);
 
@@ -107,6 +107,9 @@ function SingleBubble({ item, onDismiss }: { item: BubbleItem; onDismiss: () => 
       duration: 300,
       easing: Easing.out(Easing.ease),
     });
+    if (onBubbleAppear) {
+      onBubbleAppear(item.text);
+    }
   }, []);
 
   const posStyle = POSITION_STYLES[item.position];
@@ -142,7 +145,7 @@ export interface BubbleOverlayProps {
   hidden?: boolean;
 }
 
-export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll, hidden }: BubbleOverlayProps) {
+export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll, onBubbleAppear, hidden }: BubbleOverlayProps) {
   const { colors } = useTheme();
 
   if (hidden) return null;
@@ -172,6 +175,7 @@ export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll, 
           key={item.id}
           item={item}
           onDismiss={() => onDismiss(item.id)}
+          onBubbleAppear={onBubbleAppear}
         />
       ))}
       {visibleItems.length > 1 && !loading && (
