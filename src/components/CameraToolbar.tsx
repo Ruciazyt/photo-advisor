@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -8,16 +8,33 @@ interface CameraToolbarProps {
   onGallery: () => void;
   onAskAI: () => void;
   onSwitchCamera: () => void;
+  onQuickCapture?: () => void;
   selectedMode?: 'photo' | 'scan' | 'video' | 'portrait';
   isRecording?: boolean;
   onStartRecording?: () => void;
   onStopRecording?: () => void;
 }
 
-export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera, selectedMode, isRecording, onStartRecording, onStopRecording }: CameraToolbarProps) {
+export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera, onQuickCapture, selectedMode, isRecording, onStartRecording, onStopRecording }: CameraToolbarProps) {
   const { colors } = useTheme();
 
   const isVideoMode = selectedMode === 'video';
+
+  // Double-tap detection on the shutter button
+  const lastPressRef = useRef<number>(0);
+  const handleShutterPress = () => {
+    if (!onQuickCapture) {
+      onAskAI();
+      return;
+    }
+    const now = Date.now();
+    const delta = now - lastPressRef.current;
+    lastPressRef.current = now;
+    if (delta < 300 && delta > 0) {
+      lastPressRef.current = 0;
+      onQuickCapture();
+    }
+  };
 
   const galleryA11y = useAccessibilityButton({
     label: '相册',
@@ -95,7 +112,7 @@ export function CameraToolbar({ onGallery, onAskAI, onSwitchCamera, selectedMode
       {/* Center: Ask AI / Recording */}
       <TouchableOpacity
         style={[styles.captureBtn, isVideoMode && styles.captureBtnVideo]}
-        onPress={isVideoMode ? (isRecording ? onStopRecording : onStartRecording) : onAskAI}
+        onPress={isVideoMode ? (isRecording ? onStopRecording : onStartRecording) : handleShutterPress}
         activeOpacity={0.7}
         {...captureA11y}
       >

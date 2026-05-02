@@ -14,13 +14,16 @@ jest.mock('../components/ModeSelector', () => ({
 }));
 
 jest.mock('../components/CameraToolbar', () => ({
-  CameraToolbar: ({ onGallery, onAskAI, onSwitchCamera }: { onGallery: () => void; onAskAI: () => void; onSwitchCamera: () => void }) => {
+  CameraToolbar: ({ onGallery, onAskAI, onSwitchCamera, onQuickCapture }: {
+    onGallery: () => void; onAskAI: () => void; onSwitchCamera: () => void; onQuickCapture?: () => void;
+  }) => {
     const { View, TouchableOpacity, Text } = require('react-native');
     return (
       <View>
         <TouchableOpacity testID="gallery-btn" onPress={onGallery}><Text>Gallery</Text></TouchableOpacity>
         <TouchableOpacity testID="ask-ai-btn" onPress={onAskAI}><Text>AI</Text></TouchableOpacity>
         <TouchableOpacity testID="switch-camera-btn" onPress={onSwitchCamera}><Text>Switch</Text></TouchableOpacity>
+        {onQuickCapture && <TouchableOpacity testID="quick-capture-btn" onPress={onQuickCapture}><Text>QuickCapture</Text></TouchableOpacity>}
       </View>
     );
   },
@@ -74,5 +77,18 @@ describe('CameraControls', () => {
   it('passes selectedMode to ModeSelector', () => {
     const { getByText } = render(<CameraControls {...defaultProps} selectedMode="video" />);
     expect(getByText('video')).toBeTruthy();
+  });
+
+  it('passes onQuickCapture to CameraToolbar when provided', () => {
+    const onQuickCapture = jest.fn();
+    const { getByTestId } = render(<CameraControls {...defaultProps} onQuickCapture={onQuickCapture} />);
+    expect(getByTestId('quick-capture-btn')).toBeTruthy();
+    fireEvent.press(getByTestId('quick-capture-btn'));
+    expect(onQuickCapture).toHaveBeenCalled();
+  });
+
+  it('does not render quick-capture button when onQuickCapture is not provided', () => {
+    const { queryByTestId } = render(<CameraControls {...defaultProps} />);
+    expect(queryByTestId('quick-capture-btn')).toBeNull();
   });
 });
