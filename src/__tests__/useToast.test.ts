@@ -11,6 +11,7 @@ import { useToast } from '../hooks/useToast';
 jest.mock('react-native-reanimated', () => ({
   useSharedValue: jest.fn(() => ({ value: 0 })),
   withTiming: jest.fn(() => 42),
+  runOnJS: jest.fn((fn) => fn),
   Easing: {
     out: jest.fn(() => 'ease-out'),
     in: jest.fn(() => 'ease-in'),
@@ -127,10 +128,23 @@ describe('useToast', () => {
       expect(result.current.toastMessage).toBe('Persistent message');
     });
 
-    // Skipped: fake timers + runOnJS + act() have a known ordering issue where
-    // the setMessage('') state update is flushed before the timer callback runs.
-    // The auto-hide behavior is validated by the "sets opacity back to 0" test.
-    it.skip('toastMessage clears after the auto-hide timeout fires', () => {});
+    it('toastMessage clears after the auto-hide timeout fires', () => {
+      const { result } = renderHook(() => useToast());
+
+      act(() => {
+        result.current.showToast('Auto-clear test');
+      });
+
+      expect(result.current.toastMessage).toBe('Auto-clear test');
+
+      act(() => {
+        jest.advanceTimersByTime(1200);
+      });
+
+      // runOnJS(clearMessage)() fires asynchronously — the state update is
+      // flushed after the timer callback, so message clears
+      expect(result.current.toastMessage).toBe('');
+    });
 
     it('sets opacity back to 0 when auto-hide fires', () => {
       const { result } = renderHook(() => useToast());
@@ -149,8 +163,32 @@ describe('useToast', () => {
       expect(withTiming).toHaveBeenCalledWith(0, expect.objectContaining({ duration: 200 }));
     });
 
-    // Skipped: same fake-timer + runOnJS + act() ordering issue as above.
-    it.skip('showToast updates message without needing a separate act for the timeout', () => {});
+    it('showToast updates message without needing a separate act for the timeout', () => {
+      // When called twice rapidly, the second showToast cancels the first timeout
+      // and schedules a new one — the message updates in place without flashing
+      const { result } = renderHook(() => useToast());
+
+      act(() => {
+        result.current.showToast('First');
+      });
+      expect(result.current.toastMessage).toBe('First');
+
+      act(() => {
+        jest.advanceTimersByTime(400);
+      });
+
+      // Second call before first timeout fires — message updates, not cleared
+      act(() => {
+        result.current.showToast('Second');
+      });
+      expect(result.current.toastMessage).toBe('Second');
+
+      // Both auto-hides should fire; only the second one attempts to clear
+      act(() => {
+        jest.advanceTimersByTime(1200);
+      });
+      expect(result.current.toastMessage).toBe('');
+    });
 
     it('rapid successive showToast calls only schedule one auto-hide timeout', () => {
       const { result } = renderHook(() => useToast());
