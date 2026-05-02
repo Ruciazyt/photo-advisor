@@ -287,3 +287,130 @@ describe('shake-to-dismiss logic pattern', () => {
     expect(overlays.keypoints).toBe(false);
   });
 });
+
+// ---- Toggle persistence logic tests ----
+// Tests that toggle handlers call saveAppSettings with the updated value.
+// These replicate the inline arrow function logic from CameraScreen's CameraTopBar props:
+//   onKeypointsToggle={async () => { const next = !showKeypoints; setShowKeypoints(next); await saveAppSettings({ showKeypoints: next }); }}
+//   onShakeDetectorToggle={async () => { const next = !showShakeDetector; setShowShakeDetector(next); await saveAppSettings({ showShakeDetector: next }); }}
+describe('toggle persistence logic', () => {
+  let savedSettings: Record<string, unknown>;
+  let mockSaveAppSettings: jest.Mock;
+
+  beforeEach(() => {
+    savedSettings = {};
+    mockSaveAppSettings = jest.fn(async (settings: Record<string, unknown>) => {
+      Object.assign(savedSettings, settings);
+    });
+  });
+
+  it('onKeypointsToggle calls saveAppSettings with showKeypoints: true when toggling on', async () => {
+    let showKeypoints = false;
+    const setShowKeypoints = (val: boolean | ((prev: boolean) => boolean)) => {
+      showKeypoints = typeof val === 'function' ? val(showKeypoints) : val;
+    };
+
+    const onKeypointsToggle = async () => {
+      const next = !showKeypoints;
+      setShowKeypoints(next);
+      await mockSaveAppSettings({ showKeypoints: next });
+    };
+
+    await onKeypointsToggle();
+    expect(showKeypoints).toBe(true);
+    expect(mockSaveAppSettings).toHaveBeenCalledWith({ showKeypoints: true });
+  });
+
+  it('onKeypointsToggle calls saveAppSettings with showKeypoints: false when toggling off', async () => {
+    let showKeypoints = true;
+    const setShowKeypoints = (val: boolean | ((prev: boolean) => boolean)) => {
+      showKeypoints = typeof val === 'function' ? val(showKeypoints) : val;
+    };
+
+    const onKeypointsToggle = async () => {
+      const next = !showKeypoints;
+      setShowKeypoints(next);
+      await mockSaveAppSettings({ showKeypoints: next });
+    };
+
+    await onKeypointsToggle();
+    expect(showKeypoints).toBe(false);
+    expect(mockSaveAppSettings).toHaveBeenCalledWith({ showKeypoints: false });
+  });
+
+  it('onShakeDetectorToggle calls saveAppSettings with showShakeDetector: true when toggling on', async () => {
+    let showShakeDetector = false;
+    const setShowShakeDetector = (val: boolean | ((prev: boolean) => boolean)) => {
+      showShakeDetector = typeof val === 'function' ? val(showShakeDetector) : val;
+    };
+
+    const onShakeDetectorToggle = async () => {
+      const next = !showShakeDetector;
+      setShowShakeDetector(next);
+      await mockSaveAppSettings({ showShakeDetector: next });
+    };
+
+    await onShakeDetectorToggle();
+    expect(showShakeDetector).toBe(true);
+    expect(mockSaveAppSettings).toHaveBeenCalledWith({ showShakeDetector: true });
+  });
+
+  it('onShakeDetectorToggle calls saveAppSettings with showShakeDetector: false when toggling off', async () => {
+    let showShakeDetector = true;
+    const setShowShakeDetector = (val: boolean | ((prev: boolean) => boolean)) => {
+      showShakeDetector = typeof val === 'function' ? val(showShakeDetector) : val;
+    };
+
+    const onShakeDetectorToggle = async () => {
+      const next = !showShakeDetector;
+      setShowShakeDetector(next);
+      await mockSaveAppSettings({ showShakeDetector: next });
+    };
+
+    await onShakeDetectorToggle();
+    expect(showShakeDetector).toBe(false);
+    expect(mockSaveAppSettings).toHaveBeenCalledWith({ showShakeDetector: false });
+  });
+
+  it('multiple toggles on keypoints accumulate calls to saveAppSettings', async () => {
+    let showKeypoints = false;
+    const setShowKeypoints = (val: boolean | ((prev: boolean) => boolean)) => {
+      showKeypoints = typeof val === 'function' ? val(showKeypoints) : val;
+    };
+
+    const onKeypointsToggle = async () => {
+      const next = !showKeypoints;
+      setShowKeypoints(next);
+      await mockSaveAppSettings({ showKeypoints: next });
+    };
+
+    await onKeypointsToggle();
+    await onKeypointsToggle();
+    await onKeypointsToggle();
+
+    expect(mockSaveAppSettings).toHaveBeenCalledTimes(3);
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(1, { showKeypoints: true });
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(2, { showKeypoints: false });
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(3, { showKeypoints: true });
+  });
+
+  it('multiple toggles on shake detector accumulate calls to saveAppSettings', async () => {
+    let showShakeDetector = false;
+    const setShowShakeDetector = (val: boolean | ((prev: boolean) => boolean)) => {
+      showShakeDetector = typeof val === 'function' ? val(showShakeDetector) : val;
+    };
+
+    const onShakeDetectorToggle = async () => {
+      const next = !showShakeDetector;
+      setShowShakeDetector(next);
+      await mockSaveAppSettings({ showShakeDetector: next });
+    };
+
+    await onShakeDetectorToggle();
+    await onShakeDetectorToggle();
+
+    expect(mockSaveAppSettings).toHaveBeenCalledTimes(2);
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(1, { showShakeDetector: true });
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(2, { showShakeDetector: false });
+  });
+});

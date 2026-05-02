@@ -431,10 +431,10 @@ export function CameraScreen() {
           lastCapturedUri={lastCapturedUri} onSaveToFavorites={handleSaveToFavorites}
           suggestions={suggestions} lastCapturedScore={lastCapturedScore}
           lastCapturedScoreReason={lastCapturedScoreReason}
-          showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)} onKeypointsToggle={() => setShowKeypoints(v => !v)}
+          showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)} onKeypointsToggle={async () => { const next = !showKeypoints; setShowKeypoints(next); await saveAppSettings({ showKeypoints: next }); }}
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
-          showShakeDetector={showShakeDetector} onShakeDetectorToggle={() => setShowShakeDetector(v => !v)}
+          showShakeDetector={showShakeDetector} onShakeDetectorToggle={async () => { const next = !showShakeDetector; setShowShakeDetector(next); await saveAppSettings({ showShakeDetector: next }); }}
         />
         <CameraControls
           selectedMode={selectedMode}
