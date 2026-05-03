@@ -11,6 +11,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import type { Keypoint, KeypointPosition, KeypointOverlayProps } from '../types';
 
 // Shared parsing utilities
@@ -86,6 +87,7 @@ export { POSITION_COORDS };
 
 export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   // Theme-dependent styles — useMemo
   const accentStyles = useMemo(() => ({
@@ -104,11 +106,12 @@ export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {
             key={kp.id}
             keypoint={kp}
             accentStyles={accentStyles}
+            reducedMotion={reducedMotion}
           />
         ))}
       </View>
     );
-  }, [visible, keypoints, accentStyles]);
+  }, [visible, keypoints, accentStyles, reducedMotion]);
 
   return renderKeypoints();
 }
@@ -117,6 +120,7 @@ export function KeypointOverlay({ keypoints, visible }: KeypointOverlayProps) {
 const MemoizedKeypointMarker = React.memo(function KeypointMarker({
   keypoint,
   accentStyles,
+  reducedMotion,
 }: {
   keypoint: Keypoint;
   accentStyles: {
@@ -124,6 +128,7 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
     marker: object[];
     markerLabel: object[];
   };
+  reducedMotion: boolean;
 }) {
   // Shared values on the UI thread
   const scale = useSharedValue(0);
@@ -131,6 +136,16 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
   const pulseValue = useSharedValue(1);
 
   useEffect(() => {
+    if (reducedMotion) {
+      // Instant appearance — no animation
+      scale.value = 1;
+      pulseValue.value = 1;
+      return () => {
+        cancelAnimation(scale);
+        cancelAnimation(pulseValue);
+      };
+    }
+
     // Pop-in animation: spring from 0 → 1
     scale.value = withSpring(1, { damping: 8, stiffness: 120 });
 
@@ -147,7 +162,7 @@ const MemoizedKeypointMarker = React.memo(function KeypointMarker({
       cancelAnimation(scale);
       cancelAnimation(pulseValue);
     };
-  }, []);
+  }, [reducedMotion]);
 
   // Ring opacity: fades from 0.4 at rest to 0 at peak expansion
   // pulseValue goes 1 → 1.3 → 1, so map [1, 1.3] → [0.4, 0]
