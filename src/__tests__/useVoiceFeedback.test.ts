@@ -110,4 +110,50 @@ describe('useVoiceFeedback', () => {
     });
     expect(mockSpeak).toHaveBeenCalledWith('', expect.any(Object));
   });
+
+  it('checkAndSpeak does NOT speak for text without positive keywords', () => {
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.checkAndSpeak('待定');
+    });
+    expect(mockSpeak).not.toHaveBeenCalled();
+  });
+});
+
+describe('standalone speak()', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockStop.mockReturnValue();
+  });
+
+  it('calls Speech.stop() before Speaking', () => {
+    const { speak: standaloneSpeak } = require('../hooks/useVoiceFeedback');
+    standaloneSpeak('测试文本');
+    expect(mockStop).toHaveBeenCalled();
+    expect(mockSpeak).toHaveBeenCalledWith('测试文本', {
+      language: 'zh-CN',
+      pitch: 1.1,
+      rate: 0.9,
+    });
+  });
+
+  it('speaks Chinese text with correct language', () => {
+    const { speak: standaloneSpeak } = require('../hooks/useVoiceFeedback');
+    standaloneSpeak('黄金比例很棒');
+    expect(mockSpeak).toHaveBeenCalledWith('黄金比例很棒', {
+      language: 'zh-CN',
+      pitch: 1.1,
+      rate: 0.9,
+    });
+  });
+
+  it('calls speak with expected options object', () => {
+    const { speak: standaloneSpeak } = require('../hooks/useVoiceFeedback');
+    standaloneSpeak('测试');
+    expect(mockSpeak).toHaveBeenCalledWith('测试', expect.objectContaining({
+      language: 'zh-CN',
+      pitch: 1.1,
+      rate: 0.9,
+    }));
+  });
 });
