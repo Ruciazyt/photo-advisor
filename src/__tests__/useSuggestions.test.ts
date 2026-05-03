@@ -99,4 +99,91 @@ describe('useSuggestions', () => {
     });
     expect(result.current.bubbleItems).toEqual([]);
   });
+
+  // --- Edge case coverage ---
+
+  it('handleDismiss callback is stable across renders (useCallback with empty deps)', () => {
+    const { result, rerender } = renderHook(() => useSuggestions());
+    const initialRef = result.current.handleDismiss;
+
+    // Change state multiple times
+    act(() => {
+      result.current.setSuggestions(['a', 'b', 'c']);
+    });
+    act(() => {
+      result.current.setLoading(true);
+    });
+    act(() => {
+      result.current.setSuggestions(['x']);
+    });
+
+    // Callback reference must remain identical
+    expect(result.current.handleDismiss).toBe(initialRef);
+  });
+
+  it('handleDismissAll callback is stable across renders (useCallback with empty deps)', () => {
+    const { result } = renderHook(() => useSuggestions());
+    const initialRef = result.current.handleDismissAll;
+
+    act(() => {
+      result.current.setSuggestions(['a', 'b', 'c']);
+    });
+    act(() => {
+      result.current.setLoading(true);
+    });
+    act(() => {
+      result.current.setSuggestions(['x', 'y']);
+    });
+
+    expect(result.current.handleDismissAll).toBe(initialRef);
+  });
+
+  it('bubbleItems handles duplicate suggestion texts — IDs remain unique (index-based)', () => {
+    const { result } = renderHook(() => useSuggestions());
+    act(() => {
+      result.current.setSuggestions(['same text', 'same text', 'same text']);
+    });
+
+    expect(result.current.bubbleItems).toHaveLength(3);
+    // IDs must be unique even when texts are identical
+    const ids = result.current.bubbleItems.map(b => b.id);
+    expect(new Set(ids).size).toBe(3);
+    // Each bubbleItem must have a distinct id
+    result.current.bubbleItems.forEach(item => {
+      expect(ids.filter(id => id === item.id).length).toBe(1);
+    });
+  });
+
+  it('suggestions replaced with new array — old items are cleared, not merged', () => {
+    const { result } = renderHook(() => useSuggestions());
+    act(() => {
+      result.current.setSuggestions(['old 1', 'old 2', 'old 3']);
+    });
+    expect(result.current.suggestions).toHaveLength(3);
+    expect(result.current.bubbleItems).toHaveLength(3);
+
+    // Replace with a completely new set
+    act(() => {
+      result.current.setSuggestions(['new A', 'new B']);
+    });
+
+    expect(result.current.suggestions).toEqual(['new A', 'new B']);
+    expect(result.current.suggestions).toHaveLength(2);
+    expect(result.current.bubbleItems.map(b => b.text)).toEqual(['new A', 'new B']);
+    // Old items must not linger
+    expect(result.current.suggestions).not.toContain('old 1');
+    expect(result.current.bubbleItems).toHaveLength(2);
+  });
+
+  it('empty suggestions array — bubbleItems is empty array', () => {
+    const { result } = renderHook(() => useSuggestions());
+
+    act(() => {
+      result.current.setSuggestions([]);
+    });
+
+    expect(result.current.suggestions).toEqual([]);
+    expect(result.current.bubbleItems).toEqual([]);
+    expect(result.current.bubbleItems).toHaveLength(0);
+  });
 });
