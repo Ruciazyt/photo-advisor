@@ -1,3 +1,5 @@
+import React from 'react';
+import { CameraView } from 'expo-camera';
 /**
  * Unit tests for src/hooks/useHistogramToggle.ts
  *
@@ -35,17 +37,17 @@ describe('useHistogramToggle', () => {
   });
 
   it('defaults showHistogram to false when initialShowHistogram is false', () => {
-    const { result } = renderHook(() => useHistogramToggle({ current: null }, false));
+    const { result } = renderHook(() => useHistogramToggle({ current: null } as React.RefObject<CameraView | null>, false));
     expect(result.current.showHistogram).toBe(false);
   });
 
   it('defaults showHistogram to true when initialShowHistogram is true', () => {
-    const { result } = renderHook(() => useHistogramToggle({ current: null }, true));
+    const { result } = renderHook(() => useHistogramToggle({ current: null } as React.RefObject<CameraView | null>, true));
     expect(result.current.showHistogram).toBe(true);
   });
 
   it('handleHistogramToggle turns histogram on when currently off', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     await act(async () => {
@@ -57,7 +59,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramToggle turns histogram off when currently on', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     // Turn on first
@@ -74,7 +76,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramToggle starts 5s auto-hide timer after turning on', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     await act(async () => {
@@ -92,7 +94,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramPressIn captures histogram and shows it', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     await act(async () => {
@@ -104,7 +106,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramPressOut starts 2s auto-hide timer', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     // Turn on first
@@ -128,7 +130,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramToggle with histogram already on resets the 5s timer', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     // Turn on
@@ -164,7 +166,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramPressIn does not start an auto-hide timer (press-out does)', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     // Turn on first
@@ -187,7 +189,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('cleanup clears timer on unmount', async () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result, unmount } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     // Start toggle timer (async operation)
@@ -205,7 +207,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('showHistogram and histogramData are exposed in return value', () => {
-    const cameraRef = { current: {} };
+    const cameraRef = { current: {} } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     expect(typeof result.current.showHistogram).toBe('boolean');
@@ -214,7 +216,7 @@ describe('useHistogramToggle', () => {
   });
 
   it('handleHistogramToggle with null cameraRef does not crash', async () => {
-    const cameraRef = { current: null };
+    const cameraRef = { current: null } as React.RefObject<CameraView | null>;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
 
     await act(async () => {

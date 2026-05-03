@@ -1,7 +1,8 @@
 /**
  * Tests for useCamera hook — extracted camera state and permissions.
  */
-import React, { renderHook, act, waitFor } from '@testing-library/react-native';
+import React, { MutableRefObject } from 'react';
+import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useCamera } from '../hooks/useCamera';
 
 // --- Mock dependencies ---
@@ -236,7 +237,7 @@ describe('useCamera', () => {
 
       const { result } = renderHook(() => useCamera());
       // Simulate cameraRef being set
-      (result.current.cameraRef as React.MutableRefObject<any>).current = mockCamera;
+      (result.current.cameraRef as MutableRefObject<any>).current = mockCamera;
 
       await act(async () => { await result.current.startRecording(); });
       expect(result.current.isRecording).toBe(false); // finally block resets
@@ -255,7 +256,7 @@ describe('useCamera', () => {
       const mockCamera = { recordAsync: mockRecordAsync };
 
       const { result } = renderHook(() => useCamera());
-      (result.current.cameraRef as React.MutableRefObject<any>).current = mockCamera;
+      (result.current.cameraRef as MutableRefObject<any>).current = mockCamera;
 
       // Simulate already recording by directly mutating state via the callback closure
       // We test the isRecording guard by calling startRecording and verifying recordAsync is called only once
@@ -285,7 +286,7 @@ describe('useCamera', () => {
       const mockCamera = { recordAsync: mockRecordAsync, stopRecording: mockStopRecording };
 
       const { result } = renderHook(() => useCamera());
-      (result.current.cameraRef as React.MutableRefObject<any>).current = mockCamera;
+      (result.current.cameraRef as MutableRefObject<any>).current = mockCamera;
 
       // Directly set isRecording to true via a captured setter if available,
       // or use startRecording + wait for its finally to complete before stopRecording

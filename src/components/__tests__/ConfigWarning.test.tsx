@@ -32,7 +32,7 @@ describe('ConfigWarning', () => {
     // style is an array: [{ color: accent, fontSize: 13 }]
     const textStyle = textProps.style;
     expect(textStyle).toBeInstanceOf(Array);
-    const colorObj = textStyle.find((s) => s.color !== undefined);
+    const colorObj = textStyle.find((s: any) => s.color !== undefined);
     expect(colorObj.color).toBe('#e8d5b7');
   });
 

@@ -358,7 +358,7 @@ describe('CameraOverlays', () => {
 
   it('renders with non-empty bubbleItems without crashing', () => {
     const bubbleItems = [
-      { id: 1, x: 100, y: 200, text: 'Good framing', direction: 'up' as const, score: 85 },
+      { id: 1, x: 100, y: 200, text: 'Good framing', position: 'top-left' as const, direction: 'up' as const, score: 85 },
     ];
     const { getByTestId } = render(
       <CameraOverlays

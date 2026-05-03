@@ -41,8 +41,8 @@ import type { BubbleItem } from '../types';
 describe('BubbleOverlay reduced motion', () => {
   const defaultProps = {
     visibleItems: [
-      { id: 1, text: '构图不错', position: 'top' as const },
-      { id: 2, text: '稍微往左', position: 'top' as const },
+      { id: 1, text: '构图不错', position: 'top-left' as const },
+      { id: 2, text: '稍微往左', position: 'top-left' as const },
     ],
     loading: false,
     onDismiss: jest.fn(),
@@ -89,7 +89,7 @@ describe('BubbleOverlay reduced motion', () => {
       rerender(
         <BubbleOverlay
           {...defaultProps}
-          visibleItems={[{ id: 1, text: '新建议', position: 'top' as const }]}
+          visibleItems={[{ id: 1, text: '新建议', position: 'top-left' as const }]}
         />
       )
     ).not.toThrow();

@@ -203,7 +203,7 @@ describe('useShakeDetector', () => {
     it('starts listening when enabled becomes true', () => {
       const onShake = jest.fn();
       const { rerender } = renderHook(
-        ({ enabled }) =>
+        ({ enabled }: { enabled: boolean }) =>
           useShakeDetector({
             onShake,
             enabled,
@@ -220,7 +220,7 @@ describe('useShakeDetector', () => {
     it('stops listening when enabled becomes false', () => {
       const onShake = jest.fn();
       const { rerender } = renderHook(
-        ({ enabled }) =>
+        ({ enabled }: { enabled: boolean }) =>
           useShakeDetector({
             onShake,
             enabled,
@@ -238,7 +238,7 @@ describe('useShakeDetector', () => {
     it('does not re-subscribe if already listening', () => {
       const onShake = jest.fn();
       const { rerender } = renderHook(
-        ({ enabled }) =>
+        ({ enabled }: { enabled: boolean }) =>
           useShakeDetector({
             onShake,
             enabled,

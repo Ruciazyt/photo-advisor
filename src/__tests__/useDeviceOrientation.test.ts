@@ -26,12 +26,19 @@ const mockIsAvailableAsync = Accelerometer.isAvailableAsync as jest.MockedFuncti
 const mockAddListener = Accelerometer.addListener as jest.MockedFunction<typeof Accelerometer.addListener>;
 const mockSetUpdateInterval = Accelerometer.setUpdateInterval as jest.MockedFunction<typeof Accelerometer.setUpdateInterval>;
 
+interface MockAccelerometerMeasurement {
+  x: number;
+  y: number;
+  z: number;
+  timestamp: number;
+}
+
 describe('useDeviceOrientation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAvailableAsync.mockResolvedValue(true);
-    mockAddListener.mockImplementation((handler) => {
-      handler({ x: 0, y: 0, z: 9.81 });
+    mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
+      handler({ x: 0, y: 0, z: 9.81, timestamp: Date.now() });
       return { remove: jest.fn() };
     });
   });
@@ -98,8 +105,8 @@ describe('useDeviceOrientation', () => {
 
   describe('orientation computation', () => {
     it('computes orientation from accelerometer data', async () => {
-      mockAddListener.mockImplementation((handler) => {
-        handler({ x: 0, y: 0, z: 9.81 });
+      mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
+        handler({ x: 0, y: 0, z: 9.81, timestamp: Date.now() });
         return { remove: jest.fn() };
       });
 
@@ -116,8 +123,8 @@ describe('useDeviceOrientation', () => {
     });
 
     it('computes non-zero pitch when device is tilted forward/back', async () => {
-      mockAddListener.mockImplementation((handler) => {
-        handler({ x: 5, y: 0, z: 8 });
+      mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
+        handler({ x: 5, y: 0, z: 8, timestamp: Date.now() });
         return { remove: jest.fn() };
       });
 
@@ -132,8 +139,8 @@ describe('useDeviceOrientation', () => {
     });
 
     it('computes non-zero roll when device is tilted left/right', async () => {
-      mockAddListener.mockImplementation((handler) => {
-        handler({ x: 0, y: 5, z: 8 });
+      mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
+        handler({ x: 0, y: 5, z: 8, timestamp: Date.now() });
         return { remove: jest.fn() };
       });
 
@@ -147,8 +154,8 @@ describe('useDeviceOrientation', () => {
     });
 
     it('updates orientation when accelerometer emits new data', async () => {
-      let capturedHandler: (m: { x: number; y: number; z: number }) => void;
-      mockAddListener.mockImplementation((handler) => {
+      let capturedHandler: (m: MockAccelerometerMeasurement) => void;
+      mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
         capturedHandler = handler;
         return { remove: jest.fn() };
       });
@@ -162,7 +169,7 @@ describe('useDeviceOrientation', () => {
 
       // Emit a different orientation
       act(() => {
-        capturedHandler!({ x: 0, y: 8, z: 4 });
+        capturedHandler!({ x: 0, y: 8, z: 4, timestamp: Date.now() });
       });
 
       expect(result.current.orientation.roll).not.toBe(initialRoll);
@@ -192,8 +199,8 @@ describe('useDeviceOrientation', () => {
     });
 
     it('does not update state after unmount (mountedRef guard)', async () => {
-      let capturedHandler: (m: { x: number; y: number; z: number }) => void;
-      mockAddListener.mockImplementation((handler) => {
+      let capturedHandler: (m: MockAccelerometerMeasurement) => void;
+      mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
         capturedHandler = handler;
         return { remove: jest.fn() };
       });
@@ -207,7 +214,7 @@ describe('useDeviceOrientation', () => {
 
       // Emit after unmount — should not crash or update state
       act(() => {
-        capturedHandler!({ x: 0, y: 0, z: 9.81 });
+        capturedHandler!({ x: 0, y: 0, z: 9.81, timestamp: Date.now() });
       });
       // No assertion needed — just ensure no crash (mount guard works)
     });
@@ -215,8 +222,8 @@ describe('useDeviceOrientation', () => {
 
   describe('mountedRef cleanup', () => {
     it('does not call setOrientation after unmount even if async callback fires', async () => {
-      let capturedHandler: (m: { x: number; y: number; z: number }) => void;
-      mockAddListener.mockImplementation((handler) => {
+      let capturedHandler: (m: MockAccelerometerMeasurement) => void;
+      mockAddListener.mockImplementation((handler: (m: MockAccelerometerMeasurement) => void) => {
         capturedHandler = handler;
         return { remove: jest.fn() };
       });
@@ -232,7 +239,7 @@ describe('useDeviceOrientation', () => {
 
       // Fire callback after unmount — should be a no-op (mountedRef = false)
       act(() => {
-        capturedHandler!({ x: 0, y: 5, z: 8 });
+        capturedHandler!({ x: 0, y: 5, z: 8, timestamp: Date.now() });
       });
     });
   });
