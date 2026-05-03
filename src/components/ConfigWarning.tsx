@@ -30,7 +30,7 @@ export function ConfigWarning({ visible = true }: ConfigWarningProps) {
 
   return (
     <View style={containerStyles.warning}>
-      <Text style={textStyle}>⚠️ 请先配置API</Text>
+      <Text style={textStyle} accessibilityLabel="⚠️ 请先配置API">⚠️ 请先配置API</Text>
     </View>
   );
 }
