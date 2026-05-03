@@ -49,6 +49,7 @@ jest.mock('../hooks/useAccessibility', () => ({
   useAccessibilityAnnouncement: jest.fn(() => ({
     announce: jest.fn(),
   })),
+  useAccessibilityReducedMotion: jest.fn(() => ({ reducedMotion: false })),
 }));
 
 const makeResult = (overrides: Partial<CompositionScoreResult> = {}): CompositionScoreResult => ({

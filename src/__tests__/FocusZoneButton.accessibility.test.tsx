@@ -16,6 +16,7 @@ import { FocusGuideOverlay } from '../components/FocusGuideOverlay';
 const mockA11yButton = jest.fn();
 jest.mock('../hooks/useAccessibility', () => ({
   useAccessibilityButton: (...args: unknown[]) => mockA11yButton(...args),
+  useAccessibilityReducedMotion: jest.fn(() => ({ reducedMotion: false })),
 }));
 
 jest.mock('react-native-reanimated');
