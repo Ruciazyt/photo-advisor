@@ -63,7 +63,7 @@ jest.mock('../services/update', () => ({
 }));
 
 jest.mock('../services/settings', () => ({
-  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced' })),
+  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced', focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium' })),
   saveAppSettings: jest.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (loadApiConfig as jest.Mock).mockResolvedValue(null);
-    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced' });
+    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced', focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium' });
     (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
   });
 
@@ -284,6 +284,8 @@ describe('SettingsScreen', () => {
       showFocusGuide: false,
       showBubbleChat: true,
       showShakeDetector: false,
+      focusPeakingColor: '#FF4444',
+      focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => {
@@ -456,6 +458,8 @@ describe('SettingsScreen', () => {
       showFocusGuide: false,
       showBubbleChat: true,
       showShakeDetector: false,
+      focusPeakingColor: '#FF4444',
+      focusPeakingSensitivity: 'medium',
     });
     const { getByText } = render(<SettingsScreen />);
     await waitFor(() => {
@@ -537,6 +541,7 @@ describe('SettingsScreen', () => {
       defaultGridVariant: 'thirds',
       showHistogram: false, showLevel: true, showFocusPeaking: false,
       showSunPosition: false, showFocusGuide: true, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('水平仪')).toBeTruthy(); });
@@ -551,6 +556,7 @@ describe('SettingsScreen', () => {
       defaultGridVariant: 'thirds',
       showHistogram: true, showLevel: true, showFocusPeaking: true,
       showSunPosition: true, showFocusGuide: true, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
@@ -741,6 +747,7 @@ describe('SettingsScreen', () => {
       showHistogram: false, showLevel: true, showFocusPeaking: false,
       showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
       showShakeDetector: true, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
@@ -776,6 +783,7 @@ describe('SettingsScreen', () => {
       showHistogram: false, showLevel: true, showFocusPeaking: false,
       showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
       showShakeDetector: false, showKeypoints: true, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('关键点标记')).toBeTruthy(); });
@@ -821,6 +829,7 @@ describe('SettingsScreen', () => {
       showHistogram: false, showLevel: true, showFocusPeaking: false,
       showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
       showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('10s，已选中')).toBeTruthy(); });
