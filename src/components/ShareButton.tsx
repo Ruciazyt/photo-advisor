@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { sharePhoto } from '../services/share';
 import { useAccessibilityButton } from '../hooks/useAccessibility';
 import { ShareCard } from './ShareCard';
+import { SharePreviewModal } from './SharePreviewModal';
 import { captureRef } from 'react-native-view-shot';
 import type { ShareOptions } from '../types';
 
@@ -106,6 +107,19 @@ export function ShareButton({
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
+  // Share preview modal state
+  const [showPreview, setShowPreview] = useState(false);
+  const [captionText, setCaptionText] = useState('');
+
+  // Pre-fill caption with AI suggestions when modal opens
+  const openPreview = () => {
+    const prefill = suggestions.length > 0
+      ? suggestions.map(s => s.replace(/^\[[^\]]+\]\s*/, '').trim()).join('\n')
+      : '';
+    setCaptionText(prefill);
+    setShowPreview(true);
+  };
+
   // Ref for the off-screen ShareCard used as capture source for view-shot
   const shareCardRef = useRef<View>(null);
 
@@ -181,35 +195,27 @@ export function ShareButton({
     enabled: canShare,
   });
 
-  const handleShare = async () => {
-    if (sharing || !canShare) return;
+  const handleShare = () => {
+    if (!canShare) return;
+    // Open preview modal instead of sharing directly
+    openPreview();
+  };
 
+  // Called by SharePreviewModal's onShare — does the actual capture + share
+  const handlePreviewShare = async (capturedUri: string, caption: string) => {
+    setShowPreview(false);
     setSharing(true);
     try {
       const opts: ShareOptions = {
-        photoUri,
+        photoUri: capturedUri,
         suggestions,
         gridType,
         score,
         gridVariant,
+        text: caption || undefined,
       };
 
-      // Capture the ShareCard as a composite image via view-shot
-      let shareUri = photoUri;
-      if (shareCardRef.current) {
-        try {
-          const uri = await captureRef(shareCardRef, {
-            format: 'jpg',
-            quality: 0.9,
-          });
-          shareUri = uri;
-        } catch {
-          // Fall back to raw photo if capture fails
-          shareUri = photoUri;
-        }
-      }
-
-      const result = await sharePhoto({ ...opts, photoUri: shareUri });
+      const result = await sharePhoto(opts);
       if (result.success) {
         setToastMessage('分享成功！');
       } else {
@@ -266,6 +272,21 @@ export function ShareButton({
           setShowToast(false);
           onShareEnd?.();
         }}
+      />
+
+      <SharePreviewModal
+        visible={showPreview}
+        photoUri={photoUri}
+        suggestions={suggestions}
+        gridType={gridType}
+        score={score}
+        gridVariant={gridVariant}
+        captionText={captionText}
+        onCaptionChange={setCaptionText}
+        onShare={handlePreviewShare}
+        onCancel={() => setShowPreview(false)}
+        photoAspectRatio={cardAspectRatio}
+        scoreReason={scoreReason}
       />
     </>
   );

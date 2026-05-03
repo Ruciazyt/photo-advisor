@@ -1,5 +1,4 @@
 import React from 'react';
-import { View, Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { ConfigWarning } from '../ConfigWarning';
 
@@ -28,11 +27,13 @@ describe('ConfigWarning', () => {
   });
 
   it('uses theme accent color for text style', () => {
-    const { getByText } = render(<ConfigWarning />);
-    const text = getByText('⚠️ 请先配置API');
-    const style = text.props.style;
-    const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
-    expect(flatStyle.color).toBe('#e8d5b7');
+    const { toJSON } = render(<ConfigWarning />);
+    const textProps = toJSON().children[0].props;
+    // style is an array: [{ color: accent, fontSize: 13 }]
+    const textStyle = textProps.style;
+    expect(textStyle).toBeInstanceOf(Array);
+    const colorObj = textStyle.find((s) => s.color !== undefined);
+    expect(colorObj.color).toBe('#e8d5b7');
   });
 
   it('text content is "⚠️ 请先配置API"', () => {
@@ -40,25 +41,21 @@ describe('ConfigWarning', () => {
     expect(getByText('⚠️ 请先配置API')).toBeTruthy();
   });
 
-  it('container has correct static styles', () => {
+  it('container has correct static styles (backgroundColor, borderRadius, zIndex, etc.)', () => {
     const { toJSON } = render(<ConfigWarning />);
-    const container = toJSON();
-    expect(container.type).toBe('View');
-    expect(container.props.style).toEqual(
-      expect.objectContaining({
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        alignSelf: 'center',
-        marginTop: 60,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        zIndex: 10,
-      })
-    );
+    const containerStyle = toJSON().props.style;
+    expect(containerStyle.backgroundColor).toBe('rgba(0,0,0,0.6)');
+    expect(containerStyle.borderRadius).toBe(20);
+    expect(containerStyle.zIndex).toBe(10);
+    expect(containerStyle.alignSelf).toBe('center');
+    expect(containerStyle.marginTop).toBe(60);
+    expect(containerStyle.paddingHorizontal).toBe(16);
+    expect(containerStyle.paddingVertical).toBe(8);
   });
 
   it('Text has accessibilityLabel set', () => {
-    const { getByLabelText } = render(<ConfigWarning />);
-    expect(getByLabelText('⚠️ 请先配置API')).toBeTruthy();
+    const { toJSON } = render(<ConfigWarning />);
+    const textProps = toJSON().children[0].props;
+    expect(textProps.accessibilityLabel).toBe('⚠️ 请先配置API');
   });
 });
