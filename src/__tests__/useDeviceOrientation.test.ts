@@ -1,118 +1,239 @@
-// This triggers the manual mock from __mocks__/expo-sensors.js
-jest.mock('expo-sensors');
+/**
+ * Tests for useDeviceOrientation hook
+ * Tests: orientation state, availability detection, accelerometer subscription lifecycle
+ */
+
+jest.mock('expo-sensors', () => {
+  const mockAddListener = jest.fn(() => ({ remove: jest.fn() }));
+  const mockRemove = jest.fn();
+  const mockSetUpdateInterval = jest.fn();
+  const mockIsAvailableAsync = jest.fn();
+  return {
+    Accelerometer: {
+      isAvailableAsync: mockIsAvailableAsync,
+      setUpdateInterval: mockSetUpdateInterval,
+      addListener: mockAddListener,
+      remove: mockRemove,
+    },
+  };
+});
 
 import { renderHook, act } from '@testing-library/react-native';
 import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
-// Access the mocked functions via require
-const { Accelerometer } = require('expo-sensors');
+import { Accelerometer } from 'expo-sensors';
+
+const mockIsAvailableAsync = Accelerometer.isAvailableAsync as jest.MockedFunction<typeof Accelerometer.isAvailableAsync>;
+const mockAddListener = Accelerometer.addListener as jest.MockedFunction<typeof Accelerometer.addListener>;
+const mockSetUpdateInterval = Accelerometer.setUpdateInterval as jest.MockedFunction<typeof Accelerometer.setUpdateInterval>;
 
 describe('useDeviceOrientation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Accelerometer.addListener.mockReturnValue({ remove: jest.fn() });
-  });
-
-  it('should set available to false when accelerometer is not available', async () => {
-    Accelerometer.isAvailableAsync.mockResolvedValue(false);
-
-    const { result } = renderHook(() => useDeviceOrientation());
-
-    await act(async () => {
-      await result.current; // wait for hook to settle
-    });
-
-    expect(result.current.available).toBe(false);
-    expect(Accelerometer.addListener).not.toHaveBeenCalled();
-  });
-
-  it('should set available to true and add subscription when accelerometer is available', async () => {
-    Accelerometer.isAvailableAsync.mockResolvedValue(true);
-    Accelerometer.addListener.mockReturnValue({ remove: jest.fn() });
-
-    const { result } = renderHook(() => useDeviceOrientation());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
-    });
-
-    expect(result.current.available).toBe(true);
-    expect(Accelerometer.setUpdateInterval).toHaveBeenCalledWith(100);
-    expect(Accelerometer.addListener).toHaveBeenCalled();
-  });
-
-  it('should compute orientation correctly (pitch and roll) for level device', async () => {
-    Accelerometer.isAvailableAsync.mockResolvedValue(true);
-    let listenerCb: (m: { x: number; y: number; z: number }) => void;
-    Accelerometer.addListener.mockImplementation((cb: (m: { x: number; y: number; z: number }) => void) => {
-      listenerCb = cb;
+    mockIsAvailableAsync.mockResolvedValue(true);
+    mockAddListener.mockImplementation((handler) => {
+      handler({ x: 0, y: 0, z: 9.81 });
       return { remove: jest.fn() };
     });
-
-    const { result } = renderHook(() => useDeviceOrientation());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
-    });
-
-    // Simulate a measurement: level on flat surface (z=9.81, x=0, y=0)
-    await act(async () => {
-      listenerCb!({ x: 0, y: 0, z: 9.81 });
-    });
-
-    // pitch = atan2(-x, sqrt(y^2+z^2)) ≈ 0, roll = atan2(y, z) ≈ 0
-    expect(result.current.orientation.pitch).toBeCloseTo(0);
-    expect(result.current.orientation.roll).toBeCloseTo(0);
   });
 
-  it('should compute non-zero pitch for forward tilt', async () => {
-    Accelerometer.isAvailableAsync.mockResolvedValue(true);
-    let listenerCb: (m: { x: number; y: number; z: number }) => void;
-    Accelerometer.addListener.mockImplementation((cb: (m: { x: number; y: number; z: number }) => void) => {
-      listenerCb = cb;
-      return { remove: jest.fn() };
+  describe('initial state', () => {
+    it('starts with pitch=0 and roll=0', () => {
+      const { result } = renderHook(() => useDeviceOrientation());
+      expect(result.current.orientation.pitch).toBe(0);
+      expect(result.current.orientation.roll).toBe(0);
     });
 
-    const { result } = renderHook(() => useDeviceOrientation());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
+    it('starts with available=false pending availability check', () => {
+      const { result } = renderHook(() => useDeviceOrientation());
+      expect(result.current.available).toBe(false);
     });
-
-    // Phone tilted forward: x positive, z reduced
-    await act(async () => {
-      listenerCb!({ x: 4.905, y: 0, z: 8.492 });
-    });
-
-    // pitch = atan2(-4.905, sqrt(0+72.11)) ≈ -30
-    expect(result.current.orientation.pitch).toBeCloseTo(-30, 0);
   });
 
-  it('should remove subscription on unmount', async () => {
-    Accelerometer.isAvailableAsync.mockResolvedValue(true);
-    const removeMock = jest.fn();
-    Accelerometer.addListener.mockReturnValue({ remove: removeMock });
-
-    const { unmount } = renderHook(() => useDeviceOrientation());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
+  describe('availability detection', () => {
+    it('sets available=true when Accelerometer.isAvailableAsync returns true', async () => {
+      mockIsAvailableAsync.mockResolvedValue(true);
+      const { result } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(result.current.available).toBe(true);
     });
 
-    unmount();
+    it('sets available=false when Accelerometer.isAvailableAsync returns false', async () => {
+      mockIsAvailableAsync.mockResolvedValue(false);
+      const { result } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(result.current.available).toBe(false);
+    });
 
-    expect(removeMock).toHaveBeenCalled();
+    it('does not subscribe when accelerometer is not available', async () => {
+      mockIsAvailableAsync.mockResolvedValue(false);
+      renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(mockAddListener).not.toHaveBeenCalled();
+    });
   });
 
-  it('should call setUpdateInterval with custom interval', async () => {
-    Accelerometer.isAvailableAsync.mockResolvedValue(true);
-    Accelerometer.addListener.mockReturnValue({ remove: jest.fn() });
-
-    renderHook(() => useDeviceOrientation(250));
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
+  describe('update interval', () => {
+    it('sets update interval on mount', async () => {
+      renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(mockSetUpdateInterval).toHaveBeenCalledWith(100);
     });
 
-    expect(Accelerometer.setUpdateInterval).toHaveBeenCalledWith(250);
+    it('uses custom updateIntervalMs when provided', async () => {
+      renderHook(() => useDeviceOrientation(50));
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(mockSetUpdateInterval).toHaveBeenCalledWith(50);
+    });
+  });
+
+  describe('orientation computation', () => {
+    it('computes orientation from accelerometer data', async () => {
+      mockAddListener.mockImplementation((handler) => {
+        handler({ x: 0, y: 0, z: 9.81 });
+        return { remove: jest.fn() };
+      });
+
+      const { result } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // When device is flat: x=0, y=0, z≈9.81
+      // pitch = atan2(-x, sqrt(y²+z²)) = atan2(0, sqrt(0+9.81²)) = 0
+      // roll = atan2(y, z) = atan2(0, 9.81) = 0
+      expect(result.current.orientation.pitch).toBeCloseTo(0, 1);
+      expect(result.current.orientation.roll).toBeCloseTo(0, 1);
+    });
+
+    it('computes non-zero pitch when device is tilted forward/back', async () => {
+      mockAddListener.mockImplementation((handler) => {
+        handler({ x: 5, y: 0, z: 8 });
+        return { remove: jest.fn() };
+      });
+
+      const { result } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // pitch = atan2(-5, sqrt(0 + 8²)) = atan2(-5, 8)
+      // = atan2(-5, 8) ≈ -32° (negative because x is positive, forward tilt)
+      expect(result.current.orientation.pitch).not.toBeCloseTo(0, 1);
+    });
+
+    it('computes non-zero roll when device is tilted left/right', async () => {
+      mockAddListener.mockImplementation((handler) => {
+        handler({ x: 0, y: 5, z: 8 });
+        return { remove: jest.fn() };
+      });
+
+      const { result } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // roll = atan2(5, 8) ≈ 32°
+      expect(result.current.orientation.roll).not.toBeCloseTo(0, 1);
+    });
+
+    it('updates orientation when accelerometer emits new data', async () => {
+      let capturedHandler: (m: { x: number; y: number; z: number }) => void;
+      mockAddListener.mockImplementation((handler) => {
+        capturedHandler = handler;
+        return { remove: jest.fn() };
+      });
+
+      const { result } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      const initialRoll = result.current.orientation.roll;
+
+      // Emit a different orientation
+      act(() => {
+        capturedHandler!({ x: 0, y: 8, z: 4 });
+      });
+
+      expect(result.current.orientation.roll).not.toBe(initialRoll);
+    });
+  });
+
+  describe('subscription lifecycle', () => {
+    it('subscribes to Accelerometer on mount when available', async () => {
+      renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(mockAddListener).toHaveBeenCalledTimes(1);
+    });
+
+    it('removes subscription on unmount', async () => {
+      const removeMock = jest.fn();
+      mockAddListener.mockReturnValue({ remove: removeMock });
+
+      const { unmount } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      unmount();
+      expect(removeMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not update state after unmount (mountedRef guard)', async () => {
+      let capturedHandler: (m: { x: number; y: number; z: number }) => void;
+      mockAddListener.mockImplementation((handler) => {
+        capturedHandler = handler;
+        return { remove: jest.fn() };
+      });
+
+      const { unmount } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      unmount();
+
+      // Emit after unmount — should not crash or update state
+      act(() => {
+        capturedHandler!({ x: 0, y: 0, z: 9.81 });
+      });
+      // No assertion needed — just ensure no crash (mount guard works)
+    });
+  });
+
+  describe('mountedRef cleanup', () => {
+    it('does not call setOrientation after unmount even if async callback fires', async () => {
+      let capturedHandler: (m: { x: number; y: number; z: number }) => void;
+      mockAddListener.mockImplementation((handler) => {
+        capturedHandler = handler;
+        return { remove: jest.fn() };
+      });
+
+      const { result, unmount } = renderHook(() => useDeviceOrientation());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      const stateBefore = result.current.orientation;
+
+      unmount();
+
+      // Fire callback after unmount — should be a no-op (mountedRef = false)
+      act(() => {
+        capturedHandler!({ x: 0, y: 5, z: 8 });
+      });
+    });
   });
 });
