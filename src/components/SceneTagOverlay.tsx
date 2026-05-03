@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 interface SceneTagOverlayProps {
   /** The scene tag to display (e.g. "风光", "人像"), null/empty renders nothing */
@@ -42,6 +43,7 @@ const containerStyles = StyleSheet.create({
 export function SceneTagOverlay({ tag, visible }: SceneTagOverlayProps) {
   const { colors } = useTheme();
   const opacity = useSharedValue(0);
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   const staticTagStyles = { fontSize: 15, fontWeight: '600' as const, letterSpacing: 1 };
   // Theme-dependent tag text style — use useMemo
@@ -52,11 +54,11 @@ export function SceneTagOverlay({ tag, visible }: SceneTagOverlayProps) {
 
   useEffect(() => {
     if (!visible) {
-      opacity.value = withTiming(0, { duration: 300 });
+      opacity.value = withTiming(0, { duration: reducedMotion ? 0 : 300 });
       return;
     }
-    opacity.value = withTiming(1, { duration: 200 });
-  }, [visible]);
+    opacity.value = withTiming(1, { duration: reducedMotion ? 0 : 200 });
+  }, [visible, reducedMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
