@@ -16,6 +16,7 @@ import Animated, {
 import { KeypointOverlay } from './KeypointOverlay';
 import { BubbleOverlay } from './BubbleOverlay';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import type { BubbleItem, Keypoint, ComparisonOverlayProps } from '../types';
 export type { ComparisonOverlayProps };
 
@@ -105,6 +106,7 @@ export function ComparisonOverlay({
   scoreReason,
 }: ComparisonOverlayProps) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const [showAnnotated, setShowAnnotated] = useState(true);
   const fadeAnim = useSharedValue(1);
 
@@ -187,10 +189,11 @@ export function ComparisonOverlay({
   const animatedStyle = useAnimatedStyle(() => ({ opacity: fadeAnim.value }));
 
   const toggleView = useCallback((show: boolean) => {
-    fadeAnim.value = withTiming(0, { duration: 150 }, (finished) => {
+    const dur = reducedMotion ? 0 : 150;
+    fadeAnim.value = withTiming(0, { duration: dur }, (finished) => {
       if (finished) {
         runOnJS(setShowAnnotated)(show);
-        fadeAnim.value = withTiming(1, { duration: 150 });
+        fadeAnim.value = withTiming(1, { duration: dur });
       }
     });
   }, []);

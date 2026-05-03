@@ -32,6 +32,23 @@ jest.mock('../contexts/ThemeContext', () => ({
   })),
 }));
 
+// Mock useAccessibility hook
+const mockReducedMotion = jest.fn(() => false);
+jest.mock('../hooks/useAccessibility', () => ({
+  useAccessibilityButton: jest.fn(() => ({})),
+  useAccessibilityReducedMotion: jest.fn(() => ({ reducedMotion: mockReducedMotion() })),
+}));
+
+// Mock useHaptics
+jest.mock('../hooks/useHaptics', () => ({
+  useHaptics: jest.fn(() => ({
+    lightImpact: jest.fn(),
+    mediumImpact: jest.fn(),
+    errorNotification: jest.fn(),
+    warningNotification: jest.fn(),
+  })),
+}));
+
 describe('GridSelectorModal', () => {
   const defaultProps = {
     visible: false,
@@ -122,5 +139,29 @@ describe('GridSelectorModal', () => {
       <GridSelectorModal {...defaultProps} visible={true} selectedVariant="golden" />
     );
     expect(getByText('黄金分割')).toBeTruthy();
+  });
+
+  describe('reduced motion accessibility', () => {
+    it('calls useAccessibilityReducedMotion when reducedMotion=true', () => {
+      mockReducedMotion.mockReturnValueOnce(true);
+      render(<GridSelectorModal {...defaultProps} visible={true} />);
+      expect(mockReducedMotion).toHaveBeenCalled();
+    });
+
+    it('calls useAccessibilityReducedMotion when reducedMotion=false', () => {
+      mockReducedMotion.mockReturnValueOnce(false);
+      render(<GridSelectorModal {...defaultProps} visible={true} />);
+      expect(mockReducedMotion).toHaveBeenCalled();
+    });
+
+    it('renders all grid options regardless of reducedMotion setting', () => {
+      mockReducedMotion.mockReturnValueOnce(false);
+      const { getByText } = render(<GridSelectorModal {...defaultProps} visible={true} />);
+      expect(getByText('三分法')).toBeTruthy();
+      expect(getByText('黄金分割')).toBeTruthy();
+      expect(getByText('对角线')).toBeTruthy();
+      expect(getByText('螺旋线')).toBeTruthy();
+      expect(getByText('关闭网格')).toBeTruthy();
+    });
   });
 });

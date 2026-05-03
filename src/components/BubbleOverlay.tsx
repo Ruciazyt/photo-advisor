@@ -17,7 +17,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { useAccessibilityButton, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import type { BubbleItem } from '../types';
 export type { BubblePosition } from '../types';
 export { BubbleItem };
@@ -60,7 +60,7 @@ const containerStyles = StyleSheet.create({
   },
 });
 
-function SingleBubble({ item, onDismiss, onBubbleAppear }: { item: BubbleItem; onDismiss: () => void; onBubbleAppear?: (text: string) => void }) {
+function SingleBubble({ item, onDismiss, onBubbleAppear, reducedMotion }: { item: BubbleItem; onDismiss: () => void; onBubbleAppear?: (text: string) => void; reducedMotion: boolean }) {
   const { colors } = useTheme();
   const opacity = useSharedValue(0);
 
@@ -104,7 +104,7 @@ function SingleBubble({ item, onDismiss, onBubbleAppear }: { item: BubbleItem; o
   // Fade in once on mount — NOT on every render
   useEffect(() => {
     opacity.value = withTiming(1, {
-      duration: 300,
+      duration: reducedMotion ? 0 : 300,
       easing: Easing.out(Easing.ease),
     });
     if (onBubbleAppear) {
@@ -147,6 +147,7 @@ export interface BubbleOverlayProps {
 
 export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll, onBubbleAppear, hidden }: BubbleOverlayProps) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   if (hidden) return null;
 
@@ -176,6 +177,7 @@ export function BubbleOverlay({ visibleItems, loading, onDismiss, onDismissAll, 
           item={item}
           onDismiss={() => onDismiss(item.id)}
           onBubbleAppear={onBubbleAppear}
+          reducedMotion={reducedMotion}
         />
       ))}
       {visibleItems.length > 1 && !loading && (

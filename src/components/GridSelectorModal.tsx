@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { useAccessibilityButton, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import { useHaptics } from '../hooks/useHaptics';
 import type { GridVariant, GridSelectorModalProps } from '../types';
 export type { GridSelectorModalProps };
@@ -353,6 +353,7 @@ export function GridSelectorModal({
   onClose,
 }: GridSelectorModalProps) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const { lightImpact } = useHaptics();
 
   const translateY = useSharedValue(SHEET_HEIGHT);
@@ -363,20 +364,20 @@ export function GridSelectorModal({
     if (visible) {
       setIsShown(true);
       translateY.value = withTiming(0, {
-        duration: 300,
+        duration: reducedMotion ? 0 : 300,
         easing: Easing.out(Easing.ease),
       });
       opacity.value = withTiming(1, {
-        duration: 250,
+        duration: reducedMotion ? 0 : 250,
         easing: Easing.out(Easing.ease),
       });
     } else {
       translateY.value = withTiming(SHEET_HEIGHT, {
-        duration: 250,
+        duration: reducedMotion ? 0 : 250,
         easing: Easing.out(Easing.ease),
       });
       opacity.value = withTiming(0, {
-        duration: 200,
+        duration: reducedMotion ? 0 : 200,
         easing: Easing.out(Easing.ease),
       }, (finished) => {
         if (finished) runOnJS(setIsClosed)(false);

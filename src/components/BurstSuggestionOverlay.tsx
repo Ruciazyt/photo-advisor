@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
+import { useAccessibilityAnnouncement, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 interface BurstSuggestionOverlayProps {
   visible: boolean;
@@ -32,6 +32,7 @@ export function BurstSuggestionOverlay({
 }: BurstSuggestionOverlayProps) {
   const { colors } = useTheme();
   const { announce } = useAccessibilityAnnouncement();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const scaleAnim = useSharedValue(0);
   const opacityAnim = useSharedValue(0);
   const announcedRef = useRef(false);
@@ -42,8 +43,8 @@ export function BurstSuggestionOverlay({
         announce('建议连拍: ' + suggestion, 'polite');
         announcedRef.current = true;
       }
-      scaleAnim.value = withSpring(1, { damping: 10, stiffness: 100 });
-      opacityAnim.value = withTiming(1, { duration: 200 });
+      scaleAnim.value = withSpring(1, reducedMotion ? { damping: 100, stiffness: 1000 } : { damping: 10, stiffness: 100 });
+      opacityAnim.value = withTiming(1, { duration: reducedMotion ? 0 : 200 });
     } else {
       scaleAnim.value = 0;
       opacityAnim.value = 0;

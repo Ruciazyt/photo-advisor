@@ -11,7 +11,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
+import { useAccessibilityAnnouncement, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import type { CompositionGrade, CompositionScoreResult, ChallengeSession, CompositionScoreOverlayProps } from '../types';
 export type { CompositionScoreOverlayProps };
 
@@ -63,19 +63,20 @@ interface SparkleItem {
   color: string;
 }
 
-function SparkleView({ originX, originY, targetX, targetY, color }: Omit<SparkleItem, 'id'>) {
+function SparkleView({ originX, originY, targetX, targetY, color, reducedMotion }: Omit<SparkleItem, 'id'> & { reducedMotion: boolean }) {
   const x = useSharedValue(originX);
   const y = useSharedValue(originY);
   const opacity = useSharedValue(1);
   const scale = useSharedValue(0);
   const rotation = useSharedValue(0);
 
+  const sparkleDuration = reducedMotion ? 0 : SPARKLE_DURATION_MS;
   // Animate all properties on mount — all UI thread
-  x.value = withTiming(targetX, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
-  y.value = withTiming(targetY, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
-  scale.value = withTiming(1, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
-  opacity.value = withTiming(0, { duration: SPARKLE_DURATION_MS, easing: Easing.out(Easing.ease) });
-  rotation.value = withTiming(1, { duration: SPARKLE_DURATION_MS, easing: Easing.linear });
+  x.value = withTiming(targetX, { duration: sparkleDuration, easing: Easing.out(Easing.ease) });
+  y.value = withTiming(targetY, { duration: sparkleDuration, easing: Easing.out(Easing.ease) });
+  scale.value = withTiming(1, { duration: sparkleDuration, easing: Easing.out(Easing.ease) });
+  opacity.value = withTiming(0, { duration: sparkleDuration, easing: Easing.out(Easing.ease) });
+  rotation.value = withTiming(1, { duration: sparkleDuration, easing: Easing.linear });
 
   const animatedStyle = useAnimatedStyle(() => ({
     left: x.value,
@@ -103,6 +104,7 @@ export function CompositionScoreOverlay({
   const { colors } = useTheme();
   const { score, breakdown, grade } = result;
   const { announce } = useAccessibilityAnnouncement();
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   const [displayScore, setDisplayScore] = useState(0);
   const [showGrade, setShowGrade] = useState(false);
@@ -274,20 +276,28 @@ export function CompositionScoreOverlay({
     }
 
     // Fade in overlay (pure UI-thread animation)
-    overlayOpacity.value = withTiming(1, { duration: OVERLAY_FADE_IN_MS, easing: Easing.linear });
+    overlayOpacity.value = withTiming(1, { duration: reducedMotion ? 0 : OVERLAY_FADE_IN_MS, easing: Easing.linear });
 
     // Grade badge pop + score display: both triggered at GRADE_DELAY_MS via withDelay.
     // The grade badge uses withSpring for bounce; score reveal uses withDelay + useAnimatedReaction.
-    gradePopScale.value = withDelay(
-      GRADE_DELAY_MS,
-      withSpring(1, { stiffness: 120, damping: 8 }),
-    );
+    if (reducedMotion) {
+      gradePopScale.value = withSpring(1, { damping: 100, stiffness: 1000 });
+    } else {
+      gradePopScale.value = withDelay(
+        GRADE_DELAY_MS,
+        withSpring(1, { stiffness: 120, damping: 8 }),
+      );
+    }
 
     // Auto-dismiss: fade out on UI thread after total visible duration
-    overlayOpacity.value = withDelay(
-      OVERLAY_AUTO_DISMISS_MS,
-      withTiming(0, { duration: OVERLAY_FADE_OUT_MS, easing: Easing.linear }),
-    );
+    if (reducedMotion) {
+      overlayOpacity.value = withTiming(0, { duration: 0 });
+    } else {
+      overlayOpacity.value = withDelay(
+        OVERLAY_AUTO_DISMISS_MS,
+        withTiming(0, { duration: OVERLAY_FADE_OUT_MS, easing: Easing.linear }),
+      );
+    }
   }, [score, grade, isHighRank, colors.scoreS, colors.scoreA]);
 
   // ---- Trigger grade + score display + announcement when GRADE_DELAY_MS has elapsed ----
@@ -340,6 +350,7 @@ export function CompositionScoreOverlay({
           targetX={sp.targetX}
           targetY={sp.targetY}
           color={sp.color}
+          reducedMotion={reducedMotion}
         />
       ))}
 

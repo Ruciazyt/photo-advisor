@@ -15,6 +15,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import type { FocusGuideOverlayProps } from '../types';
 export type { FocusGuideOverlayProps };
 
@@ -35,9 +36,10 @@ interface FocusRingProps {
   borderColor: string;
   innerBorderColor: string;
   onComplete: () => void;
+  reducedMotion?: boolean;
 }
 
-function FocusRing({ x, y, borderColor, innerBorderColor, onComplete }: FocusRingProps) {
+function FocusRing({ x, y, borderColor, innerBorderColor, onComplete, reducedMotion }: FocusRingProps) {
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(1);
 
@@ -49,15 +51,15 @@ function FocusRing({ x, y, borderColor, innerBorderColor, onComplete }: FocusRin
   useEffect(() => {
     // Both animations run simultaneously on the UI thread — no JS thread needed.
     // Wrap onComplete in runOnJS since it's a host function (state setter).
-    scale.value = withTiming(1.8, { duration: 500 });
+    scale.value = withTiming(1.8, { duration: reducedMotion ? 0 : 500 });
     // NOTE: onEnd callback fires on the UI thread (not the JS thread).
     // This is intentional — it means onComplete runs without a JS→UI round-trip,
     // providing smoother animation completion with no frame drops.
-    opacity.value = withTiming(0, { duration: 500 }, (finished) => {
+    opacity.value = withTiming(0, { duration: reducedMotion ? 0 : 500 }, (finished) => {
       if (finished) runOnJS(onComplete)();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <Animated.View
@@ -79,6 +81,7 @@ function FocusRing({ x, y, borderColor, innerBorderColor, onComplete }: FocusRin
 
 export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideOverlayProps) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   // Build theme-aware styles — recomputed when colors change (e.g. light/dark switch)
   const dynamicStyles = useMemo(() => {
@@ -288,6 +291,7 @@ export function FocusGuideOverlay({ visible, cameraRef, showToast }: FocusGuideO
             borderColor={ringBorderColor}
             innerBorderColor={ringInnerBorderColor}
             onComplete={() => removeRing(ring.id)}
+            reducedMotion={reducedMotion}
           />
         ))}
       </View>

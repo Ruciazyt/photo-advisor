@@ -8,7 +8,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
+import { useAccessibilityAnnouncement, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 // ---- 60fps animation constants ----
 // Use withTiming (not withSpring) for predictable, smooth easing.
@@ -30,6 +30,7 @@ interface CountdownOverlayProps {
 export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
   const { colors } = useTheme();
   const { announce } = useAccessibilityAnnouncement();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   // Scale starts at 1.4 (pop-in from previous cycle), eases to 1
   const scale = useSharedValue(1.4);
   // Opacity fades from 1 → 0.3 over the countdown duration
@@ -52,11 +53,11 @@ export function CountdownOverlay({ count, onComplete }: CountdownOverlayProps) {
     // Use withTiming for smooth, predictable 60fps animation.
     // Previous damping:3 spring was underdamped → excessive oscillation.
     scale.value = withTiming(SCALE_TARGET, {
-      duration: SCALE_DURATION_MS,
+      duration: reducedMotion ? 0 : SCALE_DURATION_MS,
       easing: Easing.out(Easing.ease),
     });
     opacity.value = withTiming(OPACITY_TARGET, {
-      duration: FADE_DURATION_MS,
+      duration: reducedMotion ? 0 : FADE_DURATION_MS,
       easing: Easing.out(Easing.ease),
     });
   }, [count]);

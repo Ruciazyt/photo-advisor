@@ -16,7 +16,7 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { TIMER_OPTIONS, TimerDuration } from '../hooks/useCountdown';
-import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { useAccessibilityButton, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import type { TimerSelectorModalProps } from '../types';
 export type { TimerSelectorModalProps };
 
@@ -107,6 +107,7 @@ export function TimerSelectorModal({
   onClose,
 }: TimerSelectorModalProps) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const translateY = useSharedValue(SHEET_HEIGHT);
   const opacity = useSharedValue(0);
   const [isShown, setIsShown] = useState(false);
@@ -116,14 +117,14 @@ export function TimerSelectorModal({
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, { stiffness: 100, damping: 20 });
-      opacity.value = withTiming(1, { duration: 250 });
+      translateY.value = withSpring(0, reducedMotion ? { stiffness: 1000, damping: 100 } : { stiffness: 100, damping: 20 });
+      opacity.value = withTiming(1, { duration: reducedMotion ? 0 : 250 });
       setIsShown(true);
     } else {
-      translateY.value = withTiming(SHEET_HEIGHT, { duration: 250 }, (finished) => {
+      translateY.value = withTiming(SHEET_HEIGHT, { duration: reducedMotion ? 0 : 250 }, (finished) => {
         if (finished) runOnJS(setIsShown)(false);
       });
-      opacity.value = withTiming(0, { duration: 200 });
+      opacity.value = withTiming(0, { duration: reducedMotion ? 0 : 200 });
     }
   }, [visible]);
 

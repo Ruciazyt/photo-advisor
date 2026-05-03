@@ -27,6 +27,13 @@ jest.mock('../contexts/ThemeContext', () => ({
   })),
 }));
 
+// Mock useAccessibility hook
+const mockReducedMotion = jest.fn(() => false);
+jest.mock('../hooks/useAccessibility', () => ({
+  useAccessibilityButton: jest.fn(() => ({})),
+  useAccessibilityReducedMotion: jest.fn(() => ({ reducedMotion: mockReducedMotion() })),
+}));
+
 describe('TimerSelectorModal', () => {
   const noop = () => {};
 
@@ -164,5 +171,48 @@ describe('TimerSelectorModal', () => {
     const json = JSON.stringify(toJSON());
     // Backdrop has rgba black background
     expect(json).toContain('rgba');
+  });
+
+  describe('reduced motion accessibility', () => {
+    it('calls useAccessibilityReducedMotion when reducedMotion=true', () => {
+      mockReducedMotion.mockReturnValueOnce(true);
+      render(
+        <TimerSelectorModal
+          visible={true}
+          selectedDuration={3}
+          onSelect={noop}
+          onClose={noop}
+        />
+      );
+      expect(mockReducedMotion).toHaveBeenCalled();
+    });
+
+    it('calls useAccessibilityReducedMotion when reducedMotion=false', () => {
+      mockReducedMotion.mockReturnValueOnce(false);
+      render(
+        <TimerSelectorModal
+          visible={true}
+          selectedDuration={3}
+          onSelect={noop}
+          onClose={noop}
+        />
+      );
+      expect(mockReducedMotion).toHaveBeenCalled();
+    });
+
+    it('renders all timer options regardless of reducedMotion setting', () => {
+      mockReducedMotion.mockReturnValueOnce(false);
+      const { getByText } = render(
+        <TimerSelectorModal
+          visible={true}
+          selectedDuration={3}
+          onSelect={noop}
+          onClose={noop}
+        />
+      );
+      expect(getByText('3s')).toBeTruthy();
+      expect(getByText('5s')).toBeTruthy();
+      expect(getByText('10s')).toBeTruthy();
+    });
   });
 });
