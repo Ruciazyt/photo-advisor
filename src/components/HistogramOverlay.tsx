@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAccessibilityAnnouncement } from '../hooks/useAccessibility';
+import { useAccessibilityAnnouncement, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 interface HistogramOverlayProps {
   histogramData?: number[];
@@ -105,6 +105,7 @@ const staticStyles = StyleSheet.create({
 export function HistogramOverlay({ histogramData, visible }: HistogramOverlayProps) {
   const { colors } = useTheme();
   const { announce } = useAccessibilityAnnouncement();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const announcedRef = useRef(false);
 
   // Theme-dependent styles — useMemo to avoid re-creation
@@ -216,7 +217,7 @@ export function HistogramOverlay({ histogramData, visible }: HistogramOverlayPro
         {bars.map((height, i) => {
           const backgroundColor =
             i < 3 ? colors.error : i > 12 ? colors.error : colors.accent;
-          const opacity = 0.45 + height * 0.55;
+          const opacity = reducedMotion ? 1 : 0.45 + height * 0.55;
           return (
             <Bar
               key={i}

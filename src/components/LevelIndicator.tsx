@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDeviceOrientation, DeviceOrientation } from '../hooks/useDeviceOrientation';
 import { useHaptics } from '../hooks/useHaptics';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 const MAX_TILT = 20; // degrees beyond which we consider "严重倾斜"
 const MID_TILT = 8;  // degrees for "轻微倾斜"
@@ -26,12 +27,16 @@ function getColor(state: 'level' | 'slight' | 'tilted', colors: { success: strin
 interface BubbleDotProps {
   animPitch: SharedValue<number>;
   animRoll: SharedValue<number>;
+  reducedMotionSv: SharedValue<number>;
   color: string;
 }
 
-function BubbleDot({ animPitch, animRoll, color }: BubbleDotProps) {
+function BubbleDot({ animPitch, animRoll, reducedMotionSv, color }: BubbleDotProps) {
   const { colors } = useTheme();
   const animatedStyle = useAnimatedStyle(() => {
+    if (reducedMotionSv.value === 1) {
+      return { transform: [{ translateX: 0 }, { translateY: 0 }] };
+    }
     const clampedPitch = Math.max(-MAX_TILT, Math.min(MAX_TILT, animPitch.value));
     const clampedRoll = Math.max(-MAX_TILT, Math.min(MAX_TILT, animRoll.value));
     const offsetX = (clampedRoll / MAX_TILT) * BUBBLE_RADIUS;
@@ -69,11 +74,17 @@ export function LevelIndicator() {
   const { colors } = useTheme();
   const { orientation, available } = useDeviceOrientation(80);
   const { triggerLevelHaptic, warningNotification } = useHaptics();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const prevStateRef = useRef<'level' | 'slight' | 'tilted'>('level');
 
   // Shared values live on the UI thread — writing to them doesn't cause re-renders
   const animPitch = useSharedValue(0);
   const animRoll = useSharedValue(0);
+  const reducedMotionSv = useSharedValue(reducedMotion ? 1 : 0);
+
+  useEffect(() => {
+    reducedMotionSv.value = reducedMotion ? 1 : 0;
+  }, [reducedMotion]);
 
   if (!available) {
     return null;
@@ -127,7 +138,7 @@ export function LevelIndicator() {
   return (
     <View style={[styles.container, { backgroundColor: colors.overlayBg, borderColor: colors.topBarBorderInactive }]} pointerEvents="none">
       <View style={styles.indicatorRow}>
-        <BubbleDot animPitch={animPitch} animRoll={animRoll} color={color} />
+        <BubbleDot animPitch={animPitch} animRoll={animRoll} reducedMotionSv={reducedMotionSv} color={color} />
         <View style={styles.infoPanel}>
           <Ionicons name={statusIcon} size={18} color={color} />
           <Text style={[styles.statusText, { color }]}>{statusText}</Text>
