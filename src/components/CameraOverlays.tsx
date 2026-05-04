@@ -18,12 +18,15 @@ import { SceneTagOverlay } from './SceneTagOverlay';
 import { CountdownOverlay } from './CountdownOverlay';
 import type { BubbleItem } from '../types';
 import { ComparisonOverlay } from './ComparisonOverlay';
+import { PortraitModeOverlay } from './PortraitModeOverlay';
 import type { PeakPoint } from '../types';
 import type { CompositionScoreResult, ChallengeSession } from '../types';
 
 export interface CameraOverlaysProps {
   // Config
   apiConfigured: boolean;
+  // Portrait mode
+  showPortraitMode: boolean;
   // Grid
   gridVariant: GridVariant;
   showGridModal: boolean;
@@ -81,6 +84,7 @@ export interface CameraOverlaysProps {
 
 export function CameraOverlays({
   apiConfigured,
+  showPortraitMode,
   gridVariant,
   showGridModal,
   onGridSelect,
@@ -125,6 +129,8 @@ export function CameraOverlays({
   return (
     <>
       <ConfigWarning visible={!apiConfigured} />
+
+      <PortraitModeOverlay visible={showPortraitMode} />
 
       <GridOverlay variant={gridVariant} onGridActivate={onGridActivate} />
 

@@ -394,7 +394,7 @@ export function CameraScreen() {
     <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
       <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)}>
         <CameraOverlays
-          apiConfigured={apiConfigured} gridVariant={gridVariant} showGridModal={showGridModal}
+          apiConfigured={apiConfigured} showPortraitMode={selectedMode === 'portrait'} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
           onGridActivate={handleGridActivate}
           showLevel={showLevel} showHistogram={showHistogram} histogramData={histogramData}
