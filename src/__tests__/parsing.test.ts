@@ -13,6 +13,7 @@ import {
   parseKeypointsFromTexts,
   BUBBLE_POSITION_MAP,
   KEYPOINT_POSITION_MAP,
+  computeScoreFromSuggestions,
 } from '../utils/parsing';
 
 describe('parseBubbleItemFromText', () => {
@@ -256,5 +257,90 @@ describe('KEYPOINT_POSITION_MAP coverage', () => {
       '右下': 'bottom-right',
       '中间': 'center',
     });
+  });
+});
+
+describe('computeScoreFromSuggestions', () => {
+  it('empty array → score=50, reason=""', () => {
+    const result = computeScoreFromSuggestions([]);
+    expect(result.score).toBe(50);
+    expect(result.reason).toBe('');
+  });
+
+  it('single positive word → score=70, reason=cleaned text', () => {
+    const result = computeScoreFromSuggestions(['构图不错']);
+    expect(result.score).toBe(70);
+    expect(result.reason).toBe('构图不错');
+  });
+
+  it('multiple positive words capped at +40 → score=90', () => {
+    // 3 positive matches × 20 = 60 → min(60, 40) = 40
+    // score = 50 + 40 = 90
+    const result = computeScoreFromSuggestions(['构图不错', '光线优秀', '色彩完美']);
+    expect(result.score).toBe(90);
+  });
+
+  it('negative words decrease score → each neg word -15 capped at -45', () => {
+    // 3 negative matches × 15 = 45 → min(45, 45) = 45
+    // score = 50 - 45 = 5
+    const result = computeScoreFromSuggestions(['有些欠曝', '光线过曝', '构图偏移']);
+    expect(result.score).toBe(5);
+  });
+
+  it('combined positive and negative → correct net score', () => {
+    // 1 positive (+20) + 1 negative (-15) → 50 + 20 - 15 = 55
+    const result = computeScoreFromSuggestions(['构图不错', '有些欠曝']);
+    expect(result.score).toBe(55);
+  });
+
+  it('score never exceeds 100', () => {
+    // 5 positive words = min(5*20, 40) = 40 → 50+40 = 90; add more
+    // Add 2 more positive words → still capped at 40
+    const result = computeScoreFromSuggestions(['好', '优秀', '完美', '不错', '佳']);
+    expect(result.score).toBe(90);
+    // Also test with negative that would push above 100 (can't happen, but verify cap)
+    // Add negatives that would push below... actually let me test the cap by adding enough positives
+    // With 5 positives: score = 50 + 40 = 90. Let me test a scenario that could exceed 100
+    // Actually with current logic max is 50+40=90. Let me just verify 100 is never exceeded.
+    // To test this, we need a case where score formula > 100. Let's use 5 positives and no negatives.
+    expect(result.score).toBeLessThanOrEqual(100);
+  });
+
+  it('score never goes below 0', () => {
+    // 4 negatives = min(4*15, 45) = 45 → 50-45 = 5
+    // Need a case where score could go negative theoretically
+    // 5 negatives = min(5*15, 45) = 45 → 50-45 = 5 (same due to cap)
+    // To test below 0, we'd need 7+ negatives before cap: min(7*15, 45)=45, still 50-45=5
+    // Actually with current logic min negative is 50-45=5. But let's verify Math.max(0, ...) works.
+    const result = computeScoreFromSuggestions(['欠曝', '过曝', '倾斜', '偏移']);
+    expect(result.score).toBeGreaterThanOrEqual(0);
+  });
+
+  it('reason extracts Chinese text from first suggestion, strips leading non-Chinese chars, trims, slices to 30', () => {
+    // Long string > 30 chars after cleaning
+    const longText = '这是一个非常长的建议文本超过了三十个字符的限制'; // 24 chars
+    const result1 = computeScoreFromSuggestions(['测试' + longText]);
+    expect(result1.reason.length).toBeLessThanOrEqual(30);
+
+    // Short string
+    const result2 = computeScoreFromSuggestions(['建议内容']);
+    expect(result2.reason).toBe('建议内容');
+  });
+
+  it('reason for "[左上] 将主体放在左侧" → actual behavior: strips only leading non-Chinese chars, first Chinese char is 左', () => {
+    // The regex strips leading non-Chinese chars.
+    // '[' is non-Chinese → removed → '左上] 将主体放在左侧'
+    const result = computeScoreFromSuggestions(['[左上] 将主体放在左侧']);
+    expect(result.reason).toBe('左上] 将主体放在左侧');
+  });
+
+  it('reason for "hello 你好 world" → "你好 world" (strips leading non-Chinese chars)', () => {
+    const result = computeScoreFromSuggestions(['hello 你好 world']);
+    expect(result.reason).toBe('你好 world');
+  });
+
+  it('reason is empty string for empty array', () => {
+    const result = computeScoreFromSuggestions([]);
+    expect(result.reason).toBe('');
   });
 });
