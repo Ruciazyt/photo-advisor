@@ -17,6 +17,7 @@
 
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 // Dynamically import BlurView from expo-image — may be undefined on some Android devices
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -48,18 +49,14 @@ export const PortraitModeOverlay = React.memo(function PortraitModeOverlay({
   blurRadius = DEFAULT_BLUR_RADIUS,
   fallbackColor = DEFAULT_FALLBACK_COLOR,
 }: PortraitModeOverlayProps) {
-  // Memoize the blur styles — applies native blur when BlurView is available
-  const blurStyle = useMemo(() => ({
-    // Apply native blur via BlurView when available
-    // blurRadius is passed to BlurView component below
-    blurRadius,
-  }), [blurRadius]);
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   // Memoize the container style for visibility transitions
+  // When reduced motion is enabled, skip opacity animation for instant display
   const containerStyle = useMemo(() => [
     styles.container,
-    { opacity: visible ? 1 : 0 },
-  ], [visible]);
+    reducedMotion ? { opacity: 1 } : { opacity: visible ? 1 : 0 },
+  ], [visible, reducedMotion]);
 
   if (!visible) return null;
 
