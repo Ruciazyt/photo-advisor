@@ -88,6 +88,9 @@ export {
 // useSceneRecognition
 export { type UseSceneRecognitionReturn, useSceneRecognition } from './useSceneRecognition';
 
+// useShakeDetector
+export { type UseShakeDetectorOptions, type UseShakeDetectorReturn, useShakeDetector } from './useShakeDetector';
+
 // useShootLog
 export { useShootLog } from './useShootLog';
 

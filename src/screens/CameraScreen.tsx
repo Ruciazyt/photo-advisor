@@ -24,7 +24,7 @@ import { useHistogramToggle } from '../hooks/useHistogramToggle';
 import { useFocusPeaking, PeakPoint } from '../hooks/useFocusPeaking';
 import { useAnimationFrameTimer } from '../hooks/useAnimationFrameTimer';
 import { useFavorites } from '../hooks/useFavorites';
-import { useVoiceFeedback } from '../hooks/useVoiceFeedback';
+import { speak, useVoiceFeedback } from '../hooks/useVoiceFeedback';
 import { useCompositionScore } from '../hooks/useCompositionScore';
 import { useSceneRecognition } from '../hooks/useSceneRecognition';
 import { useToast } from '../hooks/useToast';
@@ -107,6 +107,7 @@ export function CameraScreen() {
       keypointsDismissAllRef.current();
     },
     enabled: showShakeDetector && showBubbleChat,
+    onShakeVoiceFeedback: showShakeDetector ? () => speak('已关闭所有建议') : undefined,
   });
 
   // Sync loading state from useSuggestions to useBubbleChat

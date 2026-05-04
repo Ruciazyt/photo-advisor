@@ -35,6 +35,11 @@ export interface UseShakeDetectorOptions {
    * Default 500ms.
    */
   resetIntervalMs?: number;
+  /**
+   * Optional voice feedback to speak when shake is detected.
+   * Called immediately after onShake (before debounce reset).
+   */
+  onShakeVoiceFeedback?: () => void;
 }
 
 const DEFAULT_THRESHOLD = 1.8;
@@ -55,6 +60,7 @@ export function useShakeDetector({
   threshold = DEFAULT_THRESHOLD,
   consecutiveCount = DEFAULT_CONSECUTIVE,
   resetIntervalMs = DEFAULT_RESET_MS,
+  onShakeVoiceFeedback,
 }: UseShakeDetectorOptions): UseShakeDetectorReturn {
   const consecutiveRef = useRef(0);
   const lastShakeTimeRef = useRef(0);
@@ -78,6 +84,7 @@ export function useShakeDetector({
             lastShakeTimeRef.current = now;
             consecutiveRef.current = 0;
             onShake();
+            onShakeVoiceFeedback?.();
           }
         }
       } else {

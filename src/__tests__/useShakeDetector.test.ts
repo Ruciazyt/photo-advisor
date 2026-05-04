@@ -297,4 +297,73 @@ describe('useShakeDetector', () => {
       expect(onShake).not.toHaveBeenCalled();
     });
   });
+
+  describe('onShakeVoiceFeedback', () => {
+    it('calls onShakeVoiceFeedback immediately after onShake', () => {
+      const onShake = jest.fn();
+      const onShakeVoiceFeedback = jest.fn();
+      renderHook(() =>
+        useShakeDetector({
+          onShake,
+          onShakeVoiceFeedback,
+          enabled: true,
+          threshold: 1.8,
+          consecutiveCount: 3,
+        })
+      );
+
+      // Trigger shake
+      emitShake({ x: 0, y: 0, z: 2.0 });
+      emitShake({ x: 0, y: 0, z: 2.1 });
+      emitShake({ x: 0, y: 0, z: 2.2 });
+
+      expect(onShake).toHaveBeenCalledTimes(1);
+      expect(onShakeVoiceFeedback).toHaveBeenCalledTimes(1);
+      // Voice feedback called AFTER onShake (sequential, same synchronous block)
+      expect(onShakeVoiceFeedback.mock.invocationCallOrder[0]).toBeGreaterThanOrEqual(
+        onShake.mock.invocationCallOrder[0]
+      );
+    });
+
+    it('does not call onShakeVoiceFeedback when not provided', () => {
+      const onShake = jest.fn();
+      renderHook(() =>
+        useShakeDetector({
+          onShake,
+          enabled: true,
+          threshold: 1.8,
+          consecutiveCount: 3,
+          // onShakeVoiceFeedback not provided
+        })
+      );
+
+      emitShake({ x: 0, y: 0, z: 2.0 });
+      emitShake({ x: 0, y: 0, z: 2.1 });
+      emitShake({ x: 0, y: 0, z: 2.2 });
+
+      expect(onShake).toHaveBeenCalledTimes(1);
+      // No error should occur even though onShakeVoiceFeedback is undefined
+    });
+
+    it('does not call onShakeVoiceFeedback when enabled is false', () => {
+      const onShake = jest.fn();
+      const onShakeVoiceFeedback = jest.fn();
+      renderHook(() =>
+        useShakeDetector({
+          onShake,
+          onShakeVoiceFeedback,
+          enabled: false,
+          threshold: 1.8,
+          consecutiveCount: 3,
+        })
+      );
+
+      // Shake while disabled — no callbacks
+      emitShake({ x: 0, y: 0, z: 2.0 });
+      emitShake({ x: 0, y: 0, z: 2.1 });
+      emitShake({ x: 0, y: 0, z: 2.2 });
+      expect(onShake).not.toHaveBeenCalled();
+      expect(onShakeVoiceFeedback).not.toHaveBeenCalled();
+    });
+  });
 });
