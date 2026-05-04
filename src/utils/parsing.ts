@@ -122,3 +122,27 @@ export function parseKeypointsFromTexts(rawTexts: string[]): Keypoint[] {
   }
   return result;
 }
+
+// ============================================================
+// Composition score from AI suggestions
+// ============================================================
+
+/**
+ * Compute a composition score (0–100) and a short reason string from
+ * an array of AI suggestion strings.
+ */
+export function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: string } {
+  const positive = ['好', '优秀', '完美', '不错', '佳'];
+  const negative = ['欠曝', '过曝', '倾斜', '偏移', '不足'];
+  let pos = 0, neg = 0;
+  for (const s of sugs) {
+    for (const p of positive) { if (s.includes(p)) pos++; }
+    for (const n of negative) { if (s.includes(n)) neg++; }
+  }
+  let score = 50 + Math.min(pos * 20, 40) - Math.min(neg * 15, 45);
+  score = Math.max(0, Math.min(100, score));
+  const reason = sugs.length > 0
+    ? sugs[0].replace(/^[^\u4e00-\u9fa5]*/, '').trim().slice(0, 30)
+    : '';
+  return { score, reason };
+}

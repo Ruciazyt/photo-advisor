@@ -44,6 +44,7 @@ import { useBubbleChat } from '../hooks/useBubbleChat';
 import { useKeypoints } from '../hooks/useKeypoints';
 import { useShootLog } from '../hooks/useShootLog';
 import { useCurrentLocation } from '../hooks/useCurrentLocation';
+import { computeScoreFromSuggestions } from '../utils/parsing';
 
 type CameraMode = 'photo' | 'scan' | 'video' | 'portrait';
 
@@ -51,18 +52,7 @@ const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法', golden: '黄金分割', diagonal: '对角线', spiral: '螺旋线', none: '关闭',
 };
 
-function computeScoreFromSuggestions(sugs: string[]): { score: number; reason: string } {
-  const positive = ['好', '优秀', '完美', '不错', '佳'];
-  const negative = ['欠曝', '过曝', '倾斜', '偏移', '不足'];
-  let pos = 0, neg = 0;
-  for (const s of sugs) { for (const p of positive) { if (s.includes(p)) pos++; } for (const n of negative) { if (s.includes(n)) neg++; } }
-  let score = 50 + Math.min(pos * 20, 40) - Math.min(neg * 15, 45);
-  score = Math.max(0, Math.min(100, score));
-  const reason = sugs.length > 0 ? sugs[0].replace(/^[^\u4e00-\u9fa5]*/, '').trim().slice(0, 30) : '';
-  return { score, reason };
-}
-
-export function CameraScreen() {
+function CameraScreen() {
   const { colors } = useTheme();
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
