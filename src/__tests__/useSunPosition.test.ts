@@ -521,3 +521,116 @@ describe('getDirectionAdvice — altitude/azimuth branches (lines 167-170)', () 
     expect(getDirectionAdvice(5, 220)).toBe('顺光拍摄');
   });
 });
+
+describe('getAzimuthDirection — all 8 directions', () => {
+  it('returns "北" around 0°/360° (north)', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(0)).toBe('北');
+    expect(getAzimuthDirection(15)).toBe('北');
+    expect(getAzimuthDirection(345)).toBe('北');
+  });
+
+  it('returns "东北" around 45°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(45)).toBe('东北');
+    expect(getAzimuthDirection(60)).toBe('东北');
+  });
+
+  it('returns "东" around 90°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(90)).toBe('东');
+    expect(getAzimuthDirection(105)).toBe('东');
+  });
+
+  it('returns "东南" around 135°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(135)).toBe('东南');
+    expect(getAzimuthDirection(150)).toBe('东南');
+  });
+
+  it('returns "南" around 180°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(180)).toBe('南');
+    expect(getAzimuthDirection(195)).toBe('南');
+  });
+
+  it('returns "西南" around 225°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(225)).toBe('西南');
+    expect(getAzimuthDirection(240)).toBe('西南');
+  });
+
+  it('returns "西" around 270°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(270)).toBe('西');
+    expect(getAzimuthDirection(285)).toBe('西');
+  });
+
+  it('returns "西北" around 315°', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(315)).toBe('西北');
+    expect(getAzimuthDirection(330)).toBe('西北');
+  });
+
+  it('handles boundary at 360° same as 0° (north)', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(360)).toBe('北');
+  });
+
+  it('handles exact boundary angles (45° steps)', () => {
+    const { getAzimuthDirection } = require('../hooks/useSunPosition');
+    expect(getAzimuthDirection(22.5)).toBe('北');   // rounds to 0 -> 北
+    expect(getAzimuthDirection(67.5)).toBe('东');   // rounds to 90 -> 东
+    expect(getAzimuthDirection(112.5)).toBe('东南'); // rounds to 135 -> 东南
+    expect(getAzimuthDirection(157.5)).toBe('南');  // rounds to 180 -> 南
+    expect(getAzimuthDirection(202.5)).toBe('西南'); // rounds to 225 -> 西南
+    expect(getAzimuthDirection(247.5)).toBe('西');  // rounds to 270 -> 西
+    expect(getAzimuthDirection(292.5)).toBe('西北'); // rounds to 315 -> 西北
+    expect(getAzimuthDirection(337.5)).toBe('北');  // rounds to 360 -> 北
+  });
+});
+
+describe('getSunAdvice — altitude branches', () => {
+  it('returns night shooting advice when altitude < -6', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(-10, 90)).toBe('太阳低于地平线，夜间拍摄');
+    expect(getSunAdvice(-7, 180)).toBe('太阳低于地平线，夜间拍摄');
+  });
+
+  it('returns blue hour advice for altitude between -6 and -4', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(-5, 90)).toBe('蓝调时刻，光线柔和');
+    expect(getSunAdvice(-5.5, 180)).toBe('蓝调时刻，光线柔和');
+  });
+
+  it('returns golden hour (warm) advice for altitude between -4 and 0', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(-1, 90)).toBe('黄金时刻，暖色光线');
+    expect(getSunAdvice(-3, 180)).toBe('黄金时刻，暖色光线');
+  });
+
+  it('returns golden hour (back/side light) advice for altitude between 0 and 6', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(3, 90)).toBe('黄金时刻，逆光/侧光佳');
+    expect(getSunAdvice(5.9, 180)).toBe('黄金时刻，逆光/侧光佳');
+  });
+
+  it('returns soft side-light advice for altitude between 6 and 20', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(10, 90)).toBe('太阳较低，侧光柔和');
+    expect(getSunAdvice(19, 180)).toBe('太阳较低，侧光柔和');
+  });
+
+  it('returns bright light advice for altitude between 20 and 50', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(30, 90)).toBe('阳光充足，注意光影');
+    expect(getSunAdvice(45, 180)).toBe('阳光充足，注意光影');
+  });
+
+  it('returns top-light advice when altitude >= 50', () => {
+    const { getSunAdvice } = require('../hooks/useSunPosition');
+    expect(getSunAdvice(50, 90)).toBe('顶光较强，建议补光');
+    expect(getSunAdvice(80, 180)).toBe('顶光较强，建议补光');
+    expect(getSunAdvice(89, 270)).toBe('顶光较强，建议补光');
+  });
+});

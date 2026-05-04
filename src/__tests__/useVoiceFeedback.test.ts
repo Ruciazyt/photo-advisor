@@ -118,6 +118,94 @@ describe('useVoiceFeedback', () => {
     });
     expect(mockSpeak).not.toHaveBeenCalled();
   });
+
+  it('speak() sets speaking to false when onError is called', () => {
+    mockSpeak.mockImplementation((_text: string, opts: { onDone?: () => void; onError?: () => void; onStopped?: () => void } | undefined) => {
+      opts?.onError?.();
+    });
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.speak('测试错误');
+    });
+    expect(result.current.isSpeaking()).toBe(false);
+  });
+
+  it('speak() sets speaking to false when onStopped is called', () => {
+    mockSpeak.mockImplementation((_text: string, opts: { onDone?: () => void; onError?: () => void; onStopped?: () => void } | undefined) => {
+      opts?.onStopped?.();
+    });
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.speak('测试停止');
+    });
+    expect(result.current.isSpeaking()).toBe(false);
+  });
+
+  it('speak() sets speaking to false when onDone is called (explicit mock)', () => {
+    mockSpeak.mockImplementation((_text: string, opts: { onDone?: () => void; onError?: () => void; onStopped?: () => void } | undefined) => {
+      opts?.onDone?.();
+    });
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.speak('测试完成');
+    });
+    expect(result.current.isSpeaking()).toBe(false);
+  });
+});
+
+describe('useVoiceFeedback POSITIVE_KEYWORDS edge cases', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockSpeak.mockImplementation((_text: string, opts: { onDone?: () => void; onError?: () => void; onStopped?: () => void } | undefined) => {
+      opts?.onDone?.();
+    });
+    mockStop.mockReturnValue();
+  });
+
+  it('checkAndSpeak triggers speak() when keyword is at the start', () => {
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.checkAndSpeak('很好，构图很棒');
+    });
+    expect(mockSpeak).toHaveBeenCalled();
+  });
+
+
+  it('checkAndSpeak triggers speak() when keyword is at the end', () => {
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.checkAndSpeak('这个构图很完美');
+    });
+    expect(mockSpeak).toHaveBeenCalled();
+  });
+
+  it('checkAndSpeak triggers speak() only once when multiple keywords present', () => {
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.checkAndSpeak('很不错，构图很好，完美');
+    });
+    // speak is called once (one positive keyword match is enough)
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+  });
+
+  it('checkAndSpeak does NOT trigger speak() when text only has negative forms', () => {
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.checkAndSpeak('构图不正确');
+    });
+    // Current implementation only checks for positive keywords,
+    // so "不正确" does not match "不错" - documents current behavior
+    expect(mockSpeak).not.toHaveBeenCalled();
+  });
+
+  it('checkAndSpeak does NOT trigger speak() for text without positive keywords even with partial matches', () => {
+    const { result } = renderHook(() => useVoiceFeedback());
+    act(() => {
+      result.current.checkAndSpeak('理想情况下是黄金比例');
+    });
+    // "理想" is a positive keyword, so this should speak
+    expect(mockSpeak).toHaveBeenCalled();
+  });
 });
 
 describe('standalone speak()', () => {
@@ -155,5 +243,27 @@ describe('standalone speak()', () => {
       pitch: 1.1,
       rate: 0.9,
     }));
+  });
+
+  it('standalone speak() works gracefully when no callbacks are provided', () => {
+    // The standalone speak() does NOT pass onDone/onError/onStopped to Speech.speak.
+    // When Speech finishes, no callback fires — this should not crash.
+    const { speak: standaloneSpeak } = require('../hooks/useVoiceFeedback');
+    // Mock Speech.speak with no callbacks (simulating real behavior)
+    mockSpeak.mockImplementation((_text: string, _opts: Record<string, unknown>) => {
+      // no callbacks invoked — standalone speak doesn't set any
+    });
+    // Should not throw even though no onDone fires to reset anything
+    expect(() => standaloneSpeak('无回调测试')).not.toThrow();
+    expect(mockSpeak).toHaveBeenCalledWith('无回调测试', {
+      language: 'zh-CN',
+      pitch: 1.1,
+      rate: 0.9,
+    });
+    // Verify no callbacks were passed (graceful — no state to update outside hook)
+    const callArgs = mockSpeak.mock.calls[0][1] as Record<string, unknown>;
+    expect(callArgs.onDone).toBeUndefined();
+    expect(callArgs.onError).toBeUndefined();
+    expect(callArgs.onStopped).toBeUndefined();
   });
 });

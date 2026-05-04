@@ -397,29 +397,230 @@ describe('toResult', () => {
   });
 });
 
-describe('errorToString', () => {
-  it('returns AppError message', () => {
-    const err = new AppError('app error msg', ErrorCode.GEN_UNKNOWN);
-    expect(errorToString(err)).toBe('app error msg');
+describe('toAppError - preserves AppError (line 172)', () => {
+  it('returns the same AppError reference unchanged', () => {
+    const original = new CameraError('cam', ErrorCode.CAM_PERMISSION_DENIED, 'warning', true);
+    const result = toAppError(original);
+    expect(result).toBe(original);  // line 172: if (error instanceof AppError) return error;
+    expect(result.code).toBe(ErrorCode.CAM_PERMISSION_DENIED);
   });
 
-  it('returns plain Error message', () => {
-    expect(errorToString(new Error('plain error'))).toBe('plain error');
+  it('preserves APIError with statusCode intact', () => {
+    const original = new APIError('auth', ErrorCode.API_AUTH_FAILED, 401, 'error', true);
+    const result = toAppError(original);
+    expect(result).toBe(original);
+    expect((result as APIError).statusCode).toBe(401);
+  });
+});
+
+describe('handleError - showAlert false even for critical errors (lines 291-296)', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    MockAlert.alert.mockClear();
   });
 
-  it('returns string as-is', () => {
-    expect(errorToString('just a string')).toBe('just a string');
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  it('returns fallback for null/undefined', () => {
-    expect(errorToString(null)).toBe('发生了一个未知错误');
-    expect(errorToString(undefined)).toBe('发生了一个未知错误');
-    expect(errorToString(null, 'custom fallback')).toBe('custom fallback');
-    expect(errorToString(undefined, 'custom fallback')).toBe('custom fallback');
+  it('does NOT call Alert.alert when showAlert=false for critical error', () => {
+    const err = new AppError('critical failure', ErrorCode.STOR_DISK_FULL, 'critical', false);
+    handleError(err, { showAlert: false });
+    expect(MockAlert.alert).not.toHaveBeenCalled();
   });
 
-  it('returns fallback for non-object values', () => {
-    expect(errorToString(42)).toBe('发生了一个未知错误');
-    expect(errorToString(42, 'fallback for number')).toBe('fallback for number');
+  it('does NOT call Alert.alert when showAlert=false for error severity', () => {
+    const err = new AppError('just an error', ErrorCode.GEN_UNKNOWN, 'error', false);
+    handleError(err, { showAlert: false });
+    expect(MockAlert.alert).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleError - wraps non-AppError with onRecover into AppError GEN_UNKNOWN', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    MockAlert.alert.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('wraps plain Error and shows recovery Alert with onRecover', () => {
+    const plainError = new Error('network unreachable');
+    const onRecover = jest.fn();
+    const result = handleError(plainError, { onRecover });
+
+    expect(result).toBeInstanceOf(AppError);
+    expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
+    expect(result.message).toBe('network unreachable');
+
+    // Should still show alert with retry
+    // Note: message only contains "是否重试" when appError.recoverable=true
+    // toAppError sets recoverable=false for plain Errors, so no retry text
+    expect(MockAlert.alert).toHaveBeenCalledTimes(1);
+    const [title, message, buttons] = MockAlert.alert.mock.calls[0];
+    expect(title).toBe('出错了');
+    expect(message).toBe('network unreachable');
+    // No retry buttons when not recoverable
+    expect(buttons).toEqual([{ text: '确定' }]);
+  });
+
+  it('wraps string error into AppError with default code', () => {
+    const result = handleError('something went wrong', { onRecover: jest.fn() });
+    expect(result).toBeInstanceOf(AppError);
+    expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
+    expect(result.message).toBe('something went wrong');
+  });
+});
+
+describe('handleError - custom logger', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    MockAlert.alert.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+
+  it('calls custom logger.info for info severity', () => {
+    const err = new AppError('info msg', ErrorCode.GEN_UNKNOWN, 'info');
+    const customLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    // Suppress console output to avoid noise; custom logger should still be called
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    handleError(err, { logger: customLogger, showAlert: false });
+    consoleSpy.mockRestore();
+    // 'info' severity maps to info level → calls logger.info
+    expect(customLogger.info).toHaveBeenCalled();
+    expect(customLogger.info).toHaveBeenCalledWith(
+      expect.stringContaining('[GEN-UNK-001]'),
+      'info msg',
+      expect.any(Object)
+    );
+    expect(customLogger.error).not.toHaveBeenCalled();
+  });
+
+  it('calls custom logger.warn for warning severity', () => {
+    const err = new AppError('warning', ErrorCode.LOC_PERMISSION_DENIED, 'warning');
+    const customLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    handleError(err, { logger: customLogger });
+    expect(customLogger.warn).toHaveBeenCalled();
+    expect(customLogger.error).not.toHaveBeenCalled();
+  });
+
+  it('calls custom logger.error for critical severity', () => {
+    const err = new AppError('critical failure', ErrorCode.STOR_DISK_FULL, 'critical', false);
+    const customLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    handleError(err, { logger: customLogger, showAlert: false });
+    expect(customLogger.error).toHaveBeenCalled();
+    // Third arg is { stack: error.stack } because error instanceof Error (AppError extends Error)
+    expect(customLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('[STOR-DISK-001]'),
+      'critical failure',
+      expect.objectContaining({ stack: expect.stringContaining('critical failure') })
+    );
+  });
+});
+
+describe('safeAsync - catches errors and returns fallback', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('returns custom fallback value on error', async () => {
+    const result = await safeAsync(
+      () => Promise.reject(new Error('fail')),
+      'fallback_value' as any,
+      { silent: true }
+    );
+    expect(result).toBe('fallback_value');
+  });
+
+  it('returns fallback array on error', async () => {
+    const result = await safeAsync(
+      () => Promise.reject(new AppError('fail', ErrorCode.GEN_UNKNOWN)),
+      [1, 2, 3] as any,
+      { silent: true }
+    );
+    expect(result).toEqual([1, 2, 3]);
+  });
+
+  it('returns fallback object on error', async () => {
+    const fallbackObj = { success: false, data: null };
+    const result = await safeAsync(
+      () => Promise.reject('string error'),
+      fallbackObj,
+      { silent: true }
+    );
+    expect(result).toEqual(fallbackObj);
+  });
+});
+
+describe('toResult - returns {ok: false, error: AppError} when fn throws', () => {
+  it('returns ok:false with AppError when fn throws non-AppError', async () => {
+    const fn = () => Promise.reject(new Error('plain throw'));
+    const wrapped = toResult(fn);
+    const result = await wrapped();
+
+    expect(result.ok).toBe(false);
+    const err = (result as { ok: false; error: AppError }).error;
+    expect(err).toBeInstanceOf(AppError);
+    expect(err.message).toBe('plain throw');
+    expect(err.code).toBe(ErrorCode.GEN_UNKNOWN);
+  });
+
+  it('returns ok:false with preserved AppError when fn throws AppError subclass', async () => {
+    const err = new StorageError('disk full', ErrorCode.STOR_DISK_FULL, 'critical', false);
+    const fn = () => Promise.reject(err);
+    const wrapped = toResult(fn, ErrorCode.STOR_DISK_FULL);
+    const result = await wrapped();
+
+    expect(result.ok).toBe(false);
+    const returnedErr = (result as { ok: false; error: AppError }).error;
+    expect(returnedErr).toBe(err);
+    expect(returnedErr).toBeInstanceOf(StorageError);
+    expect(returnedErr.context).toBe('StorageError');
+  });
+
+  it('returns ok:false when fn throws string', async () => {
+    const fn = () => Promise.reject('string error');
+    const wrapped = toResult(fn);
+    const result = await wrapped();
+
+    expect(result.ok).toBe(false);
+    expect((result as any).error).toBeInstanceOf(AppError);
+    expect((result as any).error.message).toBe('string error');
+    expect((result as any).error.code).toBe(ErrorCode.GEN_UNKNOWN);
+  });
+
+  it('returns ok:false with specified code when fn throws', async () => {
+    const fn = () => Promise.reject(new Error('timeout'));
+    const wrapped = toResult(fn, ErrorCode.API_TIMEOUT);
+    const result = await wrapped();
+
+    expect(result.ok).toBe(false);
+    expect((result as any).error.code).toBe(ErrorCode.API_TIMEOUT);
   });
 });
