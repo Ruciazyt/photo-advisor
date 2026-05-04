@@ -16,9 +16,11 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 import { captureRef } from 'react-native-view-shot';
 import type { ShareOptions } from '../types';
 
@@ -217,6 +219,7 @@ export function SharePreviewModal({
   scoreReason,
 }: SharePreviewModalProps) {
   const { colors, theme } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
   const meta = GRID_META[gridVariant] ?? GRID_META['thirds'];
 
   // Off-screen ref for view-shot capture
@@ -230,15 +233,17 @@ export function SharePreviewModal({
 
   useEffect(() => {
     if (visible) {
-      backdropOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
-      cardScale.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) });
-      cardOpacity.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) });
+      backdropOpacity.value = withTiming(1, { duration: reducedMotion ? 0 : 200, easing: Easing.out(Easing.ease) });
+      cardScale.value = withTiming(1, { duration: reducedMotion ? 0 : 250, easing: Easing.out(Easing.ease) });
+      cardOpacity.value = withTiming(1, { duration: reducedMotion ? 0 : 250, easing: Easing.out(Easing.ease) });
     } else {
-      backdropOpacity.value = withTiming(0, { duration: 180, easing: Easing.in(Easing.ease) });
-      cardScale.value = withTiming(0.92, { duration: 180, easing: Easing.in(Easing.ease) });
-      cardOpacity.value = withTiming(0, { duration: 180, easing: Easing.in(Easing.ease) });
+      backdropOpacity.value = withTiming(0, { duration: reducedMotion ? 0 : 180, easing: Easing.in(Easing.ease) });
+      cardScale.value = withTiming(0.92, { duration: reducedMotion ? 0 : 180, easing: Easing.in(Easing.ease) });
+      cardOpacity.value = withTiming(0, { duration: reducedMotion ? 0 : 180, easing: Easing.in(Easing.ease) }, (finished) => {
+        if (finished) runOnJS(onCancel)();
+      });
     }
-  }, [visible]);
+  }, [visible, reducedMotion]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
