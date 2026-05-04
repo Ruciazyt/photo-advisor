@@ -18,6 +18,11 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+// Dynamically import BlurView from expo-image — may be undefined on some Android devices
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const expoImageModule = require('expo-image');
+const BlurView = expoImageModule.BlurView;
+
 export interface PortraitModeOverlayProps {
   /** Whether the portrait mode overlay should be visible */
   visible: boolean;
@@ -43,18 +48,24 @@ export const PortraitModeOverlay = React.memo(function PortraitModeOverlay({
   blurRadius = DEFAULT_BLUR_RADIUS,
   fallbackColor = DEFAULT_FALLBACK_COLOR,
 }: PortraitModeOverlayProps) {
-  // Memoize the blur styles to avoid recalculation on re-renders
+  // Memoize the blur styles — applies native blur when BlurView is available
+  const blurStyle = useMemo(() => ({
+    // Apply native blur via BlurView when available
+    // blurRadius is passed to BlurView component below
+    blurRadius,
+  }), [blurRadius]);
+
+  // Memoize the container style for visibility transitions
   const containerStyle = useMemo(() => [
     styles.container,
     { opacity: visible ? 1 : 0 },
   ], [visible]);
 
-  const blurStyle = useMemo(() => ({
-    // Native blur will be applied via BlurView if available
-    // The actual blur is handled by the BlurView component below
-  }), []);
-
   if (!visible) return null;
+
+  // Use native BlurView when available for true background blur
+  // Fall back to semi-transparent color overlay on devices without BlurView support
+  const useNativeBlur = BlurView !== undefined;
 
   return (
     <View
@@ -63,7 +74,11 @@ export const PortraitModeOverlay = React.memo(function PortraitModeOverlay({
       accessibilityLabel="人像模式背景虚化覆盖层"
       accessibilityRole="image"
     >
-      <View style={[styles.blurOverlay, { backgroundColor: fallbackColor }]} />
+      {useNativeBlur ? (
+        <BlurView style={styles.blurOverlay} blurRadius={blurRadius} />
+      ) : (
+        <View style={[styles.blurOverlay, { backgroundColor: fallbackColor }]} />
+      )}
     </View>
   );
 });
