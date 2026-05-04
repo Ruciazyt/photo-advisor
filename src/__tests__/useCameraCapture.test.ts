@@ -64,7 +64,7 @@ jest.mock('../components/KeypointOverlay', () => ({
 }));
 
 // Import after mocks are set up
-import { supportsRawCapture } from '../hooks/useCameraCapture';
+import { supportsRawCapture, captureRawNative } from '../services/camera2';
 
 describe('useCameraCapture RAW support detection', () => {
   beforeEach(() => {
@@ -90,7 +90,7 @@ describe('useCameraCapture RAW support detection', () => {
       NativeModules: {}, // no Camera2RawModule
     }));
     jest.isolateModules(() => {
-      const { supportsRawCapture: sr } = require('../hooks/useCameraCapture');
+      const { supportsRawCapture: sr } = require('../services/camera2');
       // This test validates the fallback path
     });
     // Restore original mock
@@ -125,7 +125,7 @@ describe('captureRawNative', () => {
   });
 
   it('captureRawNative returns result when native capture succeeds', async () => {
-    const { captureRawNative } = require('../hooks/useCameraCapture');
+    const { captureRawNative } = require('../services/camera2');
     const mockResult = { uri: 'file:///sdcard/RAW_20240101.dng', path: '/sdcard/RAW_20240101.dng', width: 4000, height: 3000 };
     const mockModule = require('react-native').NativeModules.Camera2RawModule;
     mockModule.captureRAW.mockResolvedValue(mockResult);
@@ -135,7 +135,7 @@ describe('captureRawNative', () => {
   });
 
   it('captureRawNative returns null when native capture throws', async () => {
-    const { captureRawNative } = require('../hooks/useCameraCapture');
+    const { captureRawNative } = require('../services/camera2');
     const mockModule = require('react-native').NativeModules.Camera2RawModule;
     mockModule.captureRAW.mockRejectedValue(new Error('capture failed'));
     const result = await captureRawNative();

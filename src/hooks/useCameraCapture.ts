@@ -5,14 +5,13 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { CameraView } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../services/api';
-import { Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
+import { supportsRawCapture, captureRawNative } from '../services/camera2';
 
 import { logger } from '../utils/logger';
 
-export type { Keypoint };
-
 import type { ImageQualityPreset } from '../types';
 import { loadAppSettings } from '../services/settings';
+import { Keypoint, bubbleTextToKeypoint } from '../components/KeypointOverlay';
 
 /** Returns resize width and compress quality for a given image quality preset. */
 export function getImageQualitySettings(preset: ImageQualityPreset): { resizeWidth: number; compress: number } {
@@ -34,31 +33,6 @@ export function parseSuggestions(buffer: string, newChunk: string): { done: stri
   const remaining = parts.pop() ?? '';
   const done = parts.map(p => p.trim()).filter(p => p.length > 3);
   return { done, remaining };
-}
-
-/** Check if the device supports RAW capture via the native Camera2 module. */
-export async function supportsRawCapture(): Promise<boolean> {
-  if (Platform.OS !== 'android') return false;
-  try {
-    const NativeModules = require('react-native').NativeModules;
-    const module = NativeModules.Camera2RawModule;
-    if (!module) return false;
-    return await module.supportsRAW();
-  } catch {
-    return false;
-  }
-}
-
-/** Attempt RAW capture via the native Camera2 module; falls back to null on failure. */
-export async function captureRawNative(): Promise<{ uri: string; path: string; width: number; height: number } | null> {
-  try {
-    const NativeModules = require('react-native').NativeModules;
-    const module = NativeModules.Camera2RawModule;
-    if (!module) return null;
-    return await module.captureRAW();
-  } catch {
-    return null;
-  }
 }
 
 interface UseCameraCaptureOptions {
