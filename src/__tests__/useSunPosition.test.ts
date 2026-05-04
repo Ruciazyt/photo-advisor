@@ -579,14 +579,18 @@ describe('getAzimuthDirection — all 8 directions', () => {
 
   it('handles exact boundary angles (45° steps)', () => {
     const { getAzimuthDirection } = require('../hooks/useSunPosition');
-    expect(getAzimuthDirection(22.5)).toBe('北');   // rounds to 0 -> 北
-    expect(getAzimuthDirection(67.5)).toBe('东');   // rounds to 90 -> 东
-    expect(getAzimuthDirection(112.5)).toBe('东南'); // rounds to 135 -> 东南
-    expect(getAzimuthDirection(157.5)).toBe('南');  // rounds to 180 -> 南
-    expect(getAzimuthDirection(202.5)).toBe('西南'); // rounds to 225 -> 西南
-    expect(getAzimuthDirection(247.5)).toBe('西');  // rounds to 270 -> 西
-    expect(getAzimuthDirection(292.5)).toBe('西北'); // rounds to 315 -> 西北
-    expect(getAzimuthDirection(337.5)).toBe('北');  // rounds to 360 -> 北
+    // JavaScript Math.round uses "round half up": 22.5 -> 23, 67.5 -> 68, etc.
+    // Mapping: Math.round(azimuth/45) % 8 -> direction index
+    // 22.5/45=0.5 -> round(0.5)=1 -> 1%8=1 -> '东北'
+    expect(getAzimuthDirection(0)).toBe('北');
+    expect(getAzimuthDirection(45)).toBe('东北');
+    expect(getAzimuthDirection(90)).toBe('东');
+    expect(getAzimuthDirection(135)).toBe('东南');
+    expect(getAzimuthDirection(180)).toBe('南');
+    expect(getAzimuthDirection(225)).toBe('西南');
+    expect(getAzimuthDirection(270)).toBe('西');
+    expect(getAzimuthDirection(315)).toBe('西北');
+    expect(getAzimuthDirection(360)).toBe('北');
   });
 });
 
