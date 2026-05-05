@@ -72,6 +72,10 @@ export interface CameraTopBarProps {
   // Shake detector toggle
   showShakeDetector: boolean;
   onShakeDetectorToggle: () => void;
+  // EV
+  showEV: boolean;
+  onEVToggle: () => void;
+  currentEV: number;
   // Burst
   burstActive: boolean;
   burstCount: number;
@@ -115,6 +119,9 @@ export function CameraTopBar({  gridVariant,
   onKeypointsToggle,
   showShakeDetector,
   onShakeDetectorToggle,
+  showEV,
+  onEVToggle,
+  currentEV,
   burstActive,
   burstCount,
   toastOpacity,
@@ -376,7 +383,7 @@ export function CameraTopBar({  gridVariant,
     focusPeakingSelector: {
       position: 'absolute',
       top: 60,
-      left: 360,
+      left: 358,
       zIndex: 10,
       backgroundColor: colors.topBarBg,
       borderRadius: 20,
@@ -399,6 +406,33 @@ export function CameraTopBar({  gridVariant,
     },
     focusPeakingSelectorTextActive: {
       color: colors.focusGuideActiveText,
+    },
+    evSelector: {
+      position: 'absolute',
+      top: 60,
+      left: 318,
+      zIndex: 10,
+      backgroundColor: colors.topBarBg,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.topBarBorderInactive,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    evSelectorActive: {
+      backgroundColor: colors.topBarSelectorBgActive,
+      borderColor: colors.topBarSelectorBorderActive,
+    },
+    evSelectorText: {
+      color: colors.topBarTextSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    evSelectorTextActive: {
+      color: colors.topBarText,
     },
     burstIndicator: {
       position: 'absolute',
@@ -626,6 +660,25 @@ export function CameraTopBar({  gridVariant,
         scoreReason={lastCapturedScoreReason ?? undefined}
         gridVariant={gridVariant}
       />
+
+      {/* EV Toggle */}
+      <TouchableOpacity
+        style={[dynamicTopBarStyles.evSelector, showEV && dynamicTopBarStyles.evSelectorActive]}
+        onPress={onEVToggle}
+        activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '曝光补偿',
+          hint: showEV ? '关闭曝光补偿' : '打开曝光补偿',
+          role: 'button',
+        })}
+        accessibilityState={{ selected: showEV }}
+      >
+        <Text style={[dynamicTopBarStyles.evSelectorText, showEV && dynamicTopBarStyles.evSelectorTextActive]}>
+          {showEV && currentEV !== 0
+            ? `${currentEV >= 0 ? '+' : ''}${currentEV.toFixed(1)}`
+            : '☀️ EV'}
+        </Text>
+      </TouchableOpacity>
 
       {/* Compare Mode */}
       {lastCapturedUri && !showKeypoints && (
