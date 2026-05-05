@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, screen } from '@testing-library/react-native';
 import { CameraToolbar } from '../components/CameraToolbar';
 
 // Mock @expo/vector-icons
@@ -251,5 +251,76 @@ describe('CameraToolbar', () => {
     );
     fireEvent.press(getByText('stop-fill').parent!);
     expect(onStopRecording).toHaveBeenCalledTimes(1);
+  });
+
+  // Quick Capture double-tap logic tests
+
+  describe('Quick Capture double-tap logic', () => {
+    const renderWithProps = (props: Partial<React.ComponentProps<typeof CameraToolbar>>) => {
+      return render(<CameraToolbar {...defaultProps} {...props} />);
+    };
+
+    it('calls onAskAI when single press and onQuickCapture is NOT provided', () => {
+      const onAskAI = jest.fn();
+      const { getByLabelText } = renderWithProps({ onAskAI, onQuickCapture: undefined });
+      fireEvent.press(getByLabelText('AI摄影'));
+      expect(onAskAI).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT call onAskAI when onQuickCapture is provided (single press)', () => {
+      const onAskAI = jest.fn();
+      const onQuickCapture = jest.fn();
+      const { getByLabelText } = renderWithProps({ onAskAI, onQuickCapture });
+      fireEvent.press(getByLabelText('AI摄影'));
+      expect(onAskAI).not.toHaveBeenCalled();
+      expect(onQuickCapture).not.toHaveBeenCalled();
+    });
+
+    it('does NOT call onQuickCapture on single press even when provided', () => {
+      const onQuickCapture = jest.fn();
+      const { getByLabelText } = renderWithProps({ onQuickCapture });
+      fireEvent.press(getByLabelText('AI摄影'));
+      expect(onQuickCapture).not.toHaveBeenCalled();
+    });
+
+    it('calls onQuickCapture on double press within 300ms', () => {
+      jest.useFakeTimers();
+      const onAskAI = jest.fn();
+      const onQuickCapture = jest.fn();
+      const { getByLabelText } = renderWithProps({ onAskAI, onQuickCapture });
+      const captureBtn = getByLabelText('AI摄影');
+
+      // First press
+      fireEvent.press(captureBtn);
+      // Advance timer by 100ms (less than 300ms threshold)
+      jest.advanceTimersByTime(100);
+      // Second press within 300ms
+      fireEvent.press(captureBtn);
+
+      expect(onQuickCapture).toHaveBeenCalledTimes(1);
+      expect(onAskAI).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
+    });
+
+    it('does NOT call onQuickCapture when two presses are more than 300ms apart', () => {
+      jest.useFakeTimers();
+      const onAskAI = jest.fn();
+      const onQuickCapture = jest.fn();
+      const { getByLabelText } = renderWithProps({ onAskAI, onQuickCapture });
+      const captureBtn = getByLabelText('AI摄影');
+
+      // First press
+      fireEvent.press(captureBtn);
+      // Advance timer by 400ms (more than 300ms threshold)
+      jest.advanceTimersByTime(400);
+      // Second press after 300ms
+      fireEvent.press(captureBtn);
+
+      expect(onQuickCapture).not.toHaveBeenCalled();
+      expect(onAskAI).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
+    });
   });
 });
