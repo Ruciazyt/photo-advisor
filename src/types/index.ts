@@ -346,6 +346,7 @@ export interface AppSettings {
   showBubbleChat: boolean;
   showShakeDetector: boolean;
   showKeypoints: boolean;
+  showRawMode: boolean;
   imageQualityPreset: ImageQualityPreset;
   focusPeakingColor: string;
   focusPeakingSensitivity: FocusPeakingSensitivity;

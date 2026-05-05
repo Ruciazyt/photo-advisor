@@ -131,6 +131,23 @@ describe('useCamera', () => {
       act(() => { result.current.toggleRawMode(); });
       expect(result.current.rawMode).toBe(false);
     });
+
+    it('persists rawMode to settings when toggled', async () => {
+      const { saveAppSettings } = require('../services/settings');
+      const { result } = renderHook(() => useCamera());
+      expect(result.current.rawMode).toBe(false);
+      await act(async () => { await result.current.toggleRawMode(); });
+      expect(saveAppSettings).toHaveBeenCalledWith({ showRawMode: true });
+      await act(async () => { await result.current.toggleRawMode(); });
+      expect(saveAppSettings).toHaveBeenCalledWith({ showRawMode: false });
+    });
+
+    it('calls onSettingChange callback when rawMode changes', async () => {
+      const onSettingChange = jest.fn();
+      const { result } = renderHook(() => useCamera({ onSettingChange }));
+      await act(async () => { await result.current.toggleRawMode(); });
+      expect(onSettingChange).toHaveBeenCalledWith('showRawMode', true);
+    });
   });
 
   describe('setSelectedMode', () => {

@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showBubbleChat: true,
   showShakeDetector: false,
   showKeypoints: false,
+  showRawMode: false,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',

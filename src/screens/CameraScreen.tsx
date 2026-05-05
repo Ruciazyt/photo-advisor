@@ -81,6 +81,7 @@ function CameraScreen() {
   // showBubbleChat and showShakeDetector must be declared before useShakeDetector
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [showShakeDetector, setShowShakeDetector] = useState(false);
+  const [showRawMode, setShowRawMode] = useState(false);
 
   // Shake detector — dismiss all AI suggestion overlays on shake
   const bubbleChatDismissAllRef = useRef(bubbleChatDismissAll);
@@ -167,7 +168,12 @@ function CameraScreen() {
     isRecording,
     startRecording,
     stopRecording,
-  } = useCamera({ initialMode: 'photo' });
+  } = useCamera({
+    initialMode: 'photo',
+    onSettingChange: (key, value) => {
+      if (key === 'showRawMode') setShowRawMode(value);
+    },
+  });
   const { sceneTag, recognize: recognizeSceneTag } = useSceneRecognition();
   const { width: screenWidth, height: screenHeight } = require('react-native').useWindowDimensions();
   const { showHistogram, histogramData, handleHistogramToggle, handleHistogramPressIn, handleHistogramPressOut } = useHistogramToggle(cameraRef);
@@ -331,6 +337,7 @@ function CameraScreen() {
       setShowBubbleChat(settings.showBubbleChat ?? true);
       setShowShakeDetector(settings.showShakeDetector ?? false);
       setShowKeypoints(settings.showKeypoints ?? false);
+      setShowRawMode(settings.showRawMode ?? false);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);

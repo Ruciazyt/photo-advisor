@@ -12,10 +12,14 @@ const TIMER_DURATIONS: TimerDuration[] = [3, 5, 10];
 export interface UseCameraOptions {
   /** Initial camera mode (default: 'photo') */
   initialMode?: CameraMode;
+  /** Initial RAW mode state (default: false) */
+  initialRawMode?: boolean;
   /** Callback when facing changes */
   onFacingChange?: (facing: CameraType) => void;
   /** Callback when mode changes */
   onModeChange?: (mode: CameraMode) => void;
+  /** Callback when a setting toggle changes */
+  onSettingChange?: (key: string, value: boolean) => void;
 }
 
 export interface UseCameraReturn {
@@ -40,7 +44,7 @@ export interface UseCameraReturn {
   /** Switch between front and back camera */
   switchCamera: () => void;
   /** Toggle RAW mode on/off */
-  toggleRawMode: () => void;
+  toggleRawMode: () => Promise<void>;
   /** Set the selected camera mode */
   setSelectedMode: (mode: CameraMode) => void;
   /** Cycle to the next timer duration */
@@ -63,13 +67,15 @@ export interface UseCameraReturn {
 
 export function useCamera({
   initialMode = 'photo',
+  initialRawMode = false,
   onFacingChange,
   onModeChange,
+  onSettingChange,
 }: UseCameraOptions = {}): UseCameraReturn {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [cameraReady, setCameraReady] = useState(false);
-  const [rawMode, setRawMode] = useState(false);
+  const [rawMode, setRawMode] = useState(initialRawMode);
   const [rawSupported, setRawSupported] = useState(false);
   const [selectedMode, setSelectedModeState] = useState<CameraMode>(initialMode);
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
@@ -108,9 +114,12 @@ export function useCamera({
     });
   }, [onFacingChange]);
 
-  const toggleRawMode = useCallback(() => {
-    setRawMode((v: boolean) => !v);
-  }, []);
+  const toggleRawMode = useCallback(async () => {
+    const next = !rawMode;
+    setRawMode(next);
+    await saveAppSettings({ showRawMode: next });
+    onSettingChange?.('showRawMode', next);
+  }, [rawMode, onSettingChange]);
 
   const setSelectedMode = useCallback((mode: CameraMode) => {
     setSelectedModeState(mode);
