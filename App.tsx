@@ -6,10 +6,11 @@ import { CameraScreen } from './src/screens/CameraScreen';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { ShootLogScreen } from './src/screens/ShootLogScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { AnalysisHistoryScreen } from './src/screens/AnalysisHistoryScreen';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 
-type Tab = 'home' | 'camera' | 'favorites' | 'log' | 'settings';
+type Tab = 'home' | 'camera' | 'favorites' | 'log' | 'settings' | 'history';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -19,11 +20,14 @@ function AppContent() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primary }]}>
       <StatusBar barStyle={colors.primary === '#000000' ? 'light-content' : 'dark-content'} backgroundColor={colors.primary} />
       <View style={styles.content}>
-        {activeTab === 'home' && <HomeScreen />}
+        {activeTab === 'home' && (
+          <HomeScreen onNavigateToHistory={() => setActiveTab('history')} />
+        )}
         {activeTab === 'camera' && <CameraScreen />}
         {activeTab === 'favorites' && <FavoritesScreen />}
         {activeTab === 'log' && <ShootLogScreen />}
         {activeTab === 'settings' && <SettingsScreen onSaved={() => setActiveTab('home')} />}
+        {activeTab === 'history' && <AnalysisHistoryScreen onBack={() => setActiveTab('home')} />}
       </View>
       <View style={[styles.tabBar, { backgroundColor: colors.cardBg, borderTopColor: colors.border }]}>
         <TouchableOpacity
@@ -123,6 +127,26 @@ function AppContent() {
             ]}
           >
             设置
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => setActiveTab('history')}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={activeTab === 'history' ? 'time' : 'time-outline'}
+            size={24}
+            color={activeTab === 'history' ? colors.accent : colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.tabLabel,
+              { color: activeTab === 'history' ? colors.accent : colors.textSecondary },
+            ]}
+          >
+            历史
           </Text>
         </TouchableOpacity>
       </View>

@@ -18,7 +18,7 @@ import { loadApiConfig, streamChatCompletion, analyzeImageAnthropic } from '../s
 import { StreamingDrawer } from '../components/StreamingDrawer';
 import { logger } from '../utils/logger';
 
-export function HomeScreen() {
+export function HomeScreen({ onNavigateToHistory }: { onNavigateToHistory?: () => void }) {
   const { colors } = useTheme();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -217,6 +217,19 @@ export function HomeScreen() {
   return (
     <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
       <View style={staticStyles.header}>
+        <View style={staticStyles.headerTopRow}>
+          <View />
+          {onNavigateToHistory && (
+            <TouchableOpacity
+              style={[staticStyles.historyBtn, { backgroundColor: colors.cardBg }]}
+              onPress={onNavigateToHistory}
+              activeOpacity={0.7}
+              testID="historyBtn"
+            >
+              <Ionicons name="time-outline" size={20} color={colors.accent} />
+            </TouchableOpacity>
+          )}
+        </View>
         <Text style={[staticStyles.title, { color: colors.accent }]}>拍摄参谋</Text>
         <Text style={[staticStyles.subtitle, { color: colors.textSecondary }]}>智能照片分析</Text>
       </View>
@@ -275,6 +288,22 @@ const staticStyles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 12,
+  },
+  historyBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#333333',
   },
   header: {
     paddingTop: 60,

@@ -367,6 +367,18 @@ export interface ShareOptions {
 }
 
 // ============================================================
+// Analysis History
+// ============================================================
+
+export interface AnalysisRecord {
+  id: string;
+  imageUri: string;
+  analysisText: string;
+  timestamp: string; // ISO timestamp
+  tags: string[];
+}
+
+// ============================================================
 // Shoot Log
 // ============================================================
 
