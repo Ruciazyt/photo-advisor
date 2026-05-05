@@ -7,6 +7,7 @@ import { render, fireEvent, screen, act, waitFor } from '@testing-library/react-
 import { Alert } from 'react-native';
 import { AnalysisHistoryScreen } from '../screens/AnalysisHistoryScreen';
 import * as analysisHistoryService from '../services/analysisHistory';
+import { DarkColors } from '../theme/colors';
 import { useTheme } from '../contexts/ThemeContext';
 
 jest.mock('../services/analysisHistory');
@@ -16,20 +17,7 @@ jest.spyOn(Alert, 'alert');
 const mockService = analysisHistoryService as jest.Mocked<typeof analysisHistoryService>;
 const mockUseTheme = useTheme as jest.MockedFunction<typeof useTheme>;
 
-const mockColors = {
-  primary: '#000000',
-  accent: '#E8D5B7',
-  cardBg: '#1A1A1A',
-  text: '#FFFFFF',
-  textSecondary: '#888888',
-  border: '#333333',
-  success: '#4CAF50',
-  error: '#FF5252',
-  warning: '#F59E0B',
-  background: '#000000',
-  sunColor: '#FFB800',
-  gridAccent: 'rgba(232,213,183,0.35)',
-};
+const mockColors = DarkColors;
 
 function makeRecord(overrides: Partial<import('../types').AnalysisRecord> = {}): import('../types').AnalysisRecord {
   return {
