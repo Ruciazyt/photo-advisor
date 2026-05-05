@@ -563,10 +563,15 @@ export interface CameraControlsProps {
 
 export interface CameraOverlaysProps {
   apiConfigured: boolean;
+  // Portrait mode
+  showPortraitMode?: boolean;
+  // Grid
   gridVariant: GridVariant;
   showGridModal: boolean;
   onGridSelect: (v: GridVariant) => void;
   onGridModalClose: () => void;
+  /** Fires when user taps the active grid overlay directly (not the selector modal) */
+  onGridActivate?: (v: GridVariant) => void;
   showLevel: boolean;
   showHistogram: boolean;
   histogramData: number[];
