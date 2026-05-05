@@ -413,4 +413,61 @@ describe('toggle persistence logic', () => {
     expect(mockSaveAppSettings).toHaveBeenNthCalledWith(1, { showShakeDetector: true });
     expect(mockSaveAppSettings).toHaveBeenNthCalledWith(2, { showShakeDetector: false });
   });
+
+
+  it('onFocusPeakingToggle calls saveAppSettings with showFocusPeaking: true when toggling on', async () => {
+    let showFocusPeaking = false;
+    const setShowFocusPeaking = (val: boolean | ((prev: boolean) => boolean)) => {
+      showFocusPeaking = typeof val === 'function' ? val(showFocusPeaking) : val;
+    };
+
+    const onFocusPeakingToggle = async () => {
+      const next = !showFocusPeaking;
+      setShowFocusPeaking(next);
+      await mockSaveAppSettings({ showFocusPeaking: next });
+    };
+
+    await onFocusPeakingToggle();
+    expect(showFocusPeaking).toBe(true);
+    expect(mockSaveAppSettings).toHaveBeenCalledWith({ showFocusPeaking: true });
+  });
+
+  it('onFocusPeakingToggle calls saveAppSettings with showFocusPeaking: false when toggling off', async () => {
+    let showFocusPeaking = true;
+    const setShowFocusPeaking = (val: boolean | ((prev: boolean) => boolean)) => {
+      showFocusPeaking = typeof val === 'function' ? val(showFocusPeaking) : val;
+    };
+
+    const onFocusPeakingToggle = async () => {
+      const next = !showFocusPeaking;
+      setShowFocusPeaking(next);
+      await mockSaveAppSettings({ showFocusPeaking: next });
+    };
+
+    await onFocusPeakingToggle();
+    expect(showFocusPeaking).toBe(false);
+    expect(mockSaveAppSettings).toHaveBeenCalledWith({ showFocusPeaking: false });
+  });
+
+  it('multiple toggles on focus peaking accumulate calls to saveAppSettings', async () => {
+    let showFocusPeaking = false;
+    const setShowFocusPeaking = (val: boolean | ((prev: boolean) => boolean)) => {
+      showFocusPeaking = typeof val === 'function' ? val(showFocusPeaking) : val;
+    };
+
+    const onFocusPeakingToggle = async () => {
+      const next = !showFocusPeaking;
+      setShowFocusPeaking(next);
+      await mockSaveAppSettings({ showFocusPeaking: next });
+    };
+
+    await onFocusPeakingToggle();
+    await onFocusPeakingToggle();
+    await onFocusPeakingToggle();
+
+    expect(mockSaveAppSettings).toHaveBeenCalledTimes(3);
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(1, { showFocusPeaking: true });
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(2, { showFocusPeaking: false });
+    expect(mockSaveAppSettings).toHaveBeenNthCalledWith(3, { showFocusPeaking: true });
+  });
 });

@@ -413,7 +413,7 @@ function CameraScreen() {
           showLevel={showLevel} onLevelToggle={() => setShowLevel(v => !v)}
           showSunOverlay={showSunOverlay} onSunToggle={() => setShowSunOverlay(v => !v)}
           showFocusGuide={showFocusGuide} onFocusGuideToggle={() => setShowFocusGuide(v => !v)}
-          showFocusPeaking={showFocusPeaking} onFocusPeakingToggle={() => setShowFocusPeaking(v => !v)}
+          showFocusPeaking={showFocusPeaking} onFocusPeakingToggle={async () => { const next = !showFocusPeaking; setShowFocusPeaking(next); await saveAppSettings({ showFocusPeaking: next }); }}
           voiceEnabled={voiceEnabled} onVoiceToggle={() => setVoiceEnabled(v => !v)}
           rawMode={rawMode} rawSupported={rawSupported} onRawToggle={toggleRawMode}
           challengeMode={challengeMode} onChallengeToggle={toggleChallengeMode}
