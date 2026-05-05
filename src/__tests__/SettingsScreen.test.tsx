@@ -649,7 +649,7 @@ describe('SettingsScreen', () => {
     await waitFor(() => { expect(getByLabelText('AI 建议气泡')).toBeTruthy(); });
     fireEvent.press(getByLabelText('AI 建议气泡'));
     await waitFor(() => {
-      expect(saveAppSettings).toHaveBeenCalledWith({ showBubbleChat: false });
+      expect(saveAppSettings).toHaveBeenCalledWith({ showBubbleChat: false, showShakeDetector: false });
     });
   });
 
@@ -753,6 +753,23 @@ describe('SettingsScreen', () => {
     await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
     const shakeToggle = getByLabelText('摇一摇关闭建议');
     expect(shakeToggle.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  // 54b. shake detector toggle is disabled when bubble chat is off
+  it('shake detector toggle is disabled when showBubbleChat is false', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValueOnce({
+      voiceEnabled: false, theme: 'dark', timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: false, showLevel: true, showFocusPeaking: false,
+      showSunPosition: false, showFocusGuide: true, showBubbleChat: false,
+      showShakeDetector: true, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
+    const shakeToggle = getByLabelText('摇一摇关闭建议');
+    // Should be visually disabled (opacity + non-interactive) and a11y state reflects disabled
+    expect(shakeToggle.props.accessibilityState).toMatchObject({ disabled: true });
   });
 
   // 55. showKeypoints toggle is rendered with label "关键点标记"

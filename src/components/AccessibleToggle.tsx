@@ -12,6 +12,8 @@ interface AccessibleToggleProps {
   toggled: boolean;
   /** Callback when the toggle is pressed */
   onPress: () => void;
+  /** Whether the toggle is disabled (default: false) */
+  disabled?: boolean;
 }
 
 /**
@@ -23,12 +25,13 @@ interface AccessibleToggleProps {
  * - accessibilityState: { checked: toggled }
  * - accessibilityHint: what will happen when activated
  */
-export function AccessibleToggle({ label, hint, toggled, onPress }: AccessibleToggleProps) {
+export function AccessibleToggle({ label, hint, toggled, onPress, disabled = false }: AccessibleToggleProps) {
   const { colors } = useTheme();
 
   const handlePress = useCallback(() => {
+    if (disabled) return;
     onPress();
-  }, [onPress]);
+  }, [onPress, disabled]);
 
   return (
     <TouchableOpacity
@@ -36,20 +39,21 @@ export function AccessibleToggle({ label, hint, toggled, onPress }: AccessibleTo
         styles.toggle,
         {
           backgroundColor: colors.cardBg,
-          borderColor: toggled ? colors.accent : colors.border,
+          borderColor: disabled ? colors.border : toggled ? colors.accent : colors.border,
+          opacity: disabled ? 0.4 : 1.0,
         },
       ]}
       onPress={handlePress}
-      activeOpacity={0.7}
+      activeOpacity={disabled ? 1.0 : 0.7}
       accessibilityLabel={label}
       accessibilityRole="switch"
-      accessibilityState={{ checked: toggled }}
+      accessibilityState={{ checked: toggled, disabled }}
       accessibilityHint={hint}
     >
       <Ionicons
         name={toggled ? 'checkmark-circle' : 'ellipse-outline'}
         size={20}
-        color={toggled ? colors.accent : colors.textSecondary}
+        color={disabled ? colors.textSecondary : toggled ? colors.accent : colors.textSecondary}
       />
     </TouchableOpacity>
   );

@@ -535,7 +535,6 @@ export function SettingsScreen({ onSaved }: Props) {
             { label: '对焦辅助', desc: '显示对焦引导框', state: showFocusGuide, setter: setShowFocusGuide, saveKey: 'showFocusGuide' },
             { label: 'AI 建议气泡', desc: '显示 AI 构图建议气泡', state: showBubbleChat, setter: setShowBubbleChat, saveKey: 'showBubbleChat' },
             { label: '关键点标记', desc: '显示 AI 关键点叠加标记', state: showKeypoints, setter: setShowKeypoints, saveKey: 'showKeypoints' },
-            { label: '摇一摇关闭建议', desc: '摇动设备关闭所有 AI 建议气泡', state: showShakeDetector, setter: setShowShakeDetector, saveKey: 'showShakeDetector' },
           ].map(({ label, desc, state, setter, saveKey }) => (
             <View key={saveKey} style={[styles.toggleRow, { borderTopColor: colors.border }]}>
               <View style={styles.prefInfo}>
@@ -549,11 +548,40 @@ export function SettingsScreen({ onSaved }: Props) {
                 onPress={async () => {
                   const next = !state;
                   setter(next);
-                  await saveAppSettings({ [saveKey]: next });
+                  // When bubble chat is turned off, also disable shake detector (it requires bubble chat to work)
+                  const toSave: Record<string, boolean> = { [saveKey]: next };
+                  if (saveKey === 'showBubbleChat' && !next) {
+                    setShowShakeDetector(false);
+                    toSave.showShakeDetector = false;
+                  }
+                  await saveAppSettings(toSave);
                 }}
               />
             </View>
           ))}
+
+          {/* Shake detector toggle — disabled when bubble chat is off (requires both to work) */}
+          <View key="showShakeDetector" style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+            <View style={styles.prefInfo}>
+              <Text style={[styles.prefTitle, { color: showBubbleChat ? colors.text : colors.textSecondary }]}>
+                摇一摇关闭建议
+              </Text>
+              <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>
+                {showBubbleChat ? '摇动设备关闭所有 AI 建议气泡' : '需要先开启AI建议气泡'}
+              </Text>
+            </View>
+            <AccessibleToggle
+              label="摇一摇关闭建议"
+              hint={!showBubbleChat ? '需要先开启AI建议气泡' : showShakeDetector ? '关闭摇一摇功能' : '打开摇一摇功能'}
+              toggled={showShakeDetector}
+              disabled={!showBubbleChat}
+              onPress={async () => {
+                const next = !showShakeDetector;
+                setShowShakeDetector(next);
+                await saveAppSettings({ showShakeDetector: next });
+              }}
+            />
+          </View>
 
           {/* Timer Duration */}
           <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>

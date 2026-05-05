@@ -67,7 +67,7 @@ describe('AccessibleToggle', () => {
     const toggle = getByRole('switch');
     expect(toggle.props.accessibilityLabel).toBe('Dark Mode');
     expect(toggle.props.accessibilityRole).toBe('switch');
-    expect(toggle.props.accessibilityState).toEqual({ checked: true });
+    expect(toggle.props.accessibilityState).toEqual({ checked: true, disabled: false });
     expect(toggle.props.accessibilityHint).toBe('Enable dark theme');
   });
 
@@ -82,7 +82,7 @@ describe('AccessibleToggle', () => {
     );
 
     const toggle = getByRole('switch');
-    expect(toggle.props.accessibilityState).toEqual({ checked: false });
+    expect(toggle.props.accessibilityState).toEqual({ checked: false, disabled: false });
   });
 
   it('renders with light theme colors', () => {
@@ -178,5 +178,36 @@ describe('AccessibleToggle', () => {
     const toggle = getByRole('switch');
     const style = toggle.props.style;
     expect(style.borderColor).toBe('#333333');
+  });
+
+  it('renders as disabled when disabled prop is true', () => {
+    const { getByRole } = render(
+      <AccessibleToggle
+        label="Feature X"
+        hint="Toggle feature"
+        toggled={true}
+        onPress={jest.fn()}
+        disabled={true}
+      />
+    );
+    const toggle = getByRole('switch');
+    expect(toggle.props.accessibilityState).toEqual({ checked: true, disabled: true });
+    expect(toggle.props.accessibilityHint).toBe('Toggle feature');
+  });
+
+  it('does not call onPress when disabled', () => {
+    const onPress = jest.fn();
+    const { getByRole } = render(
+      <AccessibleToggle
+        label="Feature X"
+        hint="Toggle"
+        toggled={false}
+        onPress={onPress}
+        disabled={true}
+      />
+    );
+    const toggle = getByRole('switch');
+    fireEvent.press(toggle);
+    expect(onPress).not.toHaveBeenCalled();
   });
 });
