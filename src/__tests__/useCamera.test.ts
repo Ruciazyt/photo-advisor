@@ -10,8 +10,9 @@ jest.mock('expo-camera', () => ({
   useCameraPermissions: jest.fn(),
 }));
 
-jest.mock('../hooks/useCameraCapture', () => ({
+jest.mock('../services/camera2', () => ({
   supportsRawCapture: jest.fn().mockResolvedValue(true),
+  captureRawNative: jest.fn().mockResolvedValue(null),
 }));
 
 jest.mock('../services/settings', () => ({
@@ -30,7 +31,7 @@ describe('useCamera', () => {
       mockRequestPermission,
     ]);
     // Reset supportsRawCapture mock here in beforeEach (runs before each test body)
-    const { supportsRawCapture } = require('../hooks/useCameraCapture');
+    const { supportsRawCapture } = require('../services/camera2');
     supportsRawCapture.mockReset();
     supportsRawCapture.mockResolvedValue(true);
   });
@@ -336,7 +337,7 @@ describe('useCamera', () => {
     });
 
     it('rawSupported is false when supportsRawCapture resolves to false', async () => {
-      const { supportsRawCapture } = require('../hooks/useCameraCapture');
+      const { supportsRawCapture } = require('../services/camera2');
       supportsRawCapture.mockResolvedValue(false);
       const { result } = renderHook(() => useCamera());
       await waitFor(() => {

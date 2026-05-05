@@ -4,7 +4,7 @@ import { CameraType, useCameraPermissions } from 'expo-camera';
 import type { PermissionResponse } from 'expo-modules-core';
 import { CameraMode } from '../types';
 import type { TimerDuration } from '../types';
-import { supportsRawCapture } from './useCameraCapture';
+import { supportsRawCapture } from '../services/camera2';
 import { saveAppSettings } from '../services/settings';
 
 const TIMER_DURATIONS: TimerDuration[] = [3, 5, 10];

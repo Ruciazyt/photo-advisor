@@ -23,13 +23,13 @@ export { type UseBurstModeOptions, type UseBurstModeReturn, useBurstMode } from 
 export { type UseCameraOptions, type UseCameraReturn, useCamera } from './useCamera';
 
 // useCameraCapture
-export {
-  type Keypoint,
-  parseSuggestions,
-  supportsRawCapture,
-  captureRawNative,
-  useCameraCapture,
-} from './useCameraCapture';
+export { parseSuggestions, useCameraCapture } from './useCameraCapture';
+
+// Re-export Keypoint from types (already exported from KeypointOverlay via types)
+export type { Keypoint } from '../types';
+
+// Re-export RAW utilities from camera2 service
+export { supportsRawCapture, captureRawNative } from '../services/camera2';
 
 // useCaptureOverlay
 export { type UseCaptureOverlayReturn, useCaptureOverlay } from './useCaptureOverlay';

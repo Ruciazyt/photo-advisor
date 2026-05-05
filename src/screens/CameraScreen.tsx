@@ -52,7 +52,7 @@ const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法', golden: '黄金分割', diagonal: '对角线', spiral: '螺旋线', none: '关闭',
 };
 
-function CameraScreen() {
+export function CameraScreen() {
   const { colors } = useTheme();
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);

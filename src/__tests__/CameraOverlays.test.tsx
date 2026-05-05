@@ -137,6 +137,7 @@ const defaultProps: CameraOverlaysProps = {
   screenWidth: 375,
   screenHeight: 812,
   showSunOverlay: false,
+  showPortraitMode: false,
   showBurstSuggestion: false,
   burstSuggestionText: '',
   onBurstSuggestionAccept: jest.fn(),
