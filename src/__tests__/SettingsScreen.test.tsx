@@ -63,7 +63,7 @@ jest.mock('../services/update', () => ({
 }));
 
 jest.mock('../services/settings', () => ({
-  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced', focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium' })),
+  loadAppSettings: jest.fn(() => Promise.resolve({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, showRawMode: false, imageQualityPreset: 'balanced', focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium' })),
   saveAppSettings: jest.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (loadApiConfig as jest.Mock).mockResolvedValue(null);
-    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced', focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium' });
+    (loadAppSettings as jest.Mock).mockResolvedValue({ voiceEnabled: false, theme: 'dark', timerDuration: 3, defaultGridVariant: 'thirds', showHistogram: false, showLevel: true, showFocusPeaking: false, showSunPosition: false, showFocusGuide: true, showBubbleChat: true, showShakeDetector: false, showKeypoints: false, showRawMode: false, imageQualityPreset: 'balanced', focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium' });
     (getAppVersion as jest.Mock).mockReturnValue('1.0.0');
   });
 
@@ -845,12 +845,46 @@ describe('SettingsScreen', () => {
       defaultGridVariant: 'thirds',
       showHistogram: false, showLevel: true, showFocusPeaking: false,
       showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
-      showShakeDetector: false, showKeypoints: false, imageQualityPreset: 'balanced',
+      showShakeDetector: false, showKeypoints: false, showRawMode: false, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
     const { getByLabelText } = render(<SettingsScreen />);
     await waitFor(() => { expect(getByLabelText('10s，已选中')).toBeTruthy(); });
     expect(getByLabelText('10s，已选中')).toBeTruthy();
     expect(getByLabelText('3s').props.accessibilityState).toMatchObject({ selected: false });
+  });
+
+  // 62. showRawMode toggle is rendered with label "RAW 格式"
+  it('showRawMode toggle is rendered with label "RAW 格式"', async () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('RAW 格式')).toBeTruthy(); });
+    expect(getByLabelText('RAW 格式')).toBeTruthy();
+  });
+
+  // 63. showRawMode toggle calls saveAppSettings with showRawMode
+  it('showRawMode toggle calls saveAppSettings with showRawMode', async () => {
+    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('RAW 格式')).toBeTruthy(); });
+    fireEvent.press(getByLabelText('RAW 格式'));
+    await waitFor(() => {
+      expect(saveAppSettings).toHaveBeenCalledWith({ showRawMode: true });
+    });
+  });
+
+  // 64. showRawMode toggle reflects checked=true when enabled in settings
+  it('showRawMode toggle reflects checked=true when enabled in settings', async () => {
+    (loadAppSettings as jest.Mock).mockResolvedValue({
+      voiceEnabled: false, theme: 'dark', timerDuration: 3,
+      defaultGridVariant: 'thirds',
+      showHistogram: false, showLevel: true, showFocusPeaking: false,
+      showSunPosition: false, showFocusGuide: true, showBubbleChat: true,
+      showShakeDetector: false, showKeypoints: false, showRawMode: true, imageQualityPreset: 'balanced',
+      focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
+    });
+    const { getByLabelText } = render(<SettingsScreen />);
+    await waitFor(() => { expect(getByLabelText('RAW 格式')).toBeTruthy(); });
+    const rawToggle = getByLabelText('RAW 格式');
+    expect(rawToggle.props.accessibilityState).toMatchObject({ checked: true });
   });
 });

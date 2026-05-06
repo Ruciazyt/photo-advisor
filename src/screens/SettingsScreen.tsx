@@ -64,6 +64,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showBubbleChat, setShowBubbleChat] = useState(true);
   const [showShakeDetector, setShowShakeDetector] = useState(false);
   const [showKeypoints, setShowKeypoints] = useState(false);
+  const [showRawMode, setShowRawMode] = useState(false);
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
@@ -89,6 +90,7 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowBubbleChat(settings.showBubbleChat ?? true);
       setShowShakeDetector(settings.showShakeDetector ?? false);
       setShowKeypoints(settings.showKeypoints ?? false);
+      setShowRawMode(settings.showRawMode ?? false);
       setTimerDuration(settings.timerDuration ?? 3);
       setImageQualityPreset(settings.imageQualityPreset ?? 'balanced');
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
@@ -535,6 +537,7 @@ export function SettingsScreen({ onSaved }: Props) {
             { label: '对焦辅助', desc: '显示对焦引导框', state: showFocusGuide, setter: setShowFocusGuide, saveKey: 'showFocusGuide' },
             { label: 'AI 建议气泡', desc: '显示 AI 构图建议气泡', state: showBubbleChat, setter: setShowBubbleChat, saveKey: 'showBubbleChat' },
             { label: '关键点标记', desc: '显示 AI 关键点叠加标记', state: showKeypoints, setter: setShowKeypoints, saveKey: 'showKeypoints' },
+            { label: 'RAW 格式', desc: '使用 RAW 格式捕获更高质量照片', state: showRawMode, setter: setShowRawMode, saveKey: 'showRawMode' },
           ].map(({ label, desc, state, setter, saveKey }) => (
             <View key={saveKey} style={[styles.toggleRow, { borderTopColor: colors.border }]}>
               <View style={styles.prefInfo}>
