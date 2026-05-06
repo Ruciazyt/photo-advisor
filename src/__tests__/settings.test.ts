@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS = {
   showShakeDetector: false,
   showKeypoints: false,
   showRawMode: false,
+  showEV: false,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',

@@ -37,9 +37,11 @@ import { CameraTopBar } from '../components/CameraTopBar';
 import { CameraControls } from '../components/CameraControls';
 import { CameraOverlays } from '../components/CameraOverlays';
 import { RecordingIndicator } from '../components/RecordingIndicator';
+import { ExposureBar } from '../components/ExposureBar';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
 import { useBurstMode } from '../hooks/useBurstMode';
+import { useExposure } from '../hooks/useExposure';
 import { useBubbleChat } from '../hooks/useBubbleChat';
 import { useKeypoints } from '../hooks/useKeypoints';
 import { useShootLog } from '../hooks/useShootLog';
@@ -126,12 +128,14 @@ export function CameraScreen() {
     startBurst,
   } = useBurstMode({ setSuggestions });
 
+
   const [apiConfigured, setApiConfigured] = useState(false);
   const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
   const [showLevel, setShowLevel] = useState(true);
   const [showSunOverlay, setShowSunOverlay] = useState(false);
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [showFocusPeaking, setShowFocusPeaking] = useState(false);
+  const [showEV, setShowEV] = useState(false);
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
   const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
@@ -174,6 +178,7 @@ export function CameraScreen() {
       if (key === 'showRawMode') setShowRawMode(value);
     },
   });
+  const { exposureComp, minEC, maxEC, setExposureCompensation, isAdjusting } = useExposure(cameraRef);
   const { sceneTag, recognize: recognizeSceneTag } = useSceneRecognition();
   const { width: screenWidth, height: screenHeight } = require('react-native').useWindowDimensions();
   const { showHistogram, histogramData, handleHistogramToggle, handleHistogramPressIn, handleHistogramPressOut } = useHistogramToggle(cameraRef);
@@ -338,6 +343,7 @@ export function CameraScreen() {
       setShowShakeDetector(settings.showShakeDetector ?? false);
       setShowKeypoints(settings.showKeypoints ?? false);
       setShowRawMode(settings.showRawMode ?? false);
+      setShowEV(settings.showEV ?? false);
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
@@ -433,6 +439,7 @@ export function CameraScreen() {
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
           showShakeDetector={showShakeDetector} onShakeDetectorToggle={async () => { const next = !showShakeDetector; setShowShakeDetector(next); await saveAppSettings({ showShakeDetector: next }); }}
+          showEV={showEV} onEVToggle={() => setShowEV(v => !v)} currentEV={exposureComp}
         />
         <CameraControls
           selectedMode={selectedMode}
@@ -458,6 +465,14 @@ export function CameraScreen() {
           setShowTimerModal(false);
         }}
         onClose={() => setShowTimerModal(false)}
+      />
+      <ExposureBar
+        visible={showEV}
+        exposureComp={exposureComp}
+        minEC={minEC}
+        maxEC={maxEC}
+        onExposureChange={(v) => setExposureCompensation(v)}
+        onExposureChangeEnd={(v) => setExposureCompensation(v)}
       />
     </View>
   );

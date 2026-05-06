@@ -347,6 +347,7 @@ export interface AppSettings {
   showShakeDetector: boolean;
   showKeypoints: boolean;
   showRawMode: boolean;
+  showEV: boolean;
   imageQualityPreset: ImageQualityPreset;
   focusPeakingColor: string;
   focusPeakingSensitivity: FocusPeakingSensitivity;
