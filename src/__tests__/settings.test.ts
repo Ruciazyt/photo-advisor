@@ -215,5 +215,149 @@ describe('settings service', () => {
       const settings = await loadAppSettings();
       expect(settings.focusPeakingSensitivity).toBe('medium');
     });
+
+    // --- showShakeDetector ---
+    it('defaults showShakeDetector to false', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showShakeDetector).toBe(false);
+    });
+
+    it('saves and loads showShakeDetector', async () => {
+      await saveAppSettings({ showShakeDetector: true });
+      const settings = await loadAppSettings();
+      expect(settings.showShakeDetector).toBe(true);
+    });
+
+    it('defaults showShakeDetector when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.showShakeDetector).toBe(false);
+    });
+
+    // --- showKeypoints ---
+    it('defaults showKeypoints to false', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showKeypoints).toBe(false);
+    });
+
+    it('saves and loads showKeypoints', async () => {
+      await saveAppSettings({ showKeypoints: true });
+      const settings = await loadAppSettings();
+      expect(settings.showKeypoints).toBe(true);
+    });
+
+    it('defaults showKeypoints when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.showKeypoints).toBe(false);
+    });
+
+    // --- showEV ---
+    it('defaults showEV to false', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showEV).toBe(false);
+    });
+
+    it('saves and loads showEV', async () => {
+      await saveAppSettings({ showEV: true });
+      const settings = await loadAppSettings();
+      expect(settings.showEV).toBe(true);
+    });
+
+    it('defaults showEV when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.showEV).toBe(false);
+    });
+
+    // --- showBubbleChat ---
+    it('defaults showBubbleChat to true', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showBubbleChat).toBe(true);
+    });
+
+    it('saves and loads showBubbleChat', async () => {
+      await saveAppSettings({ showBubbleChat: false });
+      const settings = await loadAppSettings();
+      expect(settings.showBubbleChat).toBe(false);
+    });
+
+    it('defaults showBubbleChat when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.showBubbleChat).toBe(true);
+    });
+
+    // --- showRawMode ---
+    it('defaults showRawMode to false', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showRawMode).toBe(false);
+    });
+
+    it('saves and loads showRawMode', async () => {
+      await saveAppSettings({ showRawMode: true });
+      const settings = await loadAppSettings();
+      expect(settings.showRawMode).toBe(true);
+    });
+
+    it('defaults showRawMode when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.showRawMode).toBe(false);
+    });
+
+    // --- imageQualityPreset ---
+    it('defaults imageQualityPreset to balanced', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.imageQualityPreset).toBe('balanced');
+    });
+
+    it('saves and loads imageQualityPreset=balanced', async () => {
+      await saveAppSettings({ imageQualityPreset: 'balanced' });
+      const settings = await loadAppSettings();
+      expect(settings.imageQualityPreset).toBe('balanced');
+    });
+
+    it('saves and loads imageQualityPreset=size', async () => {
+      await saveAppSettings({ imageQualityPreset: 'size' });
+      const settings = await loadAppSettings();
+      expect(settings.imageQualityPreset).toBe('size');
+    });
+
+    it('saves and loads imageQualityPreset=quality', async () => {
+      await saveAppSettings({ imageQualityPreset: 'quality' });
+      const settings = await loadAppSettings();
+      expect(settings.imageQualityPreset).toBe('quality');
+    });
+
+    it('defaults imageQualityPreset when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.imageQualityPreset).toBe('balanced');
+    });
+
+    // --- theme ---
+    it('defaults theme to dark', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('dark');
+    });
+
+    it('saves and loads theme=dark', async () => {
+      await saveAppSettings({ theme: 'dark' });
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('dark');
+    });
+
+    it('saves and loads theme=light', async () => {
+      await saveAppSettings({ theme: 'light' });
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('light');
+    });
+
+    it('defaults theme when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.theme).toBe('dark');
+    });
   });
 });
