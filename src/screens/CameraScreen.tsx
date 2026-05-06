@@ -68,6 +68,7 @@ export function CameraScreen() {
   const capturedScoreRef = useRef<number>(0);
   const capturedScoreReasonRef = useRef<string>('');
   const capturedTimerDurationRef = useRef<number>(0);
+  const settingsLoadedRef = useRef(false);
 
   const { suggestions, setSuggestions, loading, setLoading, handleDismiss, handleDismissAll, bubbleItems } = useSuggestions();
 
@@ -325,7 +326,16 @@ export function CameraScreen() {
   const handleGridActivate = useCallback((variant: GridVariant) => {
     const order: GridVariant[] = ['thirds', 'golden', 'diagonal', 'spiral', 'none'];
     const nextIndex = (order.indexOf(variant) + 1) % order.length;
-    setGridVariant(order[nextIndex]);
+    const nextVariant = order[nextIndex];
+    setGridVariant(nextVariant);
+    if (settingsLoadedRef.current) {
+      saveAppSettings({ defaultGridVariant: nextVariant });
+    }
+  }, []);
+
+  const handleGridSelect = useCallback(async (variant: GridVariant) => {
+    setGridVariant(variant);
+    await saveAppSettings({ defaultGridVariant: variant });
   }, []);
 
   const loadSettingsOnFocus = useCallback(() => {
@@ -344,6 +354,7 @@ export function CameraScreen() {
       setShowKeypoints(settings.showKeypoints ?? false);
       setShowRawMode(settings.showRawMode ?? false);
       setShowEV(settings.showEV ?? false);
+      settingsLoadedRef.current = true;
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
@@ -399,7 +410,7 @@ export function CameraScreen() {
       <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)}>
         <CameraOverlays
           apiConfigured={apiConfigured} showPortraitMode={selectedMode === 'portrait'} gridVariant={gridVariant} showGridModal={showGridModal}
-          onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
+          onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
           onGridActivate={handleGridActivate}
           showLevel={showLevel} showHistogram={showHistogram} histogramData={histogramData}
           showFocusGuide={showFocusGuide} showFocusPeaking={showFocusPeaking} cameraRef={cameraRef} peakPoints={peakPoints}
@@ -420,7 +431,7 @@ export function CameraScreen() {
         />
         <CameraTopBar
           gridVariant={gridVariant} showGridModal={showGridModal} onGridPress={() => setShowGridModal(true)}
-          onGridSelect={setGridVariant} onGridModalClose={() => setShowGridModal(false)}
+          onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
           showHistogram={showHistogram} onHistogramToggle={handleHistogramToggle}
           onHistogramPressIn={handleHistogramPressIn} onHistogramPressOut={handleHistogramPressOut}
           showLevel={showLevel} onLevelToggle={() => setShowLevel(v => !v)}
