@@ -66,6 +66,7 @@ export function SettingsScreen({ onSaved }: Props) {
   const [showKeypoints, setShowKeypoints] = useState(false);
   const [showRawMode, setShowRawMode] = useState(false);
   const [showEV, setShowEV] = useState(false);
+  const [showPinchToZoom, setShowPinchToZoom] = useState(true);
   const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
   const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
@@ -93,6 +94,7 @@ export function SettingsScreen({ onSaved }: Props) {
       setShowKeypoints(settings.showKeypoints ?? false);
       setShowRawMode(settings.showRawMode ?? false);
       setShowEV(settings.showEV ?? false);
+      setShowPinchToZoom(settings.showPinchToZoom ?? true);
       setTimerDuration(settings.timerDuration ?? 3);
       setImageQualityPreset(settings.imageQualityPreset ?? 'balanced');
       setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
@@ -540,6 +542,7 @@ export function SettingsScreen({ onSaved }: Props) {
             { label: 'AI 建议气泡', desc: '显示 AI 构图建议气泡', state: showBubbleChat, setter: setShowBubbleChat, saveKey: 'showBubbleChat' },
             { label: '关键点标记', desc: '显示 AI 关键点叠加标记', state: showKeypoints, setter: setShowKeypoints, saveKey: 'showKeypoints' },
             { label: '曝光补偿', desc: '手动调整曝光补偿值', state: showEV, setter: setShowEV, saveKey: 'showEV' },
+            { label: '捏合缩放', desc: '允许两指捏合缩放画面', state: showPinchToZoom, setter: setShowPinchToZoom, saveKey: 'showPinchToZoom' },
             { label: 'RAW 格式', desc: '使用 RAW 格式捕获更高质量照片', state: showRawMode, setter: setShowRawMode, saveKey: 'showRawMode' },
           ].map(({ label, desc, state, setter, saveKey }) => (
             <View key={saveKey} style={[styles.toggleRow, { borderTopColor: colors.border }]}>

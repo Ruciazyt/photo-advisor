@@ -348,6 +348,7 @@ export interface AppSettings {
   showKeypoints: boolean;
   showRawMode: boolean;
   showEV: boolean;
+  showPinchToZoom: boolean;
   imageQualityPreset: ImageQualityPreset;
   focusPeakingColor: string;
   focusPeakingSensitivity: FocusPeakingSensitivity;

@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showKeypoints: false,
   showRawMode: false,
   showEV: false,
+  showPinchToZoom: true,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',

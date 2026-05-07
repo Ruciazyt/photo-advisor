@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS = {
   showKeypoints: false,
   showRawMode: false,
   showEV: false,
+  showPinchToZoom: true,
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',
@@ -268,6 +269,24 @@ describe('settings service', () => {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
       const settings = await loadAppSettings();
       expect(settings.showEV).toBe(false);
+    });
+
+    // --- showPinchToZoom ---
+    it('defaults showPinchToZoom to true', async () => {
+      const settings = await loadAppSettings();
+      expect(settings.showPinchToZoom).toBe(true);
+    });
+
+    it('saves and loads showPinchToZoom', async () => {
+      await saveAppSettings({ showPinchToZoom: false });
+      const settings = await loadAppSettings();
+      expect(settings.showPinchToZoom).toBe(false);
+    });
+
+    it('defaults showPinchToZoom when stored settings lack it (backwards compat)', async () => {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ voiceEnabled: true }));
+      const settings = await loadAppSettings();
+      expect(settings.showPinchToZoom).toBe(true);
     });
 
     // --- showBubbleChat ---
