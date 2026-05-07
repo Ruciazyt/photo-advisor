@@ -143,6 +143,13 @@ export function useCaptureFlow({
     capturedSceneTagRef.current = sceneTag;
     capturedTimerDurationRef.current = timerDuration;
 
+    captureMetadataRef.current = {
+      gridType: GRID_LABELS[defaultGridVariant],
+      suggestions,
+      sceneTag,
+      timerDuration,
+    };
+
     requestLocation();
 
     const result = await takePicture(rawMode);
@@ -158,6 +165,8 @@ export function useCaptureFlow({
     capturedScoreReasonRef.current = reason;
     setLastCapturedScore(score);
     setLastCapturedScoreReason(reason);
+    captureMetadataRef.current.score = score;
+    captureMetadataRef.current.scoreReason = reason;
 
     if (skipAnalysis) {
       setLoading(false);
