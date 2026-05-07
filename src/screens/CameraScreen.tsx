@@ -46,7 +46,7 @@ export function CameraScreen() {
     defaultGridVariant, setDefaultGridVariant,
     showLevel, setShowLevel,
     showFocusPeaking, setShowFocusPeaking,
-    showSunPosition,
+    showSunPosition, setShowSunPosition,
     showFocusGuide, setShowFocusGuide,
     showEV, setShowEV,
     showPinchToZoom, setShowPinchToZoom,
@@ -56,7 +56,6 @@ export function CameraScreen() {
     showBubbleChat, setShowBubbleChat,
     showShakeDetector, setShowShakeDetector,
     showKeypoints, setShowKeypoints,
-    timerDuration, setTimerDuration,
   } = useSettings();
 
   // Base64 of last captured photo — needed by handleSaveToFavorites
@@ -125,7 +124,7 @@ export function CameraScreen() {
     facing, cameraReady, rawMode, rawSupported, selectedMode,
     permission, permissionGranted, requestPermission,
     setCameraReady, switchCamera, toggleRawMode, setSelectedMode,
-    timerDuration, setTimerDuration, mode, cameraRef,
+    mode, cameraRef,
     isRecording, startRecording, stopRecording,
   } = useCamera({
     initialMode: 'photo',
@@ -337,11 +336,11 @@ export function CameraScreen() {
           onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
           showHistogram={showHistogram} onHistogramToggle={handleHistogramToggle}
           onHistogramPressIn={handleHistogramPressIn} onHistogramPressOut={handleHistogramPressOut}
-          showLevel={showLevel} onLevelToggle={() => setShowLevel(v => !v)}
+          showLevel={showLevel} onLevelToggle={() => setShowLevel(!showLevel)}
           showSunOverlay={showSunPosition} onSunToggle={() => setShowSunPosition(!showSunPosition)}
-          showFocusGuide={showFocusGuide} onFocusGuideToggle={() => setShowFocusGuide(v => !v)}
+          showFocusGuide={showFocusGuide} onFocusGuideToggle={() => setShowFocusGuide(!showFocusGuide)}
           showFocusPeaking={showFocusPeaking} onFocusPeakingToggle={() => setShowFocusPeaking(!showFocusPeaking)}
-          voiceEnabled={voiceEnabled} onVoiceToggle={() => setVoiceEnabled(v => !v)}
+          voiceEnabled={voiceEnabled} onVoiceToggle={() => setVoiceEnabled(!voiceEnabled)}
           rawMode={rawMode} rawSupported={rawSupported} onRawToggle={toggleRawMode}
           challengeMode={challengeMode} onChallengeToggle={toggleChallengeMode}
           timerDuration={timerDuration} countdownActive={countdownActive}
