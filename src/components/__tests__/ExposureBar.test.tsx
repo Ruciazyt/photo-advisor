@@ -9,7 +9,8 @@ import { View } from 'react-native';
 import { ExposureBar } from '../ExposureBar';
 
 // Mock PanResponder.create — use 'mock' prefix so jest allows factory to reference it
-const mockPanResponderHandlers = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPanResponderHandlers: any = {
   onStartShouldSetResponder: jest.fn(() => true),
   onMoveShouldSetResponder: jest.fn(() => true),
   onPanResponderGrant: jest.fn(),
@@ -22,7 +23,8 @@ jest.mock('react-native', () => {
   // Track the config passed to PanResponder.create so tests can inspect/invoke callbacks
   const mockPanResponder: any = {
     panHandlers: mockPanResponderHandlers,
-    create: jest.fn((config: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    create: (jest.fn() as any).mockImplementation((config: any) => {
       // Wire real config callbacks through the mock handlers so they can be triggered in tests
       const originalOnMove = config.onPanResponderMove;
       const originalOnRelease = config.onPanResponderRelease;

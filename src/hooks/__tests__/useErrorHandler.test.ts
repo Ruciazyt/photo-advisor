@@ -110,7 +110,7 @@ describe('useErrorHandler', () => {
     });
 
     it('handles AppError input without modification', () => {
-      const appError = new errors.AppError('already an app error', 'ERR_TEST', 'high');
+      const appError = new errors.AppError('already an app error', errors.ErrorCode.GEN_UNKNOWN, 'critical');
       const { result } = renderHook(() => useErrorHandler());
       let returned: errors.AppError | null = null;
       act(() => {
@@ -197,12 +197,14 @@ describe('useErrorHandler', () => {
 
     it('uses default error code when none provided', async () => {
       const { result } = renderHook(() => useErrorHandler());
-      let safeTryResult: { ok: true; value: string } | { ok: false; error: errors.AppError } | null = null;
+      type SafeTryResult = { ok: true; value: string } | { ok: false; error: errors.AppError };
+      let safeTryResult: SafeTryResult | null = null;
       await act(async () => {
-        safeTryResult = await result.current.safeTry(() => Promise.reject(new Error('fail')));
+        safeTryResult = (await result.current.safeTry(() => Promise.reject(new Error('fail')))) as SafeTryResult;
       });
-      if (!safeTryResult?.ok) {
-        expect(safeTryResult?.error.code).toBe(errors.ErrorCode.GEN_UNKNOWN);
+      if (!safeTryResult!.ok && safeTryResult !== null) {
+        const err = safeTryResult as any as { ok: false; error: errors.AppError };
+        expect(err.error.code).toBe(errors.ErrorCode.GEN_UNKNOWN);
       }
     });
 
@@ -224,7 +226,7 @@ describe('useErrorHandler', () => {
           throw new Error('sync error');
         });
       });
-      expect(safeTryResult?.ok).toBe(false);
+      expect(safeTryResult!.ok).toBe(false);
     });
 
     it('result.error is an AppError with a valid error code when safeTry fails', async () => {
@@ -236,14 +238,15 @@ describe('useErrorHandler', () => {
           errors.ErrorCode.API_NETWORK_ERROR
         );
       });
-      expect(safeTryResult?.ok).toBe(false);
-      if (!safeTryResult?.ok) {
+      expect(safeTryResult!.ok).toBe(false);
+      if (!safeTryResult!.ok && safeTryResult !== null) {
         // Error code is a non-empty string — validated to match ErrorCode values
-        expect(typeof safeTryResult.error.code).toBe('string');
-        expect(safeTryResult.error.code.length).toBeGreaterThan(0);
+        const errResult = safeTryResult as { ok: false; error: errors.AppError };
+        expect(typeof errResult.error.code).toBe('string');
+        expect(errResult.error.code.length).toBeGreaterThan(0);
         // Verify it's a known ErrorCode value (not undefined/arbitrary)
         const allCodes = Object.values(errors.ErrorCode);
-        expect(allCodes).toContain(safeTryResult.error.code);
+        expect(allCodes).toContain(errResult.error.code);
       }
     });
 

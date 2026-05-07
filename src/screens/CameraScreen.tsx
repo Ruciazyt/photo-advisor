@@ -412,7 +412,7 @@ export function CameraScreen() {
 
   return (
     <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
-      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)} onPinchGesture={onPinchGesture}>
+      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)}>
         <CameraOverlays
           apiConfigured={apiConfigured} showPortraitMode={selectedMode === 'portrait'} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
