@@ -8,6 +8,7 @@ import { ShootLogScreen } from './src/screens/ShootLogScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { AnalysisHistoryScreen } from './src/screens/AnalysisHistoryScreen';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import { SettingsProvider } from './src/contexts/SettingsContext';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 type Tab = 'home' | 'camera' | 'favorites' | 'log' | 'settings' | 'history';
@@ -157,9 +158,11 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
+      <SettingsProvider>
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
+      </SettingsProvider>
     </ThemeProvider>
   );
 }

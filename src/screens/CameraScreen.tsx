@@ -1,16 +1,16 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { CameraView } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { BubbleOverlay } from '../components/BubbleOverlay';
 import { KeypointOverlay } from '../components/KeypointOverlay';
-import type { Keypoint, FocusPeakingSensitivity } from '../types';
+import type { Keypoint, FocusPeakingSensitivity, GridVariant } from '../types';
 import { ComparisonOverlay } from '../components/ComparisonOverlay';
-import { GridVariant } from '../components/GridOverlay';
 import { GridSelectorModal } from '../components/GridSelectorModal';
 import { PermissionGate } from '../components/PermissionGate';
 import { CountdownOverlay } from '../components/CountdownOverlay';
@@ -31,7 +31,7 @@ import { useToast } from '../hooks/useToast';
 import { useDoubleTap } from '../hooks/useDoubleTap';
 import { useShakeDetector } from '../hooks/useShakeDetector';
 import { usePinchToZoom } from '../hooks/usePinchToZoom';
-import { loadAppSettings, saveAppSettings } from '../services/settings';
+
 import { loadApiConfig } from '../services/api';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { CameraTopBar } from '../components/CameraTopBar';
@@ -58,6 +58,25 @@ const GRID_LABELS: Record<GridVariant, string> = {
 
 export function CameraScreen() {
   const { colors } = useTheme();
+  const {
+    voiceEnabled, setVoiceEnabled,
+    defaultGridVariant, setDefaultGridVariant,
+    showHistogram,
+    showLevel, setShowLevel,
+    showFocusPeaking, setShowFocusPeaking,
+    showSunPosition,
+    showFocusGuide, setShowFocusGuide,
+    showEV, setShowEV,
+    showPinchToZoom, setShowPinchToZoom,
+    focusPeakingColor, setFocusPeakingColor,
+    focusPeakingSensitivity, setFocusPeakingSensitivity,
+    showRawMode, setShowRawMode,
+    showBubbleChat, setShowBubbleChat,
+    showShakeDetector, setShowShakeDetector,
+    showKeypoints, setShowKeypoints,
+    timerDuration, setTimerDuration,
+    imageQualityPreset,
+  } = useSettings();
   const lastCapturedBase64Ref = useRef<string | null>(null);
   const lastCaptureIdRef = useRef<number>(0);
   const preAnalysisStartedRef = useRef(false);
@@ -70,8 +89,6 @@ export function CameraScreen() {
   const capturedScoreRef = useRef<number>(0);
   const capturedScoreReasonRef = useRef<string>('');
   const capturedTimerDurationRef = useRef<number>(0);
-  const settingsLoadedRef = useRef(false);
-
   const { suggestions, setSuggestions, loading, setLoading, handleDismiss, handleDismissAll, bubbleItems } = useSuggestions();
 
   // useBubbleChat manages staggered reveal of bubble items
@@ -81,12 +98,7 @@ export function CameraScreen() {
   });
 
   // Keypoints state must be declared before keypointsDismissAllRef
-  const { keypoints, showKeypoints, setKeypoints, setShowKeypoints, handleDismiss: keypointsHandleDismiss, handleDismissAll: keypointsHandleDismissAll } = useKeypoints();
-
-  // showBubbleChat and showShakeDetector must be declared before useShakeDetector
-  const [showBubbleChat, setShowBubbleChat] = useState(true);
-  const [showShakeDetector, setShowShakeDetector] = useState(false);
-  const [showRawMode, setShowRawMode] = useState(false);
+  const { keypoints, setKeypoints, handleDismiss: keypointsHandleDismiss, handleDismissAll: keypointsHandleDismissAll } = useKeypoints();
 
   // Shake detector — dismiss all AI suggestion overlays on shake
   const bubbleChatDismissAllRef = useRef(bubbleChatDismissAll);
@@ -133,15 +145,6 @@ export function CameraScreen() {
 
 
   const [apiConfigured, setApiConfigured] = useState(false);
-  const [gridVariant, setGridVariant] = useState<GridVariant>('thirds');
-  const [showLevel, setShowLevel] = useState(true);
-  const [showSunOverlay, setShowSunOverlay] = useState(false);
-  const [showFocusGuide, setShowFocusGuide] = useState(false);
-  const [showFocusPeaking, setShowFocusPeaking] = useState(false);
-  const [showEV, setShowEV] = useState(false);
-  const [showPinchToZoom, setShowPinchToZoom] = useState(true);
-  const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
-  const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
   const [sceneTagVisible, setSceneTagVisible] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
@@ -149,7 +152,6 @@ export function CameraScreen() {
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
 
   const { opacity: toastOpacity, toastMessage, showToast } = useToast();
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const { checkAndSpeak } = useVoiceFeedback();
   const { saveFavorite } = useFavorites();
@@ -205,7 +207,7 @@ export function CameraScreen() {
     setShowScoreOverlay(false);
 
     // Snapshot state into refs for the useEffect that runs after analysis completes
-    capturedGridVariantRef.current = gridVariant;
+    capturedGridVariantRef.current = defaultGridVariant;
     capturedSuggestionsRef.current = suggestions;
     capturedSceneTagRef.current = sceneTag;
     capturedTimerDurationRef.current = timerDuration;
@@ -236,7 +238,7 @@ export function CameraScreen() {
     recognizeSceneTag(base64).then(() => { setSceneTagVisible(true); setTimeout(() => setSceneTagVisible(false), 4000); });
     const gridPromptMap: Record<GridVariant, string> = { thirds: '三分法网格', golden: '黄金分割网格', diagonal: '对角线网格', spiral: '螺旋线网格', none: '无网格' };
     if (!preAnalysisStartedRef.current) {
-      await runAnalysis(base64, `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`);
+      await runAnalysis(base64, `画面已叠加${gridPromptMap[defaultGridVariant]}参考线。请根据网格线区域提供构图位置建议。`);
     } else {
       preAnalysisStartedRef.current = false;
     }
@@ -246,7 +248,7 @@ export function CameraScreen() {
         setShowBurstSuggestion(true);
       }
     }, 100);
-  }, [takePicture, runAnalysis, savePhotoToGallery, gridVariant, burstActive, suggestions, recognizeSceneTag, rawMode, setSuggestions, setLoading, setShowBurstSuggestion, burstSuggestionText, setLastCapturedScore, setLastCapturedScoreReason]);
+  }, [takePicture, runAnalysis, savePhotoToGallery, defaultGridVariant, burstActive, suggestions, recognizeSceneTag, rawMode, setSuggestions, setLoading, setShowBurstSuggestion, burstSuggestionText, setLastCapturedScore, setLastCapturedScoreReason]);
 
   const { active: countdownActive, count: countdownCount, startCountdown, cancelCountdown } = useCountdown({ onComplete: doCapture });
 
@@ -290,12 +292,12 @@ export function CameraScreen() {
     const currentCaptureId = lastCaptureIdRef.current;
     const timer = setTimeout(() => {
       if (lastCaptureIdRef.current !== currentCaptureId) return;
-      const result = computeScore(keypoints, gridVariant);
+      const result = computeScore(keypoints, defaultGridVariant);
       setScoreOverlayResult(result); setShowScoreOverlay(true);
       if (challengeMode) addScore(result.score);
     }, 200);
     return () => clearTimeout(timer);
-  }, [keypoints, showKeypoints, computeScore, gridVariant, challengeMode, addScore]);
+  }, [keypoints, showKeypoints, computeScore, defaultGridVariant, challengeMode, addScore]);
 
   const handleSaveToFavorites = useCallback(async () => {
     if (!lastCapturedUri) return;
@@ -303,9 +305,9 @@ export function CameraScreen() {
     if (config && lastCapturedBase64Ref.current) { showToast('正在识别场景...'); sceneTag = await recognizeSceneTag(lastCapturedBase64Ref.current); }
     const { score, reason } = computeScoreFromSuggestions(suggestions);
     setLastCapturedScore(score); setLastCapturedScoreReason(reason);
-    await saveFavorite(lastCapturedUri, GRID_LABELS[gridVariant], '', sceneTag || undefined, score, reason);
+    await saveFavorite(lastCapturedUri, GRID_LABELS[defaultGridVariant], '', sceneTag || undefined, score, reason);
     showToast('已收藏！');
-  }, [lastCapturedUri, saveFavorite, gridVariant, suggestions, recognizeSceneTag, showToast]);
+  }, [lastCapturedUri, saveFavorite, defaultGridVariant, suggestions, recognizeSceneTag, showToast]);
 
   const handleGallery = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -331,40 +333,17 @@ export function CameraScreen() {
     const order: GridVariant[] = ['thirds', 'golden', 'diagonal', 'spiral', 'none'];
     const nextIndex = (order.indexOf(variant) + 1) % order.length;
     const nextVariant = order[nextIndex];
-    setGridVariant(nextVariant);
-    if (settingsLoadedRef.current) {
-      saveAppSettings({ defaultGridVariant: nextVariant });
-    }
+    setDefaultGridVariant(nextVariant);
   }, []);
 
   const handleGridSelect = useCallback(async (variant: GridVariant) => {
-    setGridVariant(variant);
-    await saveAppSettings({ defaultGridVariant: variant });
+    setDefaultGridVariant(variant);
   }, []);
 
-  const loadSettingsOnFocus = useCallback(() => {
-    loadAppSettings().then((settings) => {
-      setVoiceEnabled(settings.voiceEnabled);
-      setTimerDuration(settings.timerDuration);
-      setGridVariant(settings.defaultGridVariant);
-      setShowLevel(settings.showLevel);
-      setShowFocusGuide(settings.showFocusGuide);
-      setShowFocusPeaking(settings.showFocusPeaking);
-      setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
-      setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
-      setShowSunOverlay(settings.showSunPosition);
-      setShowBubbleChat(settings.showBubbleChat ?? true);
-      setShowShakeDetector(settings.showShakeDetector ?? false);
-      setShowKeypoints(settings.showKeypoints ?? false);
-      setShowRawMode(settings.showRawMode ?? false);
-      setShowEV(settings.showEV ?? false);
-      setShowPinchToZoom(settings.showPinchToZoom ?? true);
-      settingsLoadedRef.current = true;
-    });
+  // Load API config on mount
+  useEffect(() => {
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
   }, []);
-
-  useFocusEffect(loadSettingsOnFocus);
 
   // Track recording duration while isRecording is true
   useEffect(() => {
@@ -386,7 +365,7 @@ export function CameraScreen() {
       thirds: "三分法网格", golden: "黄金分割网格",
       diagonal: "对角线网格", spiral: "螺旋线网格", none: "无网格",
     };
-    const previewPrompt = `画面已叠加${gridPromptMap[gridVariant]}参考线。请根据网格线区域提供构图位置建议。`;
+    const previewPrompt = `画面已叠加${gridPromptMap[defaultGridVariant]}参考线。请根据网格线区域提供构图位置建议。`;
 
     try {
       const preview = await capturePreviewFrame();
@@ -399,7 +378,7 @@ export function CameraScreen() {
     }
 
     startCountdown(timerDuration);
-  }, [countdownActive, loading, burstActive, startCountdown, timerDuration, gridVariant, capturePreviewFrame, runAnalysis]);
+  }, [countdownActive, loading, burstActive, startCountdown, timerDuration, defaultGridVariant, capturePreviewFrame, runAnalysis]);
 
   const handleQuickCapture = useCallback(() => {
     if (countdownActive || loading || burstActive) return;
@@ -414,12 +393,12 @@ export function CameraScreen() {
     <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
       <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)}>
         <CameraOverlays
-          apiConfigured={apiConfigured} showPortraitMode={selectedMode === 'portrait'} gridVariant={gridVariant} showGridModal={showGridModal}
+          apiConfigured={apiConfigured} showPortraitMode={selectedMode === 'portrait'} gridVariant={defaultGridVariant} showGridModal={showGridModal}
           onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
           onGridActivate={handleGridActivate}
           showLevel={showLevel} showHistogram={showHistogram} histogramData={histogramData}
           showFocusGuide={showFocusGuide} showFocusPeaking={showFocusPeaking} cameraRef={cameraRef} peakPoints={peakPoints}
-          screenWidth={screenWidth} screenHeight={screenHeight} showSunOverlay={showSunOverlay}
+          screenWidth={screenWidth} screenHeight={screenHeight} showSunOverlay={showSunPosition}
           showToast={showToast}
           showBurstSuggestion={showBurstSuggestion} burstSuggestionText={burstSuggestionText.current}
           onBurstSuggestionAccept={() => { setShowBurstSuggestion(false); startBurst(doCapture); }}
@@ -436,14 +415,14 @@ export function CameraScreen() {
         />
         <PinchHintOverlay visible={showPinchToZoom && !hasUsedPinch} onDismiss={dismissHint} />
         <CameraTopBar
-          gridVariant={gridVariant} showGridModal={showGridModal} onGridPress={() => setShowGridModal(true)}
+          gridVariant={defaultGridVariant} showGridModal={showGridModal} onGridPress={() => setShowGridModal(true)}
           onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
           showHistogram={showHistogram} onHistogramToggle={handleHistogramToggle}
           onHistogramPressIn={handleHistogramPressIn} onHistogramPressOut={handleHistogramPressOut}
           showLevel={showLevel} onLevelToggle={() => setShowLevel(v => !v)}
-          showSunOverlay={showSunOverlay} onSunToggle={() => setShowSunOverlay(v => !v)}
+          showSunOverlay={showSunPosition} onSunToggle={() => setShowSunPosition(!showSunPosition)}
           showFocusGuide={showFocusGuide} onFocusGuideToggle={() => setShowFocusGuide(v => !v)}
-          showFocusPeaking={showFocusPeaking} onFocusPeakingToggle={async () => { const next = !showFocusPeaking; setShowFocusPeaking(next); await saveAppSettings({ showFocusPeaking: next }); }}
+          showFocusPeaking={showFocusPeaking} onFocusPeakingToggle={() => setShowFocusPeaking(!showFocusPeaking)}
           voiceEnabled={voiceEnabled} onVoiceToggle={() => setVoiceEnabled(v => !v)}
           rawMode={rawMode} rawSupported={rawSupported} onRawToggle={toggleRawMode}
           challengeMode={challengeMode} onChallengeToggle={toggleChallengeMode}
@@ -452,10 +431,10 @@ export function CameraScreen() {
           lastCapturedUri={lastCapturedUri} onSaveToFavorites={handleSaveToFavorites}
           suggestions={suggestions} lastCapturedScore={lastCapturedScore}
           lastCapturedScoreReason={lastCapturedScoreReason}
-          showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)} onKeypointsToggle={async () => { const next = !showKeypoints; setShowKeypoints(next); await saveAppSettings({ showKeypoints: next }); }}
+          showKeypoints={showKeypoints} onComparePress={() => setShowComparison(true)} onKeypointsToggle={() => setShowKeypoints(!showKeypoints)}
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
-          showShakeDetector={showShakeDetector} onShakeDetectorToggle={async () => { const next = !showShakeDetector; setShowShakeDetector(next); await saveAppSettings({ showShakeDetector: next }); }}
+          showShakeDetector={showShakeDetector} onShakeDetectorToggle={() => setShowShakeDetector(!showShakeDetector)}
           showEV={showEV} onEVToggle={() => setShowEV(v => !v)} currentEV={exposureComp}
         />
         <CameraControls
@@ -475,10 +454,9 @@ export function CameraScreen() {
       <TimerSelectorModal
         visible={showTimerModal}
         selectedDuration={timerDuration}
-        onSelect={async (dur) => {
+        onSelect={(dur) => {
           const d = dur as TimerDuration;
           setTimerDuration(d);
-          await saveAppSettings({ timerDuration: d });
           setShowTimerModal(false);
         }}
         onClose={() => setShowTimerModal(false)}

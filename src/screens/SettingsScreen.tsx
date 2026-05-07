@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { GridVariant, ImageQualityPreset, TimerDuration } from '../types';
 
 import { useTheme } from '../contexts/ThemeContext';
+import { useSettings } from '../contexts/SettingsContext';
 import {
   loadApiConfig,
   saveApiConfig,
@@ -31,7 +32,8 @@ import {
   downloadAndInstall,
   openReleasePage,
 } from '../services/update';
-import { loadAppSettings, saveAppSettings } from '../services/settings';
+import { saveAppSettings } from '../services/settings';
+
 import { speak } from '../hooks/useVoiceFeedback';
 import { AccessibleToggle } from '../components/AccessibleToggle';
 import { ExportSection } from '../components/ExportSection';
@@ -44,6 +46,25 @@ interface Props {
 
 export function SettingsScreen({ onSaved }: Props) {
   const { theme, colors, toggleTheme } = useTheme();
+  const {
+    voiceEnabled, setVoiceEnabled,
+    defaultGridVariant, setDefaultGridVariant,
+    showHistogram, setShowHistogram,
+    showLevel, setShowLevel,
+    showFocusPeaking, setShowFocusPeaking,
+    showSunPosition, setShowSunPosition,
+    showFocusGuide, setShowFocusGuide,
+    showBubbleChat, setShowBubbleChat,
+    showShakeDetector, setShowShakeDetector,
+    showKeypoints, setShowKeypoints,
+    showRawMode, setShowRawMode,
+    showEV, setShowEV,
+    showPinchToZoom, setShowPinchToZoom,
+    timerDuration, setTimerDuration,
+    imageQualityPreset, setImageQualityPreset,
+    focusPeakingColor, setFocusPeakingColor,
+    focusPeakingSensitivity, setFocusPeakingSensitivity,
+  } = useSettings();
   const [apiType, setApiType] = useState<'openai' | 'minimax'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
@@ -54,23 +75,6 @@ export function SettingsScreen({ onSaved }: Props) {
   const [fetching, setFetching] = useState(false);
   const [testing, setTesting] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [defaultGridVariant, setDefaultGridVariant] = useState<GridVariant>('thirds');
-  const [showHistogram, setShowHistogram] = useState(false);
-  const [showLevel, setShowLevel] = useState(true);
-  const [showFocusPeaking, setShowFocusPeaking] = useState(false);
-  const [showSunPosition, setShowSunPosition] = useState(false);
-  const [showFocusGuide, setShowFocusGuide] = useState(true);
-  const [showBubbleChat, setShowBubbleChat] = useState(true);
-  const [showShakeDetector, setShowShakeDetector] = useState(false);
-  const [showKeypoints, setShowKeypoints] = useState(false);
-  const [showRawMode, setShowRawMode] = useState(false);
-  const [showEV, setShowEV] = useState(false);
-  const [showPinchToZoom, setShowPinchToZoom] = useState(true);
-  const [timerDuration, setTimerDuration] = useState<TimerDuration>(3);
-  const [imageQualityPreset, setImageQualityPreset] = useState<ImageQualityPreset>('balanced');
-  const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
-  const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
 
   useEffect(() => {
     loadApiConfig().then((config) => {
@@ -80,25 +84,6 @@ export function SettingsScreen({ onSaved }: Props) {
         setBaseUrl(config.baseUrl);
         setSelectedModel(config.model);
       }
-    });
-    loadAppSettings().then((settings) => {
-      setVoiceEnabled(settings.voiceEnabled);
-      setDefaultGridVariant(settings.defaultGridVariant);
-      setShowHistogram(settings.showHistogram);
-      setShowLevel(settings.showLevel);
-      setShowFocusPeaking(settings.showFocusPeaking);
-      setShowSunPosition(settings.showSunPosition);
-      setShowFocusGuide(settings.showFocusGuide);
-      setShowBubbleChat(settings.showBubbleChat ?? true);
-      setShowShakeDetector(settings.showShakeDetector ?? false);
-      setShowKeypoints(settings.showKeypoints ?? false);
-      setShowRawMode(settings.showRawMode ?? false);
-      setShowEV(settings.showEV ?? false);
-      setShowPinchToZoom(settings.showPinchToZoom ?? true);
-      setTimerDuration(settings.timerDuration ?? 3);
-      setImageQualityPreset(settings.imageQualityPreset ?? 'balanced');
-      setFocusPeakingColor(settings.focusPeakingColor ?? '#FF4444');
-      setFocusPeakingSensitivity(settings.focusPeakingSensitivity ?? 'medium');
     });
   }, []);
 
@@ -464,10 +449,9 @@ export function SettingsScreen({ onSaved }: Props) {
               label="语音反馈"
               hint={voiceEnabled ? '关闭语音反馈' : '打开语音反馈'}
               toggled={voiceEnabled}
-              onPress={async () => {
+              onPress={() => {
                 const next = !voiceEnabled;
                 setVoiceEnabled(next);
-                await saveAppSettings({ voiceEnabled: next });
                 if (next) {
                   speak('语音反馈已开启');
                 }
@@ -513,9 +497,8 @@ export function SettingsScreen({ onSaved }: Props) {
                       { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
                       isSelected && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
                     ]}
-                    onPress={async () => {
+                    onPress={() => {
                       setDefaultGridVariant(v);
-                      await saveAppSettings({ defaultGridVariant: v });
                     }}
                     activeOpacity={0.7}
                     accessibilityLabel={gridLabel}
@@ -554,16 +537,15 @@ export function SettingsScreen({ onSaved }: Props) {
                 label={label}
                 hint={state ? `关闭${label}` : `打开${label}`}
                 toggled={state}
-                onPress={async () => {
+                onPress={() => {
                   const next = !state;
-                  setter(next);
-                  // When bubble chat is turned off, also disable shake detector (it requires bubble chat to work)
-                  const toSave: Record<string, boolean> = { [saveKey]: next };
+                  // When bubble chat is turned off, also disable shake detector (it requires both to work)
                   if (saveKey === 'showBubbleChat' && !next) {
-                    setShowShakeDetector(false);
-                    toSave.showShakeDetector = false;
+                    setter(false);
+                    saveAppSettings({ showBubbleChat: false, showShakeDetector: false });
+                  } else {
+                    setter(next);
                   }
-                  await saveAppSettings(toSave);
                 }}
               />
             </View>
@@ -584,10 +566,9 @@ export function SettingsScreen({ onSaved }: Props) {
               hint={!showBubbleChat ? '需要先开启AI建议气泡' : showShakeDetector ? '关闭摇一摇功能' : '打开摇一摇功能'}
               toggled={showShakeDetector}
               disabled={!showBubbleChat}
-              onPress={async () => {
+              onPress={() => {
                 const next = !showShakeDetector;
                 setShowShakeDetector(next);
-                await saveAppSettings({ showShakeDetector: next });
               }}
             />
           </View>
@@ -611,9 +592,8 @@ export function SettingsScreen({ onSaved }: Props) {
                     { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
                     isSelected && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
                   ]}
-                  onPress={async () => {
+                  onPress={() => {
                     setTimerDuration(d);
-                    await saveAppSettings({ timerDuration: d });
                   }}
                   activeOpacity={0.7}
                   accessibilityLabel={`${labels[d]}${isSelected ? '，已选中' : ''}`}
@@ -648,9 +628,8 @@ export function SettingsScreen({ onSaved }: Props) {
                     { backgroundColor: colors.cardBg, borderColor: imageQualityPreset === p ? colors.accent : colors.border },
                     imageQualityPreset === p && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
                   ]}
-                  onPress={async () => {
+                  onPress={() => {
                     setImageQualityPreset(p);
-                    await saveAppSettings({ imageQualityPreset: p });
                   }}
                   activeOpacity={0.7}
                   accessibilityLabel={`${labels[p]}${isSelected ? '，已选中' : ''}`}
@@ -685,9 +664,8 @@ export function SettingsScreen({ onSaved }: Props) {
                     { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
                     isSelected && styles.sensitivityOptionSelected,
                   ]}
-                  onPress={async () => {
+                  onPress={() => {
                     setFocusPeakingSensitivity(s);
-                    await saveAppSettings({ focusPeakingSensitivity: s });
                   }}
                   activeOpacity={0.7}
                   accessibilityLabel={`灵敏度 ${labels[s]}${isSelected ? '，已选中' : ''}`}
@@ -720,9 +698,8 @@ export function SettingsScreen({ onSaved }: Props) {
                     { backgroundColor: c, borderColor: isSelected ? colors.accent : colors.border },
                     isSelected && styles.colorSwatchSelected,
                   ]}
-                  onPress={async () => {
+                  onPress={() => {
                     setFocusPeakingColor(c);
-                    await saveAppSettings({ focusPeakingColor: c });
                   }}
                   activeOpacity={0.7}
                   accessibilityLabel={`颜色 ${c}${isSelected ? '，已选中' : ''}`}

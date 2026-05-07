@@ -13,6 +13,7 @@ console.error = (...args: unknown[]) => {
   originalError(...args);
 };
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { SettingsProvider } from '../contexts/SettingsContext';
 import {
   loadApiConfig,
   saveApiConfig,
@@ -287,7 +288,7 @@ describe('SettingsScreen', () => {
       focusPeakingColor: '#FF4444',
       focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => {
       // Voice toggle is ON (voiceEnabled: true) — find by accessibilityLabel
       const voiceToggle = getByLabelText('语音反馈');
@@ -558,7 +559,7 @@ describe('SettingsScreen', () => {
       showSunPosition: true, showFocusGuide: true, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('直方图')).toBeTruthy(); });
     const histogramToggle = getByLabelText('直方图');
     expect(histogramToggle.props.accessibilityState).toMatchObject({ checked: true });
@@ -668,8 +669,7 @@ describe('SettingsScreen', () => {
 
   // 50. sensitivity selector saves focusPeakingSensitivity via saveAppSettings
   it('sensitivity selector saves focusPeakingSensitivity via saveAppSettings', async () => {
-    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     // Default sensitivity is 'medium' — verify it's marked as selected
     await waitFor(() => {
       expect(getByLabelText('灵敏度 中，已选中')).toBeTruthy();
@@ -749,7 +749,7 @@ describe('SettingsScreen', () => {
       showShakeDetector: true, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
     const shakeToggle = getByLabelText('摇一摇关闭建议');
     expect(shakeToggle.props.accessibilityState).toMatchObject({ checked: true });
@@ -765,7 +765,7 @@ describe('SettingsScreen', () => {
       showShakeDetector: true, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('摇一摇关闭建议')).toBeTruthy(); });
     const shakeToggle = getByLabelText('摇一摇关闭建议');
     // Should be visually disabled (opacity + non-interactive) and a11y state reflects disabled
@@ -802,7 +802,7 @@ describe('SettingsScreen', () => {
       showShakeDetector: false, showKeypoints: true, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('关键点标记')).toBeTruthy(); });
     const keypointsToggle = getByLabelText('关键点标记');
     expect(keypointsToggle.props.accessibilityState).toMatchObject({ checked: true });
@@ -828,8 +828,7 @@ describe('SettingsScreen', () => {
 
   // 60. selects timer duration 5s and saves timerDuration
   it('selects timer duration 5s and saves timerDuration', async () => {
-    (saveAppSettings as jest.Mock).mockResolvedValue(undefined);
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('3s，已选中')).toBeTruthy(); });
     fireEvent.press(getByLabelText('5s'));
     await waitFor(() => {
@@ -848,7 +847,7 @@ describe('SettingsScreen', () => {
       showShakeDetector: false, showKeypoints: false, showRawMode: false, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('10s，已选中')).toBeTruthy(); });
     expect(getByLabelText('10s，已选中')).toBeTruthy();
     expect(getByLabelText('3s').props.accessibilityState).toMatchObject({ selected: false });
@@ -882,7 +881,7 @@ describe('SettingsScreen', () => {
       showShakeDetector: false, showKeypoints: false, showRawMode: true, imageQualityPreset: 'balanced',
       focusPeakingColor: '#FF4444', focusPeakingSensitivity: 'medium',
     });
-    const { getByLabelText } = render(<SettingsScreen />);
+    const { getByLabelText } = render(<SettingsProvider><SettingsScreen /></SettingsProvider>);
     await waitFor(() => { expect(getByLabelText('RAW 格式')).toBeTruthy(); });
     const rawToggle = getByLabelText('RAW 格式');
     expect(rawToggle.props.accessibilityState).toMatchObject({ checked: true });
