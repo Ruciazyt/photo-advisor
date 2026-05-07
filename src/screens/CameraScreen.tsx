@@ -30,6 +30,7 @@ import { useSceneRecognition } from '../hooks/useSceneRecognition';
 import { useToast } from '../hooks/useToast';
 import { useDoubleTap } from '../hooks/useDoubleTap';
 import { useShakeDetector } from '../hooks/useShakeDetector';
+import { usePinchToZoom } from '../hooks/usePinchToZoom';
 import { loadAppSettings, saveAppSettings } from '../services/settings';
 import { loadApiConfig } from '../services/api';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
@@ -37,6 +38,7 @@ import { CameraTopBar } from '../components/CameraTopBar';
 import { CameraControls } from '../components/CameraControls';
 import { CameraOverlays } from '../components/CameraOverlays';
 import { RecordingIndicator } from '../components/RecordingIndicator';
+import { PinchHintOverlay } from '../components/PinchHintOverlay';
 import { ExposureBar } from '../components/ExposureBar';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useCaptureOverlay } from '../hooks/useCaptureOverlay';
@@ -137,6 +139,7 @@ export function CameraScreen() {
   const [showFocusGuide, setShowFocusGuide] = useState(false);
   const [showFocusPeaking, setShowFocusPeaking] = useState(false);
   const [showEV, setShowEV] = useState(false);
+  const [showPinchToZoom, setShowPinchToZoom] = useState(true);
   const [focusPeakingColor, setFocusPeakingColor] = useState('#FF4444');
   const [focusPeakingSensitivity, setFocusPeakingSensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [peakPoints, setPeakPoints] = useState<PeakPoint[]>([]);
@@ -180,6 +183,7 @@ export function CameraScreen() {
     },
   });
   const { exposureComp, minEC, maxEC, setExposureCompensation, isAdjusting } = useExposure(cameraRef);
+  const { onPinchGesture, hasUsedPinch, dismissHint } = usePinchToZoom({ cameraRef, enabled: showPinchToZoom });
   const { sceneTag, recognize: recognizeSceneTag } = useSceneRecognition();
   const { width: screenWidth, height: screenHeight } = require('react-native').useWindowDimensions();
   const { showHistogram, histogramData, handleHistogramToggle, handleHistogramPressIn, handleHistogramPressOut } = useHistogramToggle(cameraRef);
@@ -354,6 +358,7 @@ export function CameraScreen() {
       setShowKeypoints(settings.showKeypoints ?? false);
       setShowRawMode(settings.showRawMode ?? false);
       setShowEV(settings.showEV ?? false);
+      setShowPinchToZoom(settings.showPinchToZoom ?? true);
       settingsLoadedRef.current = true;
     });
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
@@ -407,7 +412,7 @@ export function CameraScreen() {
 
   return (
     <View style={[staticStyles.container, { backgroundColor: colors.primary }]}>
-      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)}>
+      <CameraView ref={cameraRef} style={staticStyles.camera} facing={facing} mode={mode} onCameraReady={() => setCameraReady(true)} onPinchGesture={onPinchGesture}>
         <CameraOverlays
           apiConfigured={apiConfigured} showPortraitMode={selectedMode === 'portrait'} gridVariant={gridVariant} showGridModal={showGridModal}
           onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}
@@ -429,6 +434,7 @@ export function CameraScreen() {
           onComparisonClose={() => setShowComparison(false)}
           focusPeakingColor={focusPeakingColor}
         />
+        <PinchHintOverlay visible={showPinchToZoom && !hasUsedPinch} onDismiss={dismissHint} />
         <CameraTopBar
           gridVariant={gridVariant} showGridModal={showGridModal} onGridPress={() => setShowGridModal(true)}
           onGridSelect={handleGridSelect} onGridModalClose={() => setShowGridModal(false)}

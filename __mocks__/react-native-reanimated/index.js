@@ -44,7 +44,11 @@ function useAnimatedReaction(derive, react, deps) {
 }
 
 function withSpring(val, _opts) { return val; }
-function withTiming(val, _opts) { return val; }
+function withTiming(val, opts, callback) {
+  // Defer callback via setTimeout(50) so findByText has a chance to find the element first.
+  if (callback) setTimeout(() => { callback(true); }, 50);
+  return val;
+}
 function withSequence(...vals) { return vals[vals.length - 1]; }
 function withDelay(_, val) { try { if (typeof val === 'function') val(); } catch (_e) { /* ignore sync errors */ } return val; }
 function withRepeat(val) { return val; }
