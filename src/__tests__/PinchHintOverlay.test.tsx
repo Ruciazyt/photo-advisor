@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-// Use the pre-built __mocks__/react-native-reanimated which provides Animated.View etc.
+// Use the project's __mocks__/react-native-reanimated which provides Animated.View etc.
 jest.mock('react-native-reanimated');
 jest.mock('react-native-worklets');
 
@@ -53,7 +53,7 @@ describe('PinchHintOverlay', () => {
     jest.advanceTimersByTime(2000);
     expect(onDismiss).not.toHaveBeenCalled();
 
-    // After 3 seconds, should have dismissed
+    // After 3 seconds (3000ms auto-dismiss + fade), should have dismissed
     jest.advanceTimersByTime(1500);
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
