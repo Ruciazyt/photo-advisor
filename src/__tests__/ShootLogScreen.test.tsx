@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, act } from '@testing-library/react-native';
+import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { ShootLogScreen } from '../screens/ShootLogScreen';
 import { useShootLog } from '../hooks/useShootLog';
@@ -549,6 +549,145 @@ describe('ShootLogScreen', () => {
     const alertCalls = (Alert.alert as jest.Mock).mock.calls;
     expect(alertCalls[0][0]).toBe('删除记录');
     expect(alertCalls[0][1]).toContain('1');
+  });
+
+  it('tap toggles entry selection in select mode', async () => {
+    mockUseShootLog.mockReturnValue({
+      log: [
+        makeEntry({ id: 'tap_toggle_1', gridType: 'thirds' }),
+        makeEntry({ id: 'tap_toggle_2', gridType: 'golden' }),
+      ],
+      loading: false,
+      addEntry: jest.fn(),
+      clearLog: jest.fn(),
+      deleteEntry: jest.fn(),
+      deleteEntries: jest.fn(),
+      totalShoots: 2,
+      avgScore: 0,
+      favoriteCount: 0,
+    });
+
+    const { getByText } = render(<ShootLogScreen />);
+    // Enter selection mode via long press on first entry
+    let card1 = getByText('📐 三分法').parent?.parent?.parent;
+    fireEvent(card1!, 'longPress');
+    expect(getByText('删除(1)')).toBeTruthy();
+
+    // Tap second entry to add it to selection
+    const card2 = getByText('📐 黄金比例').parent?.parent?.parent;
+    fireEvent(card2!, 'press');
+    expect(getByText('删除(2)')).toBeTruthy();
+
+    // Re-query card1 after re-render (refs become stale)
+    card1 = getByText('📐 三分法').parent?.parent?.parent;
+    fireEvent(card1!, 'press');
+    await waitFor(() => {
+      expect(getByText('删除(1)')).toBeTruthy();
+    });
+  });
+
+  it('after confirming delete, entries are removed and select mode exits', async () => {
+    const deleteEntries = jest.fn();
+    mockUseShootLog.mockReturnValue({
+      log: [makeEntry({ id: 'confirm_del' })],
+      loading: false,
+      addEntry: jest.fn(),
+      clearLog: jest.fn(),
+      deleteEntry: jest.fn(),
+      deleteEntries,
+      totalShoots: 1,
+      avgScore: 0,
+      favoriteCount: 0,
+    });
+
+    const { getByText, queryByText } = render(<ShootLogScreen />);
+    const card = getByText('📐 三分法').parent?.parent?.parent;
+    fireEvent(card!, 'longPress');
+    expect(getByText('删除(1)')).toBeTruthy();
+
+    fireEvent.press(getByText('删除(1)'));
+    const alertCalls = (Alert.alert as jest.Mock).mock.calls;
+
+    // Simulate pressing the "删除" button in the alert
+    const deleteButton = alertCalls[0][2].find((btn: { text: string }) => btn.text === '删除');
+    deleteButton.onPress();
+
+    expect(deleteEntries).toHaveBeenCalledWith(['confirm_del']);
+
+    await waitFor(() => {
+      expect(queryByText('取消')).toBeNull();
+      expect(queryByText('删除(1)')).toBeNull();
+    });
+  });
+
+  it('select button enters select mode', () => {
+    mockUseShootLog.mockReturnValue({
+      log: [makeEntry({ id: 'select_btn_entry' })],
+      loading: false,
+      addEntry: jest.fn(),
+      clearLog: jest.fn(),
+      deleteEntry: jest.fn(),
+      deleteEntries: jest.fn(),
+      totalShoots: 1,
+      avgScore: 0,
+      favoriteCount: 0,
+    });
+
+    const { getByText } = render(<ShootLogScreen />);
+    fireEvent.press(getByText('选择'));
+    expect(getByText('取消')).toBeTruthy();
+    expect(getByText('删除(0)')).toBeTruthy();
+  });
+
+  it('shows 选择 button when entries exist', () => {
+    mockUseShootLog.mockReturnValue({
+      log: [makeEntry({ id: 'select_btn' })],
+      loading: false,
+      addEntry: jest.fn(),
+      clearLog: jest.fn(),
+      deleteEntry: jest.fn(),
+      deleteEntries: jest.fn(),
+      totalShoots: 1,
+      avgScore: 0,
+      favoriteCount: 0,
+    });
+
+    const { getByText } = render(<ShootLogScreen />);
+    expect(getByText('选择')).toBeTruthy();
+  });
+
+  it('does not render score badge when score is undefined', () => {
+    mockUseShootLog.mockReturnValue({
+      log: [makeEntry({ id: 'no_score', score: undefined })],
+      loading: false,
+      addEntry: jest.fn(),
+      clearLog: jest.fn(),
+      deleteEntry: jest.fn(),
+      deleteEntries: jest.fn(),
+      totalShoots: 1,
+      avgScore: 0,
+      favoriteCount: 0,
+    });
+
+    const { queryByText } = render(<ShootLogScreen />);
+    expect(queryByText(/★/)).toBeNull();
+  });
+
+  it('does not render score badge when score is null', () => {
+    mockUseShootLog.mockReturnValue({
+      log: [makeEntry({ id: 'null_score', score: null as any })],
+      loading: false,
+      addEntry: jest.fn(),
+      clearLog: jest.fn(),
+      deleteEntry: jest.fn(),
+      deleteEntries: jest.fn(),
+      totalShoots: 1,
+      avgScore: 0,
+      favoriteCount: 0,
+    });
+
+    const { queryByText } = render(<ShootLogScreen />);
+    expect(queryByText(/★/)).toBeNull();
   });
 
 });
