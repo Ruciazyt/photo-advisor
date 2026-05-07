@@ -176,11 +176,6 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
 
 export function SunToggleButton({ visible, onPress }: { visible: boolean; onPress: () => void }) {
   const { colors } = useTheme();
-  const a11y = useAccessibilityButton({
-    label: '太阳位置',
-    hint: visible ? '关闭太阳位置显示' : '打开太阳位置显示',
-    role: 'button',
-  });
 
   const toggleStyle = useMemo(() => [
     staticStyles.toggleBtn,
@@ -197,7 +192,11 @@ export function SunToggleButton({ visible, onPress }: { visible: boolean; onPres
       style={toggleStyle}
       onPress={onPress}
       activeOpacity={0.7}
-      {...a11y}
+      {...useAccessibilityButton({
+        label: '太阳位置',
+        hint: visible ? '关闭太阳位置显示' : '打开太阳位置显示',
+        role: 'button',
+      })}
       accessibilityState={{ selected: visible }}
     >
       <Ionicons
