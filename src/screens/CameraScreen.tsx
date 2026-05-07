@@ -56,6 +56,7 @@ export function CameraScreen() {
     showBubbleChat, setShowBubbleChat,
     showShakeDetector, setShowShakeDetector,
     showKeypoints, setShowKeypoints,
+    timerDuration, setTimerDuration,
   } = useSettings();
 
   // Base64 of last captured photo — needed by handleSaveToFavorites
