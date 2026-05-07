@@ -4,7 +4,7 @@
 import React from 'react';
 import { renderHook, act } from '@testing-library/react-native';
 import { Accelerometer } from 'expo-sensors';
-import { useShakeDetector } from '../hooks/useShakeDetector';
+import { useShakeDetector } from '../useShakeDetector';
 
 // Mock expo-sensors
 jest.mock('expo-sensors', () => ({
