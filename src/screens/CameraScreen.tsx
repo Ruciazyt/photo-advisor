@@ -80,12 +80,14 @@ export function CameraScreen() {
   const keypointsDismissAllRef = useRef(keypointsHandleDismissAll);
   keypointsDismissAllRef.current = keypointsHandleDismissAll;
 
+  const onShake = useCallback(() => {
+    bubbleChatDismissAllRef.current();
+    handleDismissAllRef.current();
+    keypointsDismissAllRef.current();
+  }, []);
+
   useShakeDetector({
-    onShake: () => {
-      bubbleChatDismissAllRef.current();
-      handleDismissAllRef.current();
-      keypointsDismissAllRef.current();
-    },
+    onShake,
     enabled: showShakeDetector && showBubbleChat,
     onShakeVoiceFeedback: showShakeDetector ? () => speak('已关闭所有建议') : undefined,
   });

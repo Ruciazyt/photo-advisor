@@ -95,7 +95,7 @@ export function useShakeDetector({
         }
       }
     },
-    [onShake, threshold, consecutiveCount, resetIntervalMs]
+    [onShake, onShakeVoiceFeedback, threshold, consecutiveCount, resetIntervalMs]
   );
 
   const startListening = useCallback(() => {
