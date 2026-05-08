@@ -125,6 +125,28 @@ describe('computeStats', () => {
     ];
     expect(computeStats(favs).recentTrend).toBe('up');
   });
+
+  it('detects downward trend when recent scores much lower', () => {
+    // Recent 5 avg = 30, prev 5 avg = 90, diff = -60 < -3 → down
+    const favs = [
+      makeFavorite({ id: '1', score: 90, date: '2026-04-01T10:00:00Z' }),
+      makeFavorite({ id: '2', score: 90, date: '2026-04-02T10:00:00Z' }),
+      makeFavorite({ id: '3', score: 90, date: '2026-04-03T10:00:00Z' }),
+      makeFavorite({ id: '4', score: 90, date: '2026-04-04T10:00:00Z' }),
+      makeFavorite({ id: '5', score: 90, date: '2026-04-05T10:00:00Z' }),
+      makeFavorite({ id: '6', score: 90, date: '2026-04-06T10:00:00Z' }),
+      makeFavorite({ id: '7', score: 90, date: '2026-04-07T10:00:00Z' }),
+      makeFavorite({ id: '8', score: 90, date: '2026-04-08T10:00:00Z' }),
+      makeFavorite({ id: '9', score: 90, date: '2026-04-09T10:00:00Z' }),
+      makeFavorite({ id: '10', score: 90, date: '2026-04-10T10:00:00Z' }),
+      makeFavorite({ id: '11', score: 30, date: '2026-04-11T10:00:00Z' }),
+      makeFavorite({ id: '12', score: 30, date: '2026-04-12T10:00:00Z' }),
+      makeFavorite({ id: '13', score: 30, date: '2026-04-13T10:00:00Z' }),
+      makeFavorite({ id: '14', score: 30, date: '2026-04-14T10:00:00Z' }),
+      makeFavorite({ id: '15', score: 30, date: '2026-04-15T10:00:00Z' }),
+    ];
+    expect(computeStats(favs).recentTrend).toBe('down');
+  });
 });
 
 describe('getScoreEmoji', () => {

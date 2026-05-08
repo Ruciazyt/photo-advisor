@@ -267,6 +267,18 @@ describe('sharePhoto', () => {
     expect(FileSystem.deleteAsync).toHaveBeenCalledWith('file:///cache/reshared.jpg', { idempotent: true });
   });
 
+  it('returns success even when cleanup throws (cleanup errors are silently ignored)', async () => {
+    const FileSystem = require('expo-file-system/legacy');
+    // Simulate cleanup failing — share should still succeed
+    FileSystem.deleteAsync.mockRejectedValueOnce(new Error('Cleanup failed'));
+
+    const result = await sharePhoto(baseOptions);
+
+    expect(result.success).toBe(true);
+    // Verify shareAsync was still called
+    expect(mockSharing.shareAsync).toHaveBeenCalled();
+  });
+
   it('returns error when shareAsync throws', async () => {
     mockSharing.shareAsync.mockRejectedValue(new Error('Share cancelled'));
 
