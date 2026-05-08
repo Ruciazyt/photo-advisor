@@ -174,7 +174,8 @@ describe('FocusGuideOverlay', () => {
     // FocusRing renders at (x-30, y-30) = (120, 170) with width/height 60
     // Look for a View with the focusRing style (position: absolute, width: 60, height: 60)
     const allViews = root.findAllByType('View', { deep: true });
-    const ringViews = allViews.filter((view) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ringViews = allViews.filter((view: any) => {
       const props = view.props;
       const style = Array.isArray(props?.style) ? props.style : [props?.style].filter(Boolean);
       const hasPositionAbsolute = style.some((s: any) => s?.position === 'absolute');

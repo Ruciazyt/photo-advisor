@@ -9,8 +9,8 @@ beforeEach(() => {
   jest.useFakeTimers();
   jest.setSystemTime(new Date('2026-01-01T00:00:00Z'));
   // Reset mock functions from __mocks__/expo-haptics.js
-  Haptics.impactAsync.mockClear();
-  Haptics.notificationAsync.mockClear();
+  (Haptics.impactAsync as jest.Mock).mockClear();
+  (Haptics.notificationAsync as jest.Mock).mockClear();
 });
 
 afterEach(() => {
@@ -139,7 +139,7 @@ describe('useHaptics', () => {
   it('methods are stable across re-renders', () => {
     const { result, rerender } = renderHook(() => useHaptics());
     const firstLightImpact = result.current.lightImpact;
-    rerender();
+    rerender({});
     expect(result.current.lightImpact).toBe(firstLightImpact);
   });
 });

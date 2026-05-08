@@ -32,7 +32,7 @@ jest.mock('../../components/BurstSuggestionOverlay', () => ({
   detectBurstMoment: jest.fn(),
 }));
 
-jest.spyOn(Platform, 'Platform', 'get').mockReturnValue({ OS: 'ios', select: jest.fn((obj: any) => obj.ios), isPad: false, isTV: false, isVision: false, constants: {}, Version: 1 });
+jest.spyOn(Platform, 'Platform', 'get' as any).mockReturnValue({ OS: 'ios', select: jest.fn((obj: any) => obj.ios), isPad: false, isTV: false, isVision: false, constants: {} as any, Version: 1 } as any);
 
 const mockTakePicture = jest.fn();
 const mockRunAnalysis = jest.fn();
@@ -110,7 +110,7 @@ describe('doCapture', () => {
     mockComputeScoreFromSuggestions.mockReturnValue({ score: 85, reason: '构图优秀' });
     mockRecognizeSceneTag.mockResolvedValue('风景');
     mockRunAnalysis.mockResolvedValue(undefined);
-    detectBurstMoment.mockReturnValue(false);
+    (detectBurstMoment as jest.Mock).mockReturnValue(false);
 
     const { result } = renderHook(() => useCaptureFlow(makeOptions()));
 
@@ -168,7 +168,7 @@ describe('doCapture', () => {
     mockComputeScoreFromSuggestions.mockReturnValue({ score: 90, reason: '绝佳' });
     mockRecognizeSceneTag.mockResolvedValue('人像');
     mockRunAnalysis.mockResolvedValue(undefined);
-    detectBurstMoment.mockReturnValue(false);
+    (detectBurstMoment as jest.Mock).mockReturnValue(false);
 
     const { result } = renderHook(() => useCaptureFlow(makeOptions({ sceneTag: '人像', timerDuration: 5 })));
 
@@ -408,7 +408,7 @@ describe('handleQuickCapture', () => {
     mockTakePicture.mockResolvedValue({ base64: 'fast64', uri: 'file:///quick.jpg' });
     mockSavePhotoToGallery.mockResolvedValue(undefined);
     mockComputeScoreFromSuggestions.mockReturnValue({ score: 75, reason: '良好' });
-    detectBurstMoment.mockReturnValue(false);
+    (detectBurstMoment as jest.Mock).mockReturnValue(false);
 
     const { result } = renderHook(() => useCaptureFlow(makeOptions()));
 
