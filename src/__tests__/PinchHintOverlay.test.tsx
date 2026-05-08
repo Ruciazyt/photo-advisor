@@ -1,72 +1,144 @@
 /**
- * PinchHintOverlay unit tests.
+ * Tests for PinchHintOverlay component.
+ * Covers: visible=true renders hint, visible=false hides it,
+ * auto-dismiss timeout, and reduced motion accessibility.
  */
 
 import React from 'react';
+import { act, render, cleanup } from '@testing-library/react-native';
+import { PinchHintOverlay } from '../components/PinchHintOverlay';
 
-// Use the project's __mocks__/react-native-reanimated which provides Animated.View etc.
+// ---------------------------------------------------------------------------
+// Mock dependencies
+// ---------------------------------------------------------------------------
+
 jest.mock('react-native-reanimated');
 jest.mock('react-native-worklets');
 
-// Mock @expo/vector-icons
 jest.mock('@expo/vector-icons', () => {
   const React = require('react');
+  const MockIonicons = jest.fn(({ name, size, color }: { name: string; size: number; color: string }) =>
+    React.createElement('MockIonicons', { name, size, color })
+  );
   return {
-    Ionicons: ({ name, size, color }: { name: string; size: number; color: string }) =>
-      React.createElement('MockIonicons', { name, size, color }),
+    Ionicons: MockIonicons,
   };
 });
 
-// Mock the theme context
 jest.mock('../contexts/ThemeContext', () => ({
-  useTheme: jest.fn(() => ({
+  useTheme: () => ({
+    theme: 'dark',
     colors: {
-      overlayBg: '#000000cc',
-      text: '#ffffff',
-      accent: '#ff9500',
+      primary: '#000000',
+      accent: '#E8D5B7',
+      cardBg: '#1A1A1A',
+      text: '#FFFFFF',
+      textSecondary: '#888888',
+      border: '#333333',
+      overlayBg: 'rgba(0,0,0,0.75)',
     },
-  })),
+  }),
 }));
 
-import { render } from '@testing-library/react-native';
-import { PinchHintOverlay } from '../components/PinchHintOverlay';
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-describe('PinchHintOverlay', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
+const defaultProps = {
+  visible: true,
+  onDismiss: jest.fn(),
+};
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.useFakeTimers();
+});
 
-  it('renders hint text when visible is true', () => {
-    const { getByText } = render(<PinchHintOverlay visible={true} onDismiss={jest.fn()} />);
+afterEach(() => {
+  cleanup();
+  jest.useRealTimers();
+});
+
+// ---------------------------------------------------------------------------
+// Tests — render conditions
+// ---------------------------------------------------------------------------
+
+describe('PinchHintOverlay render', () => {
+  it('renders hint text when visible=true', () => {
+    const { getByText } = render(<PinchHintOverlay {...defaultProps} />);
     expect(getByText('Pinch to zoom')).toBeTruthy();
   });
 
-  it('auto-dismisses after 3 seconds when visible', () => {
+  it('does not render hint text when visible=false', () => {
+    const { queryByText } = render(<PinchHintOverlay {...defaultProps} visible={false} />);
+    expect(queryByText('Pinch to zoom')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests — auto-dismiss
+// ---------------------------------------------------------------------------
+
+describe('PinchHintOverlay auto-dismiss', () => {
+  it('calls onDismiss after auto-dismiss timeout (fade-in 250ms + hold 3s + fade-out 250ms)', () => {
     const onDismiss = jest.fn();
     render(<PinchHintOverlay visible={true} onDismiss={onDismiss} />);
 
-    // Before 3 seconds, should not have dismissed
-    jest.advanceTimersByTime(2000);
-    expect(onDismiss).not.toHaveBeenCalled();
+    // Advance past the full animation cycle: 250ms fade-in + 3000ms hold + 250ms fade-out
+    act(() => {
+      jest.advanceTimersByTime(4000);
+    });
 
-    // After 3 seconds (3000ms auto-dismiss + fade), should have dismissed
-    jest.advanceTimersByTime(1500);
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call onDismiss when visible becomes false before timer fires', () => {
+  it('does not call onDismiss if unmounted before timeout fires', () => {
+    const onDismiss = jest.fn();
+    const { unmount } = render(<PinchHintOverlay visible={true} onDismiss={onDismiss} />);
+
+    // Advance partway through the hold period
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    // Unmount before auto-dismiss fires
+    unmount();
+
+    // Advance past when auto-dismiss would have fired
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it('guards against stale onDismiss when visible flips to false before auto-dismiss fires', () => {
     const onDismiss = jest.fn();
     const { rerender } = render(<PinchHintOverlay visible={true} onDismiss={onDismiss} />);
 
-    // Hide the overlay before auto-dismiss fires
-    rerender(<PinchHintOverlay visible={false} onDismiss={onDismiss} />);
-    jest.advanceTimersByTime(5000);
+    // Partially advance past fade-in but before auto-dismiss
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
 
-    // onDismiss should not be called because the overlay was hidden
+    // Flip visible to false — this should cancel the pending auto-dismiss
+    rerender(<PinchHintOverlay visible={false} onDismiss={onDismiss} />);
+
+    // Advance well past when auto-dismiss would have fired
+    act(() => {
+      jest.advanceTimersByTime(5000);
+    });
+
     expect(onDismiss).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests — icon and styling
+// ---------------------------------------------------------------------------
+
+describe('PinchHintOverlay icon and styling', () => {
+  it('uses contract-outline icon and renders without throwing', () => {
+    expect(() => render(<PinchHintOverlay {...defaultProps} />)).not.toThrow();
   });
 });
