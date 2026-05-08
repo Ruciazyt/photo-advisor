@@ -4,7 +4,7 @@
 
 import { renderHook, act } from '@testing-library/react-native';
 import { useBubbleChat } from '../useBubbleChat';
-import type { BubbleItem } from '../types';
+import type { BubbleItem } from '../../types';
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -17,8 +17,8 @@ afterEach(() => {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function makeBubble(id: number, text: string): BubbleItem {
-  return { id, text };
+function makeBubble(id: number, text: string, position: BubbleItem['position'] = 'top-left'): BubbleItem {
+  return { id, text, position };
 }
 
 // ─── Initial state ─────────────────────────────────────────────────────────

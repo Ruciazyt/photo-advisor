@@ -10,7 +10,7 @@ import {
   sobelMagnitudes,
   extractPeaks,
 } from '../useFocusPeaking';
-import type { PeakPoint } from '../types';
+import type { PeakPoint } from '../../types';
 
 describe('sensitivityThreshold', () => {
   it('returns 50 for low sensitivity', () => {

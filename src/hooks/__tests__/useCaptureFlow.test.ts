@@ -32,7 +32,7 @@ jest.mock('../../components/BurstSuggestionOverlay', () => ({
   detectBurstMoment: jest.fn(),
 }));
 
-jest.spyOn(Platform, 'Platform', 'get').mockReturnValue({ OS: 'ios', select: jest.fn((obj) => obj.ios) });
+jest.spyOn(Platform, 'Platform', 'get').mockReturnValue({ OS: 'ios', select: jest.fn((obj: any) => obj.ios), isPad: false, isTV: false, isVision: false, constants: {}, Version: 1 });
 
 const mockTakePicture = jest.fn();
 const mockRunAnalysis = jest.fn();
@@ -59,7 +59,7 @@ function makeOptions(overrides = {}) {
     cameraReady: true,
     defaultGridVariant: 'thirds' as const,
     setDefaultGridVariant: mockSetDefaultGridVariant,
-    timerDuration: 3,
+    timerDuration: 3 as const,
     rawMode: false,
     suggestions: ['建议1', '建议2'],
     sceneTag: '风景',
