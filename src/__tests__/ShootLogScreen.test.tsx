@@ -610,7 +610,10 @@ describe('ShootLogScreen', () => {
 
     // Simulate pressing the "删除" button in the alert
     const deleteButton = alertCalls[0][2].find((btn: { text: string }) => btn.text === '删除');
-    deleteButton.onPress();
+
+    await act(async () => {
+      deleteButton.onPress();
+    });
 
     expect(deleteEntries).toHaveBeenCalledWith(['confirm_del']);
 
