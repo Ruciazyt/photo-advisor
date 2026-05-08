@@ -33,6 +33,10 @@ import { useExposure } from '../hooks/useExposure';
 import { useBubbleChat } from '../hooks/useBubbleChat';
 import { useKeypoints } from '../hooks/useKeypoints';
 import { useCaptureFlow } from '../hooks/useCaptureFlow';
+import { useFavorites } from '../hooks/useFavorites';
+import { useShootLog } from '../hooks/useShootLog';
+import { useCurrentLocation } from '../hooks/useCurrentLocation';
+import { useSceneRecognition } from '../hooks/useSceneRecognition';
 import { computeScoreFromSuggestions } from '../utils/parsing';
 
 const GRID_LABELS: Record<GridVariant, string> = {
@@ -355,7 +359,7 @@ export function CameraScreen() {
           burstActive={burstActive} burstCount={burstCount}
           toastOpacity={toastOpacity} toastMessage={toastMessage}
           showShakeDetector={showShakeDetector} onShakeDetectorToggle={() => setShowShakeDetector(!showShakeDetector)}
-          showEV={showEV} onEVToggle={() => setShowEV(v => !v)} currentEV={exposureComp}
+          showEV={showEV} onEVToggle={() => setShowEV(!showEV)} currentEV={exposureComp}
         />
         <CameraControls
           selectedMode={selectedMode}

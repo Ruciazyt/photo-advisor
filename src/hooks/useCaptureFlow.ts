@@ -16,6 +16,7 @@ import type { CameraView } from 'expo-camera';
 import type { GridVariant } from '../types';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { loadApiConfig } from '../services/api';
+import type { ShootLogEntry, TimerDuration } from '../types';
 
 const GRID_LABELS: Record<GridVariant, string> = {
   thirds: '三分法', golden: '黄金分割', diagonal: '对角线', spiral: '螺旋线', none: '关闭',
@@ -29,10 +30,9 @@ const GRID_PROMPT_MAP: Record<GridVariant, string> = {
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
 
 export interface UseCaptureFlowOptions {
-  cameraReady: boolean;
   defaultGridVariant: GridVariant;
-  setDefaultGridVariant: (v: GridVariant) => void;
-  timerDuration: number;
+  setDefaultGridVariant: (v: GridVariant) => unknown;
+  timerDuration: TimerDuration;
   rawMode: boolean;
   suggestions: string[];
   sceneTag: string;
@@ -51,13 +51,13 @@ export interface UseCaptureFlowOptions {
   requestLocation: () => void;
   locationName: string | null;
   coords: { latitude: number; longitude: number } | null;
-  addEntry: (entry: Record<string, unknown>) => void;
+  addEntry: (entry: Omit<ShootLogEntry, 'id' | 'date'>) => void;
   saveFavorite: (uri: string, gridType: string, suggestion?: string, sceneTag?: string, score?: number, scoreReason?: string) => Promise<unknown>;
   showToast: (msg: string) => void;
   countdownActive: boolean;
   loading: boolean;
   burstActive: boolean;
-  startCountdown: (duration: number) => void;
+  startCountdown: (duration: TimerDuration) => void;
   capturePreviewFrame: () => Promise<{ base64: string; uri: string } | null>;
   lastCapturedBase64Ref: React.MutableRefObject<string | null>;
   lastCapturedUri: string | null;
@@ -86,7 +86,6 @@ export interface UseCaptureFlowReturn {
 }
 
 export function useCaptureFlow({
-  cameraReady,
   defaultGridVariant,
   setDefaultGridVariant,
   timerDuration,
@@ -130,7 +129,14 @@ export function useCaptureFlow({
   const capturedTimerDurationRef = useRef(0);
 
   // Shared metadata snapshot accessible to CameraScreen's shoot-log effect
-  const captureMetadataRef = useRef({
+  const captureMetadataRef = useRef<{
+    gridType: string;
+    suggestions: string[];
+    score?: number;
+    scoreReason?: string;
+    sceneTag?: string;
+    timerDuration?: number;
+  }>({
     gridType: GRID_LABELS['thirds'],
     suggestions: [] as string[],
   });
