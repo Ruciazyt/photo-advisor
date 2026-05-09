@@ -3,7 +3,8 @@
  */
 
 import { AppError, CameraError, StorageError, APIError, LocationError, MediaError, ConfigError,
-  ErrorCode, handleError, errorToString, toAppError, safeAsync, resultOf, isAtLeastSeverity, toResult } from '../services/errors';
+  ErrorCode, handleError, errorToString, toAppError, safeAsync, resultOf, isAtLeastSeverity, toResult,
+  getDefaultAlertTitle } from '../services/errors';
 
 jest.mock('react-native', () => ({
   Alert: { alert: jest.fn() },
@@ -622,5 +623,42 @@ describe('toResult - returns {ok: false, error: AppError} when fn throws', () =>
 
     expect(result.ok).toBe(false);
     expect((result as any).error.code).toBe(ErrorCode.API_TIMEOUT);
+  });
+});
+
+describe('Error titles', () => {
+  it('returns 相机错误 for CameraError', () => {
+    const err = new CameraError('cam', ErrorCode.CAM_PERMISSION_DENIED);
+    expect(getDefaultAlertTitle(err)).toBe('相机错误');
+  });
+
+  it('returns 存储错误 for StorageError', () => {
+    const err = new StorageError('disk', ErrorCode.STOR_DISK_FULL);
+    expect(getDefaultAlertTitle(err)).toBe('存储错误');
+  });
+
+  it('returns 网络错误 for APIError', () => {
+    const err = new APIError('auth', ErrorCode.API_AUTH_FAILED, 401);
+    expect(getDefaultAlertTitle(err)).toBe('网络错误');
+  });
+
+  it('returns 定位错误 for LocationError', () => {
+    const err = new LocationError('unavail', ErrorCode.LOC_UNAVAILABLE);
+    expect(getDefaultAlertTitle(err)).toBe('定位错误');
+  });
+
+  it('returns 媒体错误 for MediaError', () => {
+    const err = new MediaError('load', ErrorCode.MED_LOAD_FAILED);
+    expect(getDefaultAlertTitle(err)).toBe('媒体错误');
+  });
+
+  it('returns 配置错误 for ConfigError', () => {
+    const err = new ConfigError('missing', ErrorCode.CFG_MISSING);
+    expect(getDefaultAlertTitle(err)).toBe('配置错误');
+  });
+
+  it('returns 出错了 for unknown error name', () => {
+    const err = new AppError('generic', ErrorCode.GEN_UNKNOWN);
+    expect(getDefaultAlertTitle(err)).toBe('出错了');
   });
 });
