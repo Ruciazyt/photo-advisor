@@ -314,6 +314,69 @@ describe('ErrorCode', () => {
   });
 });
 
+// getDefaultAlertTitle is a private function — test it indirectly via handleError alert titles
+describe('getDefaultAlertTitle', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    MockAlert.alert.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const { handleError } = require('../services/errors');
+
+  it('shows "相机错误" for CameraError', () => {
+    const { CameraError } = require('../services/errors');
+    const err = new CameraError('camera unavailable', require('../services/errors').ErrorCode.CAM_PERMISSION_DENIED);
+    handleError(err);
+    expect(MockAlert.alert).toHaveBeenCalledWith('相机错误', expect.any(String), expect.any(Array));
+  });
+
+  it('shows "存储错误" for StorageError', () => {
+    const { StorageError } = require('../services/errors');
+    const err = new StorageError('read failed', require('../services/errors').ErrorCode.STOR_READ_FAILED);
+    handleError(err);
+    expect(MockAlert.alert).toHaveBeenCalledWith('存储错误', expect.any(String), expect.any(Array));
+  });
+
+  it('shows "网络错误" for APIError', () => {
+    const { APIError } = require('../services/errors');
+    const err = new APIError('network error', require('../services/errors').ErrorCode.API_NETWORK_ERROR);
+    handleError(err);
+    expect(MockAlert.alert).toHaveBeenCalledWith('网络错误', expect.any(String), expect.any(Array));
+  });
+
+  it('shows "定位错误" for LocationError', () => {
+    const { LocationError } = require('../services/errors');
+    const err = new LocationError('location unavailable', require('../services/errors').ErrorCode.LOC_UNAVAILABLE);
+    handleError(err, { showAlert: true });
+    expect(MockAlert.alert).toHaveBeenCalledWith('定位错误', expect.any(String), expect.any(Array));
+  });
+
+  it('shows "媒体错误" for MediaError', () => {
+    const { MediaError } = require('../services/errors');
+    const err = new MediaError('load failed', require('../services/errors').ErrorCode.MED_LOAD_FAILED);
+    handleError(err);
+    expect(MockAlert.alert).toHaveBeenCalledWith('媒体错误', expect.any(String), expect.any(Array));
+  });
+
+  it('shows "配置错误" for ConfigError', () => {
+    const { ConfigError } = require('../services/errors');
+    const err = new ConfigError('missing key', require('../services/errors').ErrorCode.CFG_MISSING);
+    handleError(err, { showAlert: true });
+    expect(MockAlert.alert).toHaveBeenCalledWith('配置错误', expect.any(String), expect.any(Array));
+  });
+
+  it('shows "出错了" for generic AppError (default)', () => {
+    const { AppError, ErrorCode } = require('../services/errors');
+    const err = new AppError('unknown error', ErrorCode.GEN_UNKNOWN);
+    handleError(err);
+    expect(MockAlert.alert).toHaveBeenCalledWith('出错了', expect.any(String), expect.any(Array));
+  });
+});
+
 describe('isAtLeastSeverity', () => {
   it('returns true when error severity equals minSeverity', () => {
     const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'warning');
