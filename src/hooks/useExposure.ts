@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { CameraView } from 'expo-camera';
 import { useAnimationFrameTimer } from './useAnimationFrameTimer';
 
@@ -13,33 +13,45 @@ export interface UseExposureResult {
 }
 
 function readExposureFromCamera(cam: any) {
-  const exposureCompensation =
-    cam.exposureCompensation !== undefined && typeof cam.exposureCompensation === 'number'
-      ? cam.exposureCompensation
-      : 0;
-  const minEC =
-    cam.minExposureCompensation !== undefined && typeof cam.minExposureCompensation === 'number'
-      ? cam.minExposureCompensation
-      : -2;
-  const maxEC =
-    cam.maxExposureCompensation !== undefined && typeof cam.maxExposureCompensation === 'number'
-      ? cam.maxExposureCompensation
-      : 2;
-  return { exposureCompensation, minEC, maxEC };
+  return {
+    exposureCompensation:
+      cam.exposureCompensation !== undefined &&
+      typeof cam.exposureCompensation === 'number' &&
+      Number.isFinite(cam.exposureCompensation)
+        ? cam.exposureCompensation
+        : 0,
+    minEC:
+      cam.minExposureCompensation !== undefined &&
+      typeof cam.minExposureCompensation === 'number' &&
+      Number.isFinite(cam.minExposureCompensation)
+        ? cam.minExposureCompensation
+        : -2,
+    maxEC:
+      cam.maxExposureCompensation !== undefined &&
+      typeof cam.maxExposureCompensation === 'number' &&
+      Number.isFinite(cam.maxExposureCompensation)
+        ? cam.maxExposureCompensation
+        : 2,
+  };
 }
 
 export function useExposure(cameraRef: React.RefObject<CameraView | null>): UseExposureResult {
+  const [exposureComp, setExposureComp] = useState(() => {
+    const cam = cameraRef?.current as any;
+    return cam ? readExposureFromCamera(cam).exposureCompensation : 0;
+  });
+  const [minEC, setMinEC] = useState(() => {
+    const cam = cameraRef?.current as any;
+    return cam ? readExposureFromCamera(cam).minEC : -2;
+  });
+  const [maxEC, setMaxEC] = useState(() => {
+    const cam = cameraRef?.current as any;
+    return cam ? readExposureFromCamera(cam).maxEC : 2;
+  });
+  const [isAdjusting, setIsAdjusting] = useState(false);
   const mountedRef = useRef(true);
   const cameraRefStable = useRef(cameraRef);
   cameraRefStable.current = cameraRef;
-
-  // Read initial values from camera synchronously so test renders see correct state
-  const initial = cameraRef.current ? readExposureFromCamera(cameraRef.current) : null;
-
-  const [exposureComp, setExposureComp] = useState(initial?.exposureCompensation ?? 0);
-  const [minEC, setMinEC] = useState(initial?.minEC ?? -2);
-  const [maxEC, setMaxEC] = useState(initial?.maxEC ?? 2);
-  const [isAdjusting, setIsAdjusting] = useState(false);
 
   const poll = useCallback(() => {
     if (!mountedRef.current) return;
@@ -67,8 +79,8 @@ export function useExposure(cameraRef: React.RefObject<CameraView | null>): UseE
       try {
         if (typeof cam.setExposureCompensation === 'function') {
           await cam.setExposureCompensation(value);
+          setExposureComp(value);
         }
-        setExposureComp(value);
       } finally {
         setIsAdjusting(false);
       }

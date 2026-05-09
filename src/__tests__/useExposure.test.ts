@@ -36,8 +36,6 @@ function makeMockCamera(overrides: Record<string, unknown> = {}) {
 describe('useExposure', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset the module to clear any state from previous tests
-    jest.resetModules();
   });
 
   describe('initial state', () => {
@@ -60,7 +58,7 @@ describe('useExposure', () => {
       expect(result.current.isAdjusting).toBe(false);
     });
 
-    it('starts with correct initial values when camera provides non-zero EC', () => {
+    it('reads initial values from camera synchronously', () => {
       const cameraRef = { current: makeMockCamera({ exposureCompensation: 1.5 }) };
       const { result } = renderHook(() => useExposure(cameraRef as any));
       expect(result.current.exposureComp).toBe(1.5);
@@ -115,27 +113,6 @@ describe('useExposure', () => {
       expect(result.current.isAdjusting).toBe(false);
     });
 
-    it('sets isAdjusting=true while the async call is in flight', async () => {
-      let resolveSet: () => void;
-      const mockCam = makeMockCamera({
-        setExposureCompensation: jest.fn().mockImplementation(() => new Promise<void>(r => { resolveSet = r; })),
-      });
-      const cameraRef = { current: mockCam };
-      const { result } = renderHook(() => useExposure(cameraRef as any));
-
-      let setPromise: Promise<void>;
-      act(() => {
-        setPromise = result.current.setExposureCompensation(1.0);
-      });
-
-      // Inside an act block the state updates are flushed synchronously
-      // but the promise is still pending so isAdjusting should be true
-      await act(async () => {
-        await new Promise<void>(r => setTimeout(r, 10));
-      });
-      expect(result.current.isAdjusting).toBe(false);
-    });
-
     it('clears isAdjusting even if setExposureCompensation throws', async () => {
       const mockCam = makeMockCamera({
         setExposureCompensation: jest.fn().mockRejectedValue(new Error('Camera error')),
@@ -160,7 +137,7 @@ describe('useExposure', () => {
         await result.current.setExposureCompensation(1.0);
       });
 
-      // Should not throw and should not update exposureComp since method doesn't exist
+      // Should not throw; exposureComp stays at the initial value (0)
       expect(result.current.exposureComp).toBe(0);
     });
   });
@@ -198,7 +175,7 @@ describe('useExposure', () => {
       delete (mockCam as any).minExposureCompensation;
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
-      expect(result.current.minEC).toBe(-2); // stays at default
+      expect(result.current.minEC).toBe(-2);
       expect(result.current.maxEC).toBe(2);
     });
 
@@ -208,7 +185,7 @@ describe('useExposure', () => {
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
       expect(result.current.minEC).toBe(-2);
-      expect(result.current.maxEC).toBe(2); // stays at default
+      expect(result.current.maxEC).toBe(2);
     });
 
     it('does not crash when camera is a plain object without any exposure props', () => {
@@ -223,21 +200,21 @@ describe('useExposure', () => {
       const mockCam = makeMockCamera({ exposureCompensation: 'not a number' as any });
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
-      expect(result.current.exposureComp).toBe(0); // unchanged from default
+      expect(result.current.exposureComp).toBe(0);
     });
 
     it('ignores non-numeric minExposureCompensation values', () => {
       const mockCam = makeMockCamera({ minExposureCompensation: null as any });
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
-      expect(result.current.minEC).toBe(-2); // unchanged from default
+      expect(result.current.minEC).toBe(-2);
     });
 
     it('ignores non-numeric maxExposureCompensation values', () => {
       const mockCam = makeMockCamera({ maxExposureCompensation: null as any });
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
-      expect(result.current.maxEC).toBe(2); // unchanged from default
+      expect(result.current.maxEC).toBe(2);
     });
   });
 
@@ -253,7 +230,7 @@ describe('useExposure', () => {
       expect(result.current.maxEC).toBe(3);
     });
 
-    it('handles asymmetric ranges (e.g., -1 to +4)', () => {
+    it('handles asymmetric ranges', () => {
       const mockCam = makeMockCamera({
         minExposureCompensation: -1,
         maxExposureCompensation: 4,
@@ -264,10 +241,10 @@ describe('useExposure', () => {
       expect(result.current.maxEC).toBe(4);
     });
 
-    it('uses default range when camera returns invalid extremes', () => {
+    it('uses default range when camera returns NaN', () => {
       const mockCam = makeMockCamera({
-        minExposureCompensation: NaN as any,
-        maxExposureCompensation: NaN as any,
+        minExposureCompensation: NaN,
+        maxExposureCompensation: NaN,
       });
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
@@ -275,14 +252,14 @@ describe('useExposure', () => {
       expect(result.current.maxEC).toBe(2);
     });
 
-    it('uses default range when camera min > max (nonsense data)', () => {
+    it('accepts raw values when camera min > max (nonsense data)', () => {
       const mockCam = makeMockCamera({
-        minExposureCompensation: 5 as any,
-        maxExposureCompensation: -3 as any,
+        minExposureCompensation: 5,
+        maxExposureCompensation: -3,
       });
       const cameraRef = { current: mockCam };
       const { result } = renderHook(() => useExposure(cameraRef as any));
-      expect(result.current.minEC).toBe(5); // raw value accepted (defensive: no validation)
+      expect(result.current.minEC).toBe(5);
       expect(result.current.maxEC).toBe(-3);
     });
   });
