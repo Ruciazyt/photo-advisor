@@ -39,6 +39,8 @@ export interface CameraTopBarProps {
   // Focus guide
   showFocusGuide: boolean;
   onFocusGuideToggle: () => void;
+  // Focus zone selector
+  onOpenFocusZoneSelector: () => void;
   // Focus peaking
   showFocusPeaking: boolean;
   onFocusPeakingToggle: () => void;
@@ -122,6 +124,7 @@ export function CameraTopBar({  gridVariant,
   showEV,
   onEVToggle,
   currentEV,
+  onOpenFocusZoneSelector,
   burstActive,
   burstCount,
   toastOpacity,
@@ -395,6 +398,21 @@ export function CameraTopBar({  gridVariant,
       alignItems: 'center',
       gap: 4,
     },
+    focusZoneSelector: {
+      position: 'absolute',
+      top: 60,
+      left: 416,
+      zIndex: 10,
+      backgroundColor: colors.topBarBg,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.topBarBorderInactive,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
     focusPeakingSelectorActive: {
       backgroundColor: colors.focusGuideActiveBg,
       borderColor: colors.focusGuideActiveBorder,
@@ -536,6 +554,20 @@ export function CameraTopBar({  gridVariant,
         accessibilityState={{ selected: showFocusPeaking }}
       >
         <Text style={[dynamicTopBarStyles.focusPeakingSelectorText, showFocusPeaking && dynamicTopBarStyles.focusPeakingSelectorTextActive]}>🎚️ 峰值</Text>
+      </TouchableOpacity>
+
+      {/* Focus Zone Selector */}
+      <TouchableOpacity
+        style={dynamicTopBarStyles.focusZoneSelector}
+        onPress={onOpenFocusZoneSelector}
+        activeOpacity={0.7}
+        {...useAccessibilityButton({
+          label: '对焦区域',
+          hint: '打开对焦区域选择器',
+          role: 'button',
+        })}
+      >
+        <Text style={dynamicTopBarStyles.focusGuideSelectorText}>📷 FZ</Text>
       </TouchableOpacity>
 
       {/* Keypoints Toggle */}
