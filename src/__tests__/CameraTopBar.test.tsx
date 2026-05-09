@@ -76,6 +76,7 @@ const defaultProps: CameraTopBarProps = {
   showEV: false,
   onEVToggle: jest.fn(),
   currentEV: 0,
+  onOpenFocusZoneSelector: jest.fn(),
   burstActive: false,
   burstCount: 0,
   toastOpacity: mockToastOpacity,
