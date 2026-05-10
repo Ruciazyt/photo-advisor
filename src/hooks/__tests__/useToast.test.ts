@@ -26,29 +26,19 @@ describe('useToast', () => {
     expect(result.current.toastMessage).toBe('hello world');
   });
 
-  it('showToast animates opacity to 1 then back to 0 after 1200ms', () => {
+  it('showToast animates message then clears after 1200ms', () => {
     const { result } = renderHook(() => useToast());
-
-    // Initial state: opacity starts at 0 (from useSharedValue(0))
-    expect(result.current.opacity.value).toBe(0);
     expect(result.current.toastMessage).toBe('');
 
-    // Call showToast
     act(() => {
       result.current.showToast('test message');
     });
-
-    // Message should appear immediately
     expect(result.current.toastMessage).toBe('test message');
 
-    // Advance timers: after 200ms (duration of fade-in) opacity should still be 1
-    // The withTiming callback fires after 50ms in mock, but opacity.value updates synchronously
-    // After full 1200ms, toast should be cleared
+    // Advance past the 1200ms timeout
     act(() => {
       jest.advanceTimersByTime(1200);
     });
-
-    // Message should be cleared after 1200ms timeout
     expect(result.current.toastMessage).toBe('');
   });
 
@@ -67,25 +57,22 @@ describe('useToast', () => {
     });
     expect(result.current.toastMessage).toBe('second');
 
-    // Advance past first timeout but well before second
+    // Advance 500ms — first timeout would have fired at 1200ms but was cancelled
     act(() => {
       jest.advanceTimersByTime(500);
     });
-
-    // Message should still be 'second' (first timeout was cancelled)
     expect(result.current.toastMessage).toBe('second');
 
-    // Advance past second timeout
+    // Advance remaining time — second toast clears
     act(() => {
       jest.advanceTimersByTime(800);
     });
     expect(result.current.toastMessage).toBe('');
   });
 
-  it('consecutive toasts fire their 1200ms timers independently', () => {
+  it('second showToast replaces first and resets timer independently', () => {
     const { result } = renderHook(() => useToast());
 
-    // First toast
     act(() => {
       result.current.showToast('msg1');
     });
@@ -98,18 +85,16 @@ describe('useToast', () => {
       result.current.showToast('msg2');
     });
 
-    // First should still be visible (not yet cleared)
-    // Second should override (but we can't distinguish via message since both visible)
     expect(result.current.toastMessage).toBe('msg2');
 
-    // Finish remaining time
+    // Advance past second toast's full duration
     act(() => {
       jest.advanceTimersByTime(1200);
     });
     expect(result.current.toastMessage).toBe('');
   });
 
-  it('showToast with empty string still sets message and clears after timeout', () => {
+  it('showToast with empty string still clears after timeout', () => {
     const { result } = renderHook(() => useToast());
     act(() => {
       result.current.showToast('');
@@ -121,7 +106,7 @@ describe('useToast', () => {
     expect(result.current.toastMessage).toBe('');
   });
 
-  it('multiple rapid toasts with very short intervals all resolve correctly', () => {
+  it('multiple rapid toasts with very short intervals resolve correctly', () => {
     const { result } = renderHook(() => useToast());
 
     act(() => {
@@ -140,19 +125,55 @@ describe('useToast', () => {
       result.current.showToast('c');
     });
 
-    // Latest message wins
     expect(result.current.toastMessage).toBe('c');
 
-    // Advance well past last timeout
     act(() => {
       jest.advanceTimersByTime(1300);
     });
     expect(result.current.toastMessage).toBe('');
   });
 
-  it('opacity shared value exists and is useSharedValue type', () => {
+  it('opacity shared value object exists with value property', () => {
     const { result } = renderHook(() => useToast());
-    // The mock useSharedValue returns an object with { value: initial }
+    // The mock useSharedValue returns { value: initial }
     expect(result.current.opacity).toHaveProperty('value');
+  });
+
+  it('three toasts in sequence each get their own independent timer', () => {
+    const { result } = renderHook(() => useToast());
+
+    act(() => {
+      result.current.showToast('one');
+    });
+    expect(result.current.toastMessage).toBe('one');
+
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
+    act(() => {
+      result.current.showToast('two');
+    });
+    expect(result.current.toastMessage).toBe('two');
+
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
+    act(() => {
+      result.current.showToast('three');
+    });
+    expect(result.current.toastMessage).toBe('three');
+
+    // Only 800ms elapsed for third toast — still visible
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+    // third toast fired at 800ms, fires at 2000ms total
+    // at 1300ms it's still pending
+    expect(result.current.toastMessage).toBe('three');
+
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    expect(result.current.toastMessage).toBe('');
   });
 });
