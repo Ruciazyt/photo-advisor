@@ -241,5 +241,98 @@ describe('useAnimationFrameTimer', () => {
       });
       expect(newOnTick).toHaveBeenCalledTimes(1);
     });
+
+    it('does not tick immediately when enabled toggles true→false→true (lastTickRef resets)', () => {
+      const onTick = jest.fn();
+
+      const { rerender } = renderHook<ReturnType<typeof useAnimationFrameTimer>, { enabled: boolean }>(
+        ({ enabled }) => useAnimationFrameTimer({ intervalMs: 500, onTick, enabled }),
+        { initialProps: { enabled: true } }
+      );
+
+      // Advance just below the interval so next frame will tick
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 400 }));
+      });
+      expect(onTick).not.toHaveBeenCalled();
+
+      // Disable — accumulated time is preserved in lastTickRef (400ms)
+      rerender({ enabled: false });
+
+      // Re-enable — lastTickRef must be reset to 0
+      rerender({ enabled: true });
+
+      // A single frame of 300ms should NOT trigger tick (needs 500ms total from reset)
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 300 }));
+      });
+      expect(onTick).not.toHaveBeenCalled();
+
+      // Second frame reaches 300+300=600 >= 500, now tick fires
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 300 }));
+      });
+      expect(onTick).toHaveBeenCalledTimes(1);
+    });
+
+    it('resets lastTickRef when onTick callback identity changes', () => {
+      const onTick = jest.fn();
+
+      const { rerender } = renderHook<ReturnType<typeof useAnimationFrameTimer>, { onTick: () => void }>(
+        ({ onTick: ot }) => useAnimationFrameTimer({ intervalMs: 500, onTick: ot, enabled: true }),
+        { initialProps: { onTick } }
+      );
+
+      // Advance just below the interval
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 400 }));
+      });
+      expect(onTick).not.toHaveBeenCalled();
+
+      // Replace onTick with a new function (identity change)
+      const newOnTick = jest.fn();
+      rerender({ onTick: newOnTick });
+
+      // A single frame of 300ms should NOT trigger tick (lastTickRef was reset)
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 300 }));
+      });
+      expect(newOnTick).not.toHaveBeenCalled();
+
+      // Second frame: 300+300=600 >= 500, now tick fires
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 300 }));
+      });
+      expect(newOnTick).toHaveBeenCalledTimes(1);
+    });
+
+    it('holds without ticking while disabled (enabled=false)', () => {
+      const onTick = jest.fn();
+
+      const { rerender } = renderHook<ReturnType<typeof useAnimationFrameTimer>, { enabled: boolean }>(
+        ({ enabled }) => useAnimationFrameTimer({ intervalMs: 500, onTick, enabled }),
+        { initialProps: { enabled: true } }
+      );
+
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 400 }));
+      });
+
+      rerender({ enabled: false });
+
+      // Even very large frames while disabled should not trigger tick
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 1000 }));
+      });
+      expect(onTick).not.toHaveBeenCalled();
+
+      rerender({ enabled: true });
+
+      act(() => {
+        mockCallbacks.forEach(cb => cb({ timeSincePreviousFrame: 1000 }));
+      });
+      // Re-enabled with reset lastTickRef; a 1000ms frame triggers 2 ticks (1000/500=2)
+      expect(onTick).toHaveBeenCalledTimes(2);
+    });
   });
 });
