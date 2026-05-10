@@ -11,7 +11,7 @@ const LATEST_RELEASE_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NA
 
 export const getAppVersion = (): string => APP_VERSION;
 
-const parseVersion = (v: string): number[] => {
+export const parseVersion = (v: string): number[] => {
   const normalized = v.startsWith('v') ? v.slice(1) : v;
   const parts = normalized.split(/[.\-_]/).map(part => {
     const num = parseInt(part, 10);
