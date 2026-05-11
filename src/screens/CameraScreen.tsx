@@ -85,16 +85,27 @@ export function CameraScreen() {
   const keypointsDismissAllRef = useRef(keypointsHandleDismissAll);
   keypointsDismissAllRef.current = keypointsHandleDismissAll;
 
+  const showShakeDetectorRef = useRef(showShakeDetector);
+  showShakeDetectorRef.current = showShakeDetector;
+  const speakRef = useRef(speak);
+  speakRef.current = speak;
+
   const onShake = useCallback(() => {
     bubbleChatDismissAllRef.current();
     handleDismissAllRef.current();
     keypointsDismissAllRef.current();
   }, []);
 
+  const onShakeVoiceFeedback = useCallback(() => {
+    if (showShakeDetectorRef.current) {
+      speakRef.current('已关闭所有建议');
+    }
+  }, []);
+
   useShakeDetector({
     onShake,
     enabled: showShakeDetector && showBubbleChat,
-    onShakeVoiceFeedback: showShakeDetector ? () => speak('已关闭所有建议') : undefined,
+    onShakeVoiceFeedback,
   });
 
   useEffect(() => { bubbleChatSetLoading(loading); }, [loading]);
