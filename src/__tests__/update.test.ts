@@ -21,6 +21,7 @@ import {
   downloadAndInstall,
   openReleasePage,
   showUpdateDialog,
+  parseVersion,
 } from '../services/update';
 import type { ReleaseInfo } from '../types';
 
@@ -212,6 +213,36 @@ describe('openReleasePage', () => {
   it('does not throw on error (silent failure)', async () => {
     mockLinking.openURL.mockRejectedValue(new Error('Failed to open'));
     await expect(openReleasePage('https://bad.com')).resolves.toBeUndefined();
+  });
+});
+
+describe('parseVersion', () => {
+  it('parses normal version string', () => {
+    expect(parseVersion('1.2.3')).toEqual([1, 2, 3]);
+  });
+
+  it('strips v prefix', () => {
+    expect(parseVersion('v1.2.3')).toEqual([1, 2, 3]);
+    expect(parseVersion('v2.0.0')).toEqual([2, 0, 0]);
+  });
+
+  it('handles different segment counts', () => {
+    expect(parseVersion('1')).toEqual([1, 0, 0]);
+    expect(parseVersion('1.2')).toEqual([1, 2, 0]);
+    expect(parseVersion('1.2.3')).toEqual([1, 2, 3]);
+    expect(parseVersion('1.2.3.4')).toEqual([1, 2, 3]);
+    expect(parseVersion('1.2.3.4.5')).toEqual([1, 2, 3]);
+  });
+
+  it('treats non-numeric segments as 0', () => {
+    expect(parseVersion('a.b.c')).toEqual([0, 0, 0]);
+    expect(parseVersion('1.alpha.3')).toEqual([1, 0, 3]);
+    expect(parseVersion('v1.0.x')).toEqual([1, 0, 0]);
+  });
+
+  it('handles negative numbers', () => {
+    expect(parseVersion('-1.2.3')).toEqual([0, 1, 2]);
+    expect(parseVersion('1.-2.3')).toEqual([1, 0, 2]);
   });
 });
 
