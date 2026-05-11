@@ -140,6 +140,22 @@ describe('CameraTopBarProps', () => {
     });
   });
 
+  describe('Focus zone selector props', () => {
+    it('has onOpenFocusZoneSelector prop', () => {
+      const onOpenFocusZoneSelector = jest.fn();
+      const props = createMinimalProps({ onOpenFocusZoneSelector });
+      expect(typeof props.onOpenFocusZoneSelector).toBe('function');
+      expect(props.onOpenFocusZoneSelector).toBe(onOpenFocusZoneSelector);
+    });
+
+    it('onOpenFocusZoneSelector is callable without args', () => {
+      const props = createMinimalProps({
+        onOpenFocusZoneSelector: () => {},
+      });
+      props.onOpenFocusZoneSelector();
+    });
+  });
+
   describe('Focus peaking props', () => {
     it('has correct focus peaking prop types', () => {
       const props = createMinimalProps({
@@ -454,6 +470,7 @@ function createMinimalProps(overrides: Partial<CameraTopBarProps>): CameraTopBar
     onSunToggle: () => {},
     showFocusGuide: false,
     onFocusGuideToggle: () => {},
+    onOpenFocusZoneSelector: () => {},
     showFocusPeaking: false,
     onFocusPeakingToggle: () => {},
     voiceEnabled: false,
