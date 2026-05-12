@@ -27,44 +27,59 @@ describe('SettingsContext', () => {
   // ─── Default value ──────────────────────────────────────────────────────────
 
   describe('default value (no provider)', () => {
-    it('exposes all AppSettings keys', () => {
-      // Import defaultValue directly from the module
-      const { defaultValue } = require('../contexts/SettingsContext');
-      expect(defaultValue).toMatchObject({
-        ...defaultSettings,
-      });
+    it('exposes all AppSettings keys with correct defaults via useSettings', () => {
+      // Without a provider, useSettings returns the module-level defaultValue.
+      // We test it by rendering a consumer (no provider) and checking the output.
+      const { getByText } = render(<DefaultShapeConsumer />);
+      // voiceEnabled: false, theme: dark, timerDuration: 3, etc.
+      expect(getByText(/voice:false/)).toBeTruthy();
+      expect(getByText(/theme:dark/)).toBeTruthy();
+      expect(getByText(/timer:3/)).toBeTruthy();
+      expect(getByText(/grid:thirds/)).toBeTruthy();
+      expect(getByText(/showHistogram:false/)).toBeTruthy();
+      expect(getByText(/showLevel:true/)).toBeTruthy();
+      expect(getByText(/showFocusPeaking:false/)).toBeTruthy();
+      expect(getByText(/showSunPosition:false/)).toBeTruthy();
+      expect(getByText(/showFocusGuide:true/)).toBeTruthy();
+      expect(getByText(/showBubbleChat:true/)).toBeTruthy();
+      expect(getByText(/showShakeDetector:false/)).toBeTruthy();
+      expect(getByText(/showKeypoints:false/)).toBeTruthy();
+      expect(getByText(/showRawMode:false/)).toBeTruthy();
+      expect(getByText(/showEV:false/)).toBeTruthy();
+      expect(getByText(/showPinchToZoom:true/)).toBeTruthy();
+      expect(getByText(/imageQualityPreset:balanced/)).toBeTruthy();
+      expect(getByText(/focusPeakingColor:#FF4444/)).toBeTruthy();
+      expect(getByText(/focusPeakingSensitivity:medium/)).toBeTruthy();
     });
 
-    it('all setters are functions', () => {
-      const { defaultValue } = require('../contexts/SettingsContext');
-      const setters = [
-        'setVoiceEnabled',
-        'setDefaultGridVariant',
-        'setShowHistogram',
-        'setShowLevel',
-        'setShowFocusPeaking',
-        'setShowSunPosition',
-        'setShowFocusGuide',
-        'setShowBubbleChat',
-        'setShowShakeDetector',
-        'setShowKeypoints',
-        'setShowRawMode',
-        'setShowEV',
-        'setShowPinchToZoom',
-        'setTimerDuration',
-        'setImageQualityPreset',
-        'setFocusPeakingColor',
-        'setFocusPeakingSensitivity',
-      ];
-      setters.forEach((name) => {
-        expect(typeof defaultValue[name as keyof typeof defaultValue]).toBe('function');
-      });
+    it('all setters are present and are functions', () => {
+      const { getByText } = render(<AllSettersConsumer />);
+      expect(getByText('setVoiceEnabled:function')).toBeTruthy();
+      expect(getByText('setDefaultGridVariant:function')).toBeTruthy();
+      expect(getByText('setShowHistogram:function')).toBeTruthy();
+      expect(getByText('setShowLevel:function')).toBeTruthy();
+      expect(getByText('setShowFocusPeaking:function')).toBeTruthy();
+      expect(getByText('setShowSunPosition:function')).toBeTruthy();
+      expect(getByText('setShowFocusGuide:function')).toBeTruthy();
+      expect(getByText('setShowBubbleChat:function')).toBeTruthy();
+      expect(getByText('setShowShakeDetector:function')).toBeTruthy();
+      expect(getByText('setShowKeypoints:function')).toBeTruthy();
+      expect(getByText('setShowRawMode:function')).toBeTruthy();
+      expect(getByText('setShowEV:function')).toBeTruthy();
+      expect(getByText('setShowPinchToZoom:function')).toBeTruthy();
+      expect(getByText('setTimerDuration:function')).toBeTruthy();
+      expect(getByText('setImageQualityPreset:function')).toBeTruthy();
+      expect(getByText('setFocusPeakingColor:function')).toBeTruthy();
+      expect(getByText('setFocusPeakingSensitivity:function')).toBeTruthy();
     });
 
-    it('default setter calls saveAppSettings directly', async () => {
-      const { defaultValue } = require('../contexts/SettingsContext');
-      await defaultValue.setVoiceEnabled(true);
-      expect(saveAppSettings).toHaveBeenCalledWith({ voiceEnabled: true });
+    it('default setter calls saveAppSettings directly (no provider needed)', async () => {
+      // Without a provider, the setter backed by saveAppSettings should still work
+      const { getByText } = render(<DirectSetterConsumer />);
+      fireEvent.press(getByText('trigger'));
+      await waitFor(() => {
+        expect(saveAppSettings).toHaveBeenCalledWith({ voiceEnabled: true });
+      });
     });
   });
 
@@ -314,6 +329,65 @@ function Consumer() {
       <Text>voice:{String(s.voiceEnabled)}</Text>
       <Text>grid:{s.defaultGridVariant}</Text>
       <Text>timer:{s.timerDuration}</Text>
+    </View>
+  );
+}
+
+function DefaultShapeConsumer() {
+  // No SettingsProvider — useSettings returns the module-level defaultValue
+  const s = useSettings();
+  return (
+    <View>
+      <Text>voice:{String(s.voiceEnabled)}</Text>
+      <Text>theme:{s.theme}</Text>
+      <Text>timer:{s.timerDuration}</Text>
+      <Text>grid:{s.defaultGridVariant}</Text>
+      <Text>showHistogram:{String(s.showHistogram)}</Text>
+      <Text>showLevel:{String(s.showLevel)}</Text>
+      <Text>showFocusPeaking:{String(s.showFocusPeaking)}</Text>
+      <Text>showSunPosition:{String(s.showSunPosition)}</Text>
+      <Text>showFocusGuide:{String(s.showFocusGuide)}</Text>
+      <Text>showBubbleChat:{String(s.showBubbleChat)}</Text>
+      <Text>showShakeDetector:{String(s.showShakeDetector)}</Text>
+      <Text>showKeypoints:{String(s.showKeypoints)}</Text>
+      <Text>showRawMode:{String(s.showRawMode)}</Text>
+      <Text>showEV:{String(s.showEV)}</Text>
+      <Text>showPinchToZoom:{String(s.showPinchToZoom)}</Text>
+      <Text>imageQualityPreset:{s.imageQualityPreset}</Text>
+      <Text>focusPeakingColor:{s.focusPeakingColor}</Text>
+      <Text>focusPeakingSensitivity:{s.focusPeakingSensitivity}</Text>
+    </View>
+  );
+}
+
+function AllSettersConsumer() {
+  // No SettingsProvider — shows all setters are functions on defaultValue
+  const s = useSettings() as Record<string, unknown>;
+  const setterNames = [
+    'setVoiceEnabled', 'setDefaultGridVariant', 'setShowHistogram',
+    'setShowLevel', 'setShowFocusPeaking', 'setShowSunPosition',
+    'setShowFocusGuide', 'setShowBubbleChat', 'setShowShakeDetector',
+    'setShowKeypoints', 'setShowRawMode', 'setShowEV',
+    'setShowPinchToZoom', 'setTimerDuration', 'setImageQualityPreset',
+    'setFocusPeakingColor', 'setFocusPeakingSensitivity',
+  ];
+  return (
+    <View>
+      {setterNames.map((name) => (
+        <Text key={name}>{name}:{typeof s[name]}</Text>
+      ))}
+    </View>
+  );
+}
+
+function DirectSetterConsumer() {
+  // No SettingsProvider — calls the default setter (backed by saveAppSettings)
+  const s = useSettings();
+  return (
+    <View>
+      <TouchableOpacity onPress={() => s.setVoiceEnabled(true)}>
+        <Text>trigger</Text>
+      </TouchableOpacity>
     </View>
   );
 }
