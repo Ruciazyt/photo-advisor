@@ -16,6 +16,28 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useExposure } from '../hooks/useExposure';
 
 // ---------------------------------------------------------------------------
+// Mock useAnimationFrameTimer to capture poll callbacks
+// ---------------------------------------------------------------------------
+const sharedPollCallbacks: Array<() => void> = [];
+
+jest.mock('../hooks/useAnimationFrameTimer', () => {
+  const original = jest.requireActual('../hooks/useAnimationFrameTimer');
+  return {
+    ...original,
+    useAnimationFrameTimer: jest.fn((options: {
+      intervalMs: number;
+      onTick: () => void;
+      enabled: boolean;
+    }) => {
+      if (options.enabled) {
+        sharedPollCallbacks.push(options.onTick);
+      }
+      return {};
+    }),
+  };
+});
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -144,17 +166,135 @@ describe('useExposure', () => {
 
   describe('polling mechanism', () => {
     it('registers useAnimationFrameTimer on mount', () => {
-      const { useFrameCallback } = require('react-native-reanimated');
+      const { useAnimationFrameTimer } = require('../hooks/useAnimationFrameTimer');
       const cameraRef = { current: makeMockCamera() };
       renderHook(() => useExposure(cameraRef as any));
-      expect(useFrameCallback).toHaveBeenCalled();
+      expect(useAnimationFrameTimer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          intervalMs: 500,
+          enabled: true,
+        })
+      );
     });
 
     it('registers useAnimationFrameTimer even when cameraRef.current is null', () => {
-      const { useFrameCallback } = require('react-native-reanimated');
+      const { useAnimationFrameTimer } = require('../hooks/useAnimationFrameTimer');
       const cameraRef = { current: null };
       renderHook(() => useExposure(cameraRef as any));
-      expect(useFrameCallback).toHaveBeenCalled();
+      expect(useAnimationFrameTimer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          intervalMs: 500,
+          enabled: true,
+        })
+      );
+    });
+
+    it('updates exposureComp state when poll callback is invoked', () => {
+      const mockCam = makeMockCamera({ exposureCompensation: 0 });
+      const cameraRef = { current: mockCam };
+
+      const { result } = renderHook(() => useExposure(cameraRef as any));
+      expect(result.current.exposureComp).toBe(0);
+
+      // Simulate camera value changing and trigger poll
+      mockCam.exposureCompensation = 1.5;
+
+      act(() => {
+        sharedPollCallbacks.forEach(cb => cb());
+      });
+
+      expect(result.current.exposureComp).toBe(1.5);
+    });
+
+    it('updates minEC and maxEC state when poll callback is invoked with new range', () => {
+      const mockCam = makeMockCamera({ minExposureCompensation: -2, maxExposureCompensation: 2 });
+      const cameraRef = { current: mockCam };
+
+      const { result } = renderHook(() => useExposure(cameraRef as any));
+      expect(result.current.minEC).toBe(-2);
+      expect(result.current.maxEC).toBe(2);
+
+      // Simulate camera range changing and trigger poll
+      mockCam.minExposureCompensation = -3;
+      mockCam.maxExposureCompensation = 4;
+
+      act(() => {
+        sharedPollCallbacks.forEach(cb => cb());
+      });
+
+      expect(result.current.minEC).toBe(-3);
+      expect(result.current.maxEC).toBe(4);
+    });
+
+    it('does not update state when cameraRef.current becomes null during poll', () => {
+      const mockCam = makeMockCamera({ exposureCompensation: 1 });
+      const cameraRef = { current: mockCam };
+
+      const { result } = renderHook(() => useExposure(cameraRef as any));
+      expect(result.current.exposureComp).toBe(1);
+
+      // Simulate camera becoming unavailable
+      cameraRef.current = null;
+
+      act(() => {
+        sharedPollCallbacks.forEach(cb => cb());
+      });
+
+      // State should remain at last known value
+      expect(result.current.exposureComp).toBe(1);
+    });
+  });
+
+  describe('isAdjusting state', () => {
+    it('isAdjusting is true during the async setExposureCompensation call', async () => {
+      jest.useFakeTimers();
+      const mockCam = makeMockCamera({
+        setExposureCompensation: jest.fn().mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }),
+      });
+      const cameraRef = { current: mockCam };
+      const { result } = renderHook(() => useExposure(cameraRef as any));
+
+      expect(result.current.isAdjusting).toBe(false);
+
+      act(() => {
+        result.current.setExposureCompensation(1.0);
+      });
+
+      // Advance timers to let the promise resolve, but keep promise pending
+      act(() => {
+        jest.advanceTimersByTime(5); // Before camera method resolves
+      });
+
+      // isAdjusting should be true during the async operation
+      expect(result.current.isAdjusting).toBe(true);
+
+      // Complete the promise
+      await act(async () => {
+        jest.advanceTimersByTime(10);
+        await Promise.resolve();
+      });
+
+      expect(result.current.isAdjusting).toBe(false);
+
+      jest.useRealTimers();
+    });
+
+    it('isAdjusting transitions from true to false even if camera method is missing', async () => {
+      const mockCam = makeMockCamera();
+      delete (mockCam as any).setExposureCompensation;
+      const cameraRef = { current: mockCam };
+      const { result } = renderHook(() => useExposure(cameraRef as any));
+
+      expect(result.current.isAdjusting).toBe(false);
+
+      await act(async () => {
+        await result.current.setExposureCompensation(1.0);
+      });
+
+      // isAdjusting returns to false after the guard check
+      expect(result.current.isAdjusting).toBe(false);
     });
   });
 
