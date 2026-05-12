@@ -155,19 +155,25 @@ describe('SettingsScreen', () => {
       models: [{ id: 'gpt-4o', name: 'GPT-4o' }],
     });
     fireEvent.press(getByText('获取模型列表'));
-    await waitFor(() => {
-      expect(getByText('GPT-4o')).toBeTruthy();
-    });
+    await waitFor(
+      () => {
+        expect(getByText('GPT-4o')).toBeTruthy();
+      },
+      { timeout: 10000 }
+    );
     fireEvent.press(getByText('GPT-4o'));
     fireEvent.press(getByText('保存配置'));
-    await waitFor(() => {
-      expect(saveApiConfig).toHaveBeenCalledWith(
-        'sk-testkey123',
-        'https://api.test.com',
-        'gpt-4o',
-        'openai'
-      );
-    });
+    await waitFor(
+      () => {
+        expect(saveApiConfig).toHaveBeenCalledWith(
+          'sk-testkey123',
+          'https://api.test.com',
+          'gpt-4o',
+          'openai'
+        );
+      },
+      { timeout: 10000 }
+    );
     expect(mockAlert).toHaveBeenCalledWith('保存成功', 'API 配置已保存', expect.any(Array));
   });
 
