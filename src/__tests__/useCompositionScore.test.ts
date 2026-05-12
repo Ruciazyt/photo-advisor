@@ -30,17 +30,16 @@ describe('useCompositionScore', () => {
       expect(scoreResult.score).toBeGreaterThanOrEqual(70);
     });
 
-    it('returns lower alignment score for keypoints far from grid lines', () => {
+    it('returns high alignment for center keypoint on thirds grid (center is on intersection)', () => {
       const { result } = renderHook(() => useCompositionScore());
-      // 'center' position is at 0.5, 0.5 which has moderate distance from thirds lines (0.33, 0.67)
-      // Distance to nearest thirds line = 0.17, normalized = 0.34, score = 66
+      // 'center' position is at 0.333, 0.333 which is EXACTLY on a thirds intersection
+      // Distance to nearest thirds line = 0, score = 100
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // Alignment is moderate since center is between thirds lines
-      expect(scoreResult.breakdown.alignment).toBeGreaterThanOrEqual(60);
-      expect(scoreResult.breakdown.alignment).toBeLessThanOrEqual(70);
+      // Center is exactly on thirds intersection → perfect alignment
+      expect(scoreResult.breakdown.alignment).toBeGreaterThanOrEqual(99);
     });
 
     it('balance is 100 for evenly distributed keypoints left/right', () => {
@@ -64,13 +63,15 @@ describe('useCompositionScore', () => {
       expect(scoreResult.breakdown.balance).toBeLessThan(100);
     });
 
-    it('centrality is highest for center position keypoint', () => {
+    it('centrality for center keypoint reflects its distance from true center', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      expect(scoreResult.breakdown.centrality).toBe(100);
+      // Center at (0.333, 0.333) is NOT the true geometric center (0.5, 0.5)
+      // dist = sqrt((0.167)^2+(0.167)^2) = 0.236; centrality = (1-0.236/0.707)*100 ≈ 67
+      expect(scoreResult.breakdown.centrality).toBe(67);
     });
 
     it('centrality is lower for corner keypoints', () => {
