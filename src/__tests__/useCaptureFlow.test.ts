@@ -9,6 +9,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 import { useCaptureFlow } from '../hooks/useCaptureFlow';
+import type { GridVariant, TimerDuration } from '../types';
 import { detectBurstMoment } from '../components/BurstSuggestionOverlay';
 import { loadApiConfig } from '../services/api';
 
@@ -61,9 +62,9 @@ const mockSetDefaultGridVariant = jest.fn();
 function makeOptions(overrides = {}) {
   return {
     cameraReady: true,
-    defaultGridVariant: 'thirds',
+    defaultGridVariant: 'thirds' as GridVariant,
     setDefaultGridVariant: mockSetDefaultGridVariant,
-    timerDuration: 3,
+    timerDuration: 3 as TimerDuration,
     rawMode: false,
     suggestions: ['建议1', '建议2'],
     sceneTag: '风景',

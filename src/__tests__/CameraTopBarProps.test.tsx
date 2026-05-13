@@ -62,6 +62,7 @@ describe('CameraTopBarProps', () => {
         burstActive: false,
         burstCount: 0,
         toastOpacity: { value: 0 } as any,
+        onOpenFocusZoneSelector: () => {},
         toastMessage: '',
       };
       expect(props.gridVariant).toBeDefined();
