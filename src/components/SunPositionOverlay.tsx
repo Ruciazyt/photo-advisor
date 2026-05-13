@@ -56,6 +56,12 @@ const staticStyles = StyleSheet.create({
     paddingTop: 6,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  blueHourRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
   goldenText: {
     fontSize: 10,
     fontWeight: '600',
@@ -166,6 +172,15 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
             <Ionicons name="time-outline" size={11} color={colors.sunColor} />
             <Text style={[staticStyles.goldenText, { color: colors.sunColor }]}>
               黄金时刻 {sunData.goldenHourStart}-{sunData.goldenHourEnd}
+            </Text>
+          </View>
+        )}
+
+        {sunData.blueHourStart && sunData.blueHourEnd && (
+          <View style={staticStyles.blueHourRow}>
+            <Ionicons name="moon-outline" size={11} color={colors.blueHourColor} />
+            <Text style={[staticStyles.goldenText, { color: colors.blueHourColor }]}>
+              蓝调时刻 {sunData.blueHourStart}-{sunData.blueHourEnd}
             </Text>
           </View>
         )}

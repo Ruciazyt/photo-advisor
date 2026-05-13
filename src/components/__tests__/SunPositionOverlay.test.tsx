@@ -42,6 +42,7 @@ jest.mock('../../hooks/useAccessibility', () => ({
 
 const darkColors = {
   sunColor: '#FFD700',
+  blueHourColor: '#6B93D6',
   sunPanelBg: 'rgba(30,30,30,0.85)',
   sunPanelBorder: '#FFD70055',
   sunCompassText: '#888',
@@ -174,7 +175,45 @@ describe('2 — Golden hour / time display', () => {
 
   // NOTE: blueHourStart/End are stored in sunData but NOT rendered in the overlay.
   // Only golden hour times are shown. This is a missing feature, not a bug.
-  it.todo('blue hour times are NOT rendered (not implemented in component)');
+  it('shows blue hour row when blueHourStart and blueHourEnd are available', () => {
+    const { getByText } = render(<SunPositionOverlay visible={true} />);
+    expect(getByText(/蓝调时刻/)).toBeTruthy();
+    expect(getByText(/05:52-06:12/)).toBeTruthy();
+  });
+
+  it('omits the blue hour row when blueHourStart is null', () => {
+    mockUseSunPosition.mockReturnValueOnce({
+      sunData: { ...defaultSunData, blueHourStart: null, blueHourEnd: null },
+      requestLocation: jest.fn(),
+    });
+    const { queryByText } = render(<SunPositionOverlay visible={true} />);
+    expect(queryByText(/蓝调时刻/)).toBeNull();
+  });
+
+  it('omits the blue hour row when blueHourEnd is null', () => {
+    mockUseSunPosition.mockReturnValueOnce({
+      sunData: { ...defaultSunData, blueHourStart: '05:52', blueHourEnd: null },
+      requestLocation: jest.fn(),
+    });
+    const { queryByText } = render(<SunPositionOverlay visible={true} />);
+    expect(queryByText(/蓝调时刻/)).toBeNull();
+  });
+
+  it('renders both blue hour start and end times correctly', () => {
+    mockUseSunPosition.mockReturnValueOnce({
+      sunData: { ...defaultSunData, blueHourStart: '17:45', blueHourEnd: '18:15' },
+      requestLocation: jest.fn(),
+    });
+    const { getByText } = render(<SunPositionOverlay visible={true} />);
+    expect(getByText(/17:45/)).toBeTruthy();
+    expect(getByText(/18:15/)).toBeTruthy();
+  });
+
+  it('does not affect golden hour rendering when blue hour is shown', () => {
+    const { getByText } = render(<SunPositionOverlay visible={true} />);
+    expect(getByText(/黄金时刻/)).toBeTruthy();
+    expect(getByText(/06:12-06:52/)).toBeTruthy();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -280,17 +319,23 @@ describe('4 — Sun altitude and azimuth display', () => {
 describe('5 — Time display', () => {
   it('renders golden hour start and end times', () => {
     // Times are concatenated as "黄金时刻 06:12-06:52" — split across nested Text nodes.
-    const { getByText } = render(<SunPositionOverlay visible={true} />);
-    expect(getByText(/06:12/)).toBeTruthy();
-    expect(getByText(/06:52/)).toBeTruthy();
+    // Note: 06:12 may appear twice if blue hour also ends at 06:12
+    const { getAllByText } = render(<SunPositionOverlay visible={true} />);
+    const times06_12 = getAllByText(/06:12/);
+    expect(times06_12.length).toBeGreaterThanOrEqual(1);
+    const times06_52 = getAllByText(/06:52/);
+    expect(times06_52.length).toBeGreaterThanOrEqual(1);
   });
 
   it('formats golden hour row with "黄金时刻" label and time range', () => {
-    const { getByText } = render(<SunPositionOverlay visible={true} />);
+    const { getByText, getAllByText } = render(<SunPositionOverlay visible={true} />);
     // Golden hour text is split across nested Text elements.
     expect(getByText(/黄金时刻/)).toBeTruthy();
-    expect(getByText(/06:12/)).toBeTruthy();
-    expect(getByText(/06:52/)).toBeTruthy();
+    // Use getAllByText since 06:12 may appear twice (blue hour end shares same time)
+    const times06_12 = getAllByText(/06:12/);
+    expect(times06_12.length).toBeGreaterThanOrEqual(1);
+    const times06_52 = getAllByText(/06:52/);
+    expect(times06_52.length).toBeGreaterThanOrEqual(1);
   });
 });
 
