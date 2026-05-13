@@ -200,7 +200,12 @@ export function useCaptureFlow({
 
   const handleSaveToFavorites = useCallback(async () => {
     if (!lastCapturedUri) return;
-    const config = await loadApiConfig();
+    let config;
+    try {
+      config = await loadApiConfig();
+    } catch {
+      config = null;
+    }
     let tag = '';
     if (config && lastCapturedBase64Ref.current) {
       showToast('正在识别场景...');

@@ -476,8 +476,20 @@ describe('handleSaveToFavorites', () => {
   });
 
   // Skipped: loadApiConfig rejection propagates uncaught — not explicitly caught in hook
-  it.skip('proceeds when loadApiConfig rejects', async () => {
-    expect(false).toBe(true);
+  it('proceeds when loadApiConfig rejects', async () => {
+    (loadApiConfig as jest.Mock).mockRejectedValue(new Error('config unavailable'));
+    mockComputeScoreFromSuggestions.mockReturnValue({ score: 70, reason: '还行' });
+    mockSaveFavorite.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() =>
+      useCaptureFlow(makeOptions({ lastCapturedUri: 'file:///captured.jpg' }))
+    );
+
+    await act(async () => {
+      await result.current.handleSaveToFavorites();
+    });
+
+    expect(mockSaveFavorite).toHaveBeenCalled();
   });
 });
 
@@ -801,7 +813,19 @@ describe('error handling — missing API config', () => {
   });
 
   // Skipped: same as above
-  it.skip('handleSaveToFavorites proceeds when loadApiConfig rejects', async () => {
-    expect(false).toBe(true);
+  it('handleSaveToFavorites proceeds when loadApiConfig rejects', async () => {
+    (loadApiConfig as jest.Mock).mockRejectedValue(new Error('config unavailable'));
+    mockComputeScoreFromSuggestions.mockReturnValue({ score: 70, reason: '还行' });
+    mockSaveFavorite.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() =>
+      useCaptureFlow(makeOptions({ lastCapturedUri: 'file:///captured.jpg' }))
+    );
+
+    await act(async () => {
+      await result.current.handleSaveToFavorites();
+    });
+
+    expect(mockSaveFavorite).toHaveBeenCalled();
   });
 });
