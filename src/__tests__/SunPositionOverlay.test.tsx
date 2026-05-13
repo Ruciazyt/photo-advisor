@@ -65,10 +65,14 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
-// useAccessibilityButton mock — no default implementation; configured per-test
-// to avoid stale return values across tests.
 jest.mock('../hooks/useAccessibility', () => ({
   useAccessibilityButton: jest.fn(),
+  useAccessibilityReducedMotion: jest.fn(() => ({ reducedMotion: false })),
+  announce: jest.fn(),
+  useAccessibilityAnnouncement: jest.fn(() => ({
+    announce: jest.fn(),
+    isScreenReaderEnabled: false,
+  })),
 }));
 
 // ---------------------------------------------------------------------------
