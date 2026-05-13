@@ -14,12 +14,16 @@ const GRID_LINES: Record<GridVariant, { vertical: number[]; horizontal: number[]
 };
 
 // Position coordinates for Keypoint positions
+// NOTE: 'center' is at the geometric center (0.5, 0.5), which is not on the
+// thirds/golden grid lines. Alignment scores for center-on-thirds will
+// therefore be imperfect — this is correct since the frame center is not
+// generally a thirds intersection point.
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
   'top-left':     { x: 0.33, y: 0.33 },
   'top-right':    { x: 0.67, y: 0.33 },
   'bottom-left':  { x: 0.33, y: 0.67 },
   'bottom-right': { x: 0.67, y: 0.67 },
-  'center':       { x: 0.333, y: 0.333 },
+  'center':       { x: 0.5,  y: 0.5  },
 };
 
 function gradeFromScore(score: number): CompositionGrade {
