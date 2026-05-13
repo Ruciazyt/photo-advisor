@@ -21,9 +21,8 @@ import type { Keypoint, GridVariant, KeypointPosition } from '../../types';
 jest.mock('react-native-reanimated', () => ({}));
 
 // Helper: build a Keypoint from a named position
-// Keypoint requires id and label; position and confidence are optional/required fields
-function kp(position: KeypointPosition, confidence = 0.9): Keypoint {
-  return { id: 0, label: position, position, confidence };
+function kp(position: KeypointPosition): Keypoint {
+  return { id: 0, label: position, position };
 }
 
 // ---------------------------------------------------------------------------
