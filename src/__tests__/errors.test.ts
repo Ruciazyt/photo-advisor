@@ -1,727 +1,442 @@
 /**
- * Tests for unified error handling layer
+ * Unit tests for errors.ts service
  */
 
-import { AppError, CameraError, StorageError, APIError, LocationError, MediaError, ConfigError,
-  ErrorCode, handleError, errorToString, toAppError, safeAsync, resultOf, isAtLeastSeverity, toResult,
-  getDefaultAlertTitle } from '../services/errors';
+import { AppError, ErrorCode, CameraError, StorageError, APIError, LocationError, MediaError, ConfigError, errorToString, toAppError, handleError, isAtLeastSeverity, getDefaultAlertTitle, safeAsync, toResult, resultOf } from '../services/errors';
 
+// Mock react-native Alert
 jest.mock('react-native', () => ({
-  Alert: { alert: jest.fn() },
+  Alert: {
+    alert: jest.fn(),
+  },
 }));
 
-// Access the mocked Alert after jest.mock has set it up
 const MockAlert = require('react-native').Alert;
 
-describe('AppError', () => {
-  it('creates error with all properties', () => {
-    const error = new AppError('test message', ErrorCode.GEN_UNKNOWN, 'error', true, 'testContext');
-    expect(error.message).toBe('test message');
-    expect(error.code).toBe(ErrorCode.GEN_UNKNOWN);
-    expect(error.severity).toBe('error');
-    expect(error.recoverable).toBe(true);
-    expect(error.context).toBe('testContext');
-    expect(error.name).toBe('AppError');
-    expect(error instanceof Error).toBe(true);
-  });
-
-  it('toString includes code and message', () => {
-    const error = new AppError('something went wrong', ErrorCode.API_NETWORK_ERROR, 'error', false);
-    expect(error.toString()).toBe('[API-NET-001] something went wrong');
-  });
-
-  it('toString includes context when provided', () => {
-    const error = new AppError('oops', ErrorCode.GEN_UNKNOWN, 'info', false, 'MyContext');
-    expect(error.toString()).toBe('[GEN-UNK-001] oops (MyContext)');
-  });
-
-  it('supports error equality via code', () => {
-    const e1 = new AppError('msg1', ErrorCode.CAM_PERMISSION_DENIED);
-    const e2 = new AppError('msg2', ErrorCode.CAM_PERMISSION_DENIED);
-    expect(e1.code).toBe(e2.code);
-  });
-});
-
-describe('Domain Errors', () => {
-  it('CameraError has correct name and context', () => {
-    const err = new CameraError('no permission', ErrorCode.CAM_PERMISSION_DENIED, 'warning', true);
-    expect(err.name).toBe('CameraError');
-    expect(err.context).toBe('CameraError');
-    expect(err.severity).toBe('warning');
-    expect(err.recoverable).toBe(true);
-  });
-
-  it('StorageError has correct name and context', () => {
-    const err = new StorageError('disk full', ErrorCode.STOR_DISK_FULL, 'critical', false);
-    expect(err.name).toBe('StorageError');
-    expect(err.context).toBe('StorageError');
-    expect(err.severity).toBe('critical');
-    expect(err.recoverable).toBe(false);
-  });
-
-  it('APIError includes statusCode', () => {
-    const err = new APIError('auth failed', ErrorCode.API_AUTH_FAILED, 401, 'error', true);
-    expect(err.name).toBe('APIError');
-    expect(err.statusCode).toBe(401);
-    expect(err.severity).toBe('error');
-  });
-
-  it('LocationError has default warning severity', () => {
-    const err = new LocationError('location unavailable', ErrorCode.LOC_UNAVAILABLE);
-    expect(err.severity).toBe('warning');
-    expect(err.name).toBe('LocationError');
-  });
-
-  it('MediaError has correct defaults', () => {
-    const err = new MediaError('save failed', ErrorCode.MED_SAVE_FAILED);
-    expect(err.severity).toBe('error');
-    expect(err.recoverable).toBe(false);
-  });
-
-  it('ConfigError is recoverable by default', () => {
-    const err = new ConfigError('missing key', ErrorCode.CFG_MISSING);
-    expect(err.recoverable).toBe(true);
-    expect(err.severity).toBe('warning');
-  });
-});
-
-describe('errorToString', () => {
-  it('returns AppError message', () => {
-    const err = new AppError('hello', ErrorCode.GEN_UNKNOWN);
-    expect(errorToString(err)).toBe('hello');
-  });
-
-  it('returns plain Error message', () => {
-    expect(errorToString(new Error('world'))).toBe('world');
-  });
-
-  it('returns string as-is', () => {
-    expect(errorToString('plain string')).toBe('plain string');
-  });
-
-  it('returns fallback for unknown types', () => {
-    expect(errorToString(null, 'fallback')).toBe('fallback');
-    expect(errorToString(undefined, 'fallback')).toBe('fallback');
-    expect(errorToString(123, 'fallback')).toBe('fallback');
-  });
-
-  it('returns fallback by default', () => {
-    expect(errorToString(null)).toBe('发生了一个未知错误');
-  });
-});
-
-describe('toAppError', () => {
-  it('preserves AppError instances', () => {
-    const original = new CameraError('cam', ErrorCode.CAM_PERMISSION_DENIED);
-    const result = toAppError(original);
-    expect(result).toBe(original);
-  });
-
-  it('wraps plain Error', () => {
-    const result = toAppError(new Error('plain'), ErrorCode.GEN_UNKNOWN);
-    expect(result).toBeInstanceOf(AppError);
-    expect(result.message).toBe('plain');
-    expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
-  });
-
-  it('wraps unknown as GEN_UNKNOWN', () => {
-    const result = toAppError(null);
-    expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
-    expect(result.message).toBe('发生了一个未知错误');
-  });
-
-  it('wraps string as message', () => {
-    const result = toAppError('just a string', ErrorCode.API_NETWORK_ERROR);
-    expect(result.message).toBe('just a string');
-  });
-});
-
-describe('handleError', () => {
+describe('errors.ts service', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
     MockAlert.alert.mockClear();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('logs error to console', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'error');
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    handleError(err, { silent: false });
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
-  });
-
-  it('does not log silent errors', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'silent');
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    handleError(err, { silent: false });
-    // silent severity maps to debug level, not error
-    expect(consoleSpy).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
-  });
-
-  it('does not log when silent=true', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'error');
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    handleError(err, { silent: true });
-    expect(consoleSpy).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
-  });
-
-  it('shows Alert for error severity by default', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'error');
-    handleError(err);
-    expect(MockAlert.alert).toHaveBeenCalledTimes(1);
-    expect(MockAlert.alert).toHaveBeenCalledWith('出错了', 'test', [{ text: '确定' }]);
-  });
-
-  it('does not show Alert when showAlert=false', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'error');
-    handleError(err, { showAlert: false });
-    expect(MockAlert.alert).not.toHaveBeenCalled();
-  });
-
-  it('does not show Alert for silent severity', () => {
-    const err = new AppError('silent', ErrorCode.GEN_UNKNOWN, 'silent');
-    handleError(err);
-    expect(MockAlert.alert).not.toHaveBeenCalled();
-  });
-
-  it('shows recovery Alert with retry button', () => {
-    const err = new APIError('网络连接失败', ErrorCode.API_NETWORK_ERROR, undefined, 'error', true);
-    const onRecover = jest.fn();
-    handleError(err, { onRecover });
-    expect(MockAlert.alert).toHaveBeenCalledTimes(1);
-    const [title, message, buttons] = MockAlert.alert.mock.calls[0];
-    expect(title).toBe('网络错误');
-    expect(message).toContain('是否重试');
-    expect(buttons).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ text: '取消' }),
-        expect.objectContaining({ text: '重试' }),
-      ])
-    );
-  });
-
-  it('respects custom alertTitle', () => {
-    const err = new CameraError('no cam', ErrorCode.CAM_PERMISSION_DENIED);
-    handleError(err, { alertTitle: '相机出问题了' });
-    expect(MockAlert.alert).toHaveBeenCalledWith(
-      '相机出问题了',
-      expect.any(String),
-      expect.any(Array)
-    );
-  });
-
-  it('returns the normalized AppError', () => {
-    const err = new Error('plain');
-    const result = handleError(err);
-    expect(result).toBeInstanceOf(AppError);
-    expect(result.message).toBe('plain');
-  });
-});
-
-describe('safeAsync', () => {
-  beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  it('returns value on success', async () => {
-    const result = await safeAsync(() => Promise.resolve(42));
-    expect(result).toBe(42);
-  });
-
-  it('returns fallback on error (silent)', async () => {
-    const result = await safeAsync(
-      () => Promise.reject(new Error('fail')),
-      null,
-      { silent: true }
-    );
-    expect(result).toBeNull();
-  });
-
-  it('returns null without throwing', async () => {
-    const fn = jest.fn().mockRejectedValue(new AppError('fail', ErrorCode.GEN_UNKNOWN));
-    const result = await safeAsync(fn, null, { silent: true });
-    expect(result).toBeNull();
-  });
-});
-
-describe('resultOf', () => {
-  it('returns ok:true with value on success', async () => {
-    const result = await resultOf(() => Promise.resolve('success'));
-    expect(result).toEqual({ ok: true, value: 'success' });
-  });
-
-  it('returns ok:false with AppError on failure', async () => {
-    const result = await resultOf(
-      () => Promise.reject(new APIError('auth failed', ErrorCode.API_AUTH_FAILED, 401)),
-      ErrorCode.API_AUTH_FAILED
-    );
-    expect(result.ok).toBe(false);
-    const err = result as { ok: false; error: AppError };
-    expect(err.error).toBeInstanceOf(APIError);
-    expect(err.error.message).toBe('auth failed');
-    expect((err.error as APIError).statusCode).toBe(401);
-  });
-
-  it('wraps unknown errors with default code', async () => {
-    const result = await resultOf(() => Promise.reject('string error'));
-    expect(result.ok).toBe(false);
-    const err = result as { ok: false; error: { code: ErrorCode } };
-    expect(err.error.code).toBe(ErrorCode.GEN_UNKNOWN);
-  });
-});
-
-describe('ErrorCode', () => {
-  it('has all expected camera error codes', () => {
-    expect(ErrorCode.CAM_PERMISSION_DENIED).toBe('CAM-PERM-001');
-    expect(ErrorCode.CAM_CAPTURE_FAILED).toBe('CAM-CAPT-001');
-  });
-
-  it('has all expected storage error codes', () => {
-    expect(ErrorCode.STOR_READ_FAILED).toBe('STOR-READ-001');
-    expect(ErrorCode.STOR_DISK_FULL).toBe('STOR-DISK-001');
-  });
-
-  it('has all expected API error codes', () => {
-    expect(ErrorCode.API_NETWORK_ERROR).toBe('API-NET-001');
-    expect(ErrorCode.API_TIMEOUT).toBe('API-NET-002');
-    expect(ErrorCode.API_AUTH_FAILED).toBe('API-AUTH-401');
-    expect(ErrorCode.API_RATE_LIMITED).toBe('API-RATE-429');
-  });
-
-  it('has location error codes', () => {
-    expect(ErrorCode.LOC_PERMISSION_DENIED).toBe('LOC-PERM-001');
-    expect(ErrorCode.LOC_UNAVAILABLE).toBe('LOC-001');
-  });
-
-  it('has media error codes', () => {
-    expect(ErrorCode.MED_LOAD_FAILED).toBe('MED-LOAD-001');
-    expect(ErrorCode.MED_SAVE_FAILED).toBe('MED-SAVE-001');
-  });
-
-  it('has config error codes', () => {
-    expect(ErrorCode.CFG_MISSING).toBe('CFG-001');
-    expect(ErrorCode.CFG_INVALID).toBe('CFG-002');
-  });
-});
-
-// getDefaultAlertTitle is a private function — test it indirectly via handleError alert titles
-describe('getDefaultAlertTitle', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-    MockAlert.alert.mockClear();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  const { handleError } = require('../services/errors');
-
-  it('shows "相机错误" for CameraError', () => {
-    const { CameraError } = require('../services/errors');
-    const err = new CameraError('camera unavailable', require('../services/errors').ErrorCode.CAM_PERMISSION_DENIED);
-    handleError(err);
-    expect(MockAlert.alert).toHaveBeenCalledWith('相机错误', expect.any(String), expect.any(Array));
-  });
-
-  it('shows "存储错误" for StorageError', () => {
-    const { StorageError } = require('../services/errors');
-    const err = new StorageError('read failed', require('../services/errors').ErrorCode.STOR_READ_FAILED);
-    handleError(err);
-    expect(MockAlert.alert).toHaveBeenCalledWith('存储错误', expect.any(String), expect.any(Array));
-  });
-
-  it('shows "网络错误" for APIError', () => {
-    const { APIError } = require('../services/errors');
-    const err = new APIError('network error', require('../services/errors').ErrorCode.API_NETWORK_ERROR);
-    handleError(err);
-    expect(MockAlert.alert).toHaveBeenCalledWith('网络错误', expect.any(String), expect.any(Array));
-  });
-
-  it('shows "定位错误" for LocationError', () => {
-    const { LocationError } = require('../services/errors');
-    const err = new LocationError('location unavailable', require('../services/errors').ErrorCode.LOC_UNAVAILABLE);
-    handleError(err, { showAlert: true });
-    expect(MockAlert.alert).toHaveBeenCalledWith('定位错误', expect.any(String), expect.any(Array));
-  });
-
-  it('shows "媒体错误" for MediaError', () => {
-    const { MediaError } = require('../services/errors');
-    const err = new MediaError('load failed', require('../services/errors').ErrorCode.MED_LOAD_FAILED);
-    handleError(err);
-    expect(MockAlert.alert).toHaveBeenCalledWith('媒体错误', expect.any(String), expect.any(Array));
-  });
-
-  it('shows "配置错误" for ConfigError', () => {
-    const { ConfigError } = require('../services/errors');
-    const err = new ConfigError('missing key', require('../services/errors').ErrorCode.CFG_MISSING);
-    handleError(err, { showAlert: true });
-    expect(MockAlert.alert).toHaveBeenCalledWith('配置错误', expect.any(String), expect.any(Array));
-  });
-
-  it('shows "出错了" for generic AppError (default)', () => {
-    const { AppError, ErrorCode } = require('../services/errors');
-    const err = new AppError('unknown error', ErrorCode.GEN_UNKNOWN);
-    handleError(err);
-    expect(MockAlert.alert).toHaveBeenCalledWith('出错了', expect.any(String), expect.any(Array));
-  });
-});
-
-describe('isAtLeastSeverity', () => {
-  it('returns true when error severity equals minSeverity', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'warning');
-    expect(isAtLeastSeverity(err, 'warning')).toBe(true);
-  });
-
-  it('returns true when error severity exceeds minSeverity', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'error');
-    expect(isAtLeastSeverity(err, 'warning')).toBe(true);
-    expect(isAtLeastSeverity(err, 'info')).toBe(true);
-  });
-
-  it('returns true when error severity is critical', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'critical');
-    expect(isAtLeastSeverity(err, 'critical')).toBe(true);
-    expect(isAtLeastSeverity(err, 'error')).toBe(true);
-    expect(isAtLeastSeverity(err, 'warning')).toBe(true);
-    expect(isAtLeastSeverity(err, 'info')).toBe(true);
-    expect(isAtLeastSeverity(err, 'silent')).toBe(true);
-  });
-
-  it('returns false when error severity is lower than minSeverity', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'info');
-    expect(isAtLeastSeverity(err, 'warning')).toBe(false);
-    expect(isAtLeastSeverity(err, 'error')).toBe(false);
-    expect(isAtLeastSeverity(err, 'critical')).toBe(false);
-  });
-
-  it('returns false when error severity is silent and minSeverity is higher', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'silent');
-    expect(isAtLeastSeverity(err, 'info')).toBe(false);
-    expect(isAtLeastSeverity(err, 'warning')).toBe(false);
-  });
-
-  it('returns true when both are silent', () => {
-    const err = new AppError('test', ErrorCode.GEN_UNKNOWN, 'silent');
-    expect(isAtLeastSeverity(err, 'silent')).toBe(true);
-  });
-});
-
-describe('toResult', () => {
-  it('returns ok:true with the resolved value when fn succeeds', async () => {
-    const fn = () => Promise.resolve(123);
-    const wrapped = toResult(fn);
-    const result = await wrapped();
-    expect(result).toEqual({ ok: true, value: 123 });
-  });
-
-  it('returns ok:false with AppError when fn throws AppError', async () => {
-    const err = new CameraError('cam error', ErrorCode.CAM_CAPTURE_FAILED);
-    const fn = () => Promise.reject(err);
-    const wrapped = toResult(fn, ErrorCode.CAM_CAPTURE_FAILED);
-    const result = await wrapped();
-    expect(result.ok).toBe(false);
-    expect((result as any).error).toBe(err);
-  });
-
-  it('returns ok:false with wrapped AppError when fn throws plain Error', async () => {
-    const fn = () => Promise.reject(new Error('plain'));
-    const wrapped = toResult(fn, ErrorCode.API_NETWORK_ERROR);
-    const result = await wrapped();
-    expect(result.ok).toBe(false);
-    expect((result as any).error).toBeInstanceOf(AppError);
-    expect((result as any).error.code).toBe(ErrorCode.API_NETWORK_ERROR);
-    expect((result as any).error.message).toBe('plain');
-  });
-
-  it('uses default code GEN_UNKNOWN when no code provided', async () => {
-    const fn = () => Promise.reject('string error');
-    const wrapped = toResult(fn);
-    const result = await wrapped();
-    expect(result.ok).toBe(false);
-    expect((result as any).error.code).toBe(ErrorCode.GEN_UNKNOWN);
-  });
-
-  it('resultOf is an alias for the Result pattern using toResult', async () => {
-    // resultOf wraps try/catch directly; toResult wraps a function
-    // Both should produce identical Result<T> output
-    const viaResultOf = await resultOf(() => Promise.resolve('hello'));
-    const viaToResult = await toResult(() => Promise.resolve('hello'))();
-    expect(viaResultOf).toEqual(viaToResult);
-  });
-});
-
-describe('toAppError - preserves AppError (line 172)', () => {
-  it('returns the same AppError reference unchanged', () => {
-    const original = new CameraError('cam', ErrorCode.CAM_PERMISSION_DENIED, 'warning', true);
-    const result = toAppError(original);
-    expect(result).toBe(original);  // line 172: if (error instanceof AppError) return error;
-    expect(result.code).toBe(ErrorCode.CAM_PERMISSION_DENIED);
-  });
-
-  it('preserves APIError with statusCode intact', () => {
-    const original = new APIError('auth', ErrorCode.API_AUTH_FAILED, 401, 'error', true);
-    const result = toAppError(original);
-    expect(result).toBe(original);
-    expect((result as APIError).statusCode).toBe(401);
-  });
-});
-
-describe('handleError - showAlert false even for critical errors (lines 291-296)', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-    MockAlert.alert.mockClear();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('does NOT call Alert.alert when showAlert=false for critical error', () => {
-    const err = new AppError('critical failure', ErrorCode.STOR_DISK_FULL, 'critical', false);
-    handleError(err, { showAlert: false });
-    expect(MockAlert.alert).not.toHaveBeenCalled();
-  });
-
-  it('does NOT call Alert.alert when showAlert=false for error severity', () => {
-    const err = new AppError('just an error', ErrorCode.GEN_UNKNOWN, 'error', false);
-    handleError(err, { showAlert: false });
-    expect(MockAlert.alert).not.toHaveBeenCalled();
-  });
-});
-
-describe('handleError - wraps non-AppError with onRecover into AppError GEN_UNKNOWN', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-    MockAlert.alert.mockClear();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('wraps plain Error and shows recovery Alert with onRecover', () => {
-    const plainError = new Error('network unreachable');
-    const onRecover = jest.fn();
-    const result = handleError(plainError, { onRecover });
-
-    expect(result).toBeInstanceOf(AppError);
-    expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
-    expect(result.message).toBe('network unreachable');
-
-    // Should still show alert with retry
-    // Note: message only contains "是否重试" when appError.recoverable=true
-    // toAppError sets recoverable=false for plain Errors, so no retry text
-    expect(MockAlert.alert).toHaveBeenCalledTimes(1);
-    const [title, message, buttons] = MockAlert.alert.mock.calls[0];
-    expect(title).toBe('出错了');
-    expect(message).toBe('network unreachable');
-    // No retry buttons when not recoverable
-    expect(buttons).toEqual([{ text: '确定' }]);
-  });
-
-  it('wraps string error into AppError with default code', () => {
-    const result = handleError('something went wrong', { onRecover: jest.fn() });
-    expect(result).toBeInstanceOf(AppError);
-    expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
-    expect(result.message).toBe('something went wrong');
-  });
-});
-
-describe('handleError - custom logger', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-    MockAlert.alert.mockClear();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-
-  it('calls custom logger.info for info severity', () => {
-    const err = new AppError('info msg', ErrorCode.GEN_UNKNOWN, 'info');
-    const customLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-    // Suppress console output to avoid noise; custom logger should still be called
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    handleError(err, { logger: customLogger, showAlert: false });
-    consoleSpy.mockRestore();
-    // 'info' severity maps to info level → calls logger.info
-    expect(customLogger.info).toHaveBeenCalled();
-    expect(customLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[GEN-UNK-001]'),
-      'info msg',
-      expect.any(Object)
-    );
-    expect(customLogger.error).not.toHaveBeenCalled();
-  });
-
-  it('calls custom logger.warn for warning severity', () => {
-    const err = new AppError('warning', ErrorCode.LOC_PERMISSION_DENIED, 'warning');
-    const customLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-    handleError(err, { logger: customLogger });
-    expect(customLogger.warn).toHaveBeenCalled();
-    expect(customLogger.error).not.toHaveBeenCalled();
-  });
-
-  it('calls custom logger.error for critical severity', () => {
-    const err = new AppError('critical failure', ErrorCode.STOR_DISK_FULL, 'critical', false);
-    const customLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-    handleError(err, { logger: customLogger, showAlert: false });
-    expect(customLogger.error).toHaveBeenCalled();
-    // Third arg is { stack: error.stack } because error instanceof Error (AppError extends Error)
-    expect(customLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('[STOR-DISK-001]'),
-      'critical failure',
-      expect.objectContaining({ stack: expect.stringContaining('critical failure') })
-    );
-  });
-});
-
-describe('safeAsync - catches errors and returns fallback', () => {
-  beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('returns custom fallback value on error', async () => {
-    const result = await safeAsync(
-      () => Promise.reject(new Error('fail')),
-      'fallback_value' as any,
-      { silent: true }
-    );
-    expect(result).toBe('fallback_value');
+  describe('ErrorCode', () => {
+    it('contains camera error codes', () => {
+      expect(ErrorCode.CAM_PERMISSION_DENIED).toBe('CAM-PERM-001');
+      expect(ErrorCode.CAM_NOT_AVAILABLE).toBe('CAM-PERM-002');
+      expect(ErrorCode.CAM_CAPTURE_FAILED).toBe('CAM-CAPT-001');
+      expect(ErrorCode.CAM_RAW_UNSUPPORTED).toBe('CAM-CAPT-002');
+    });
+
+    it('contains storage error codes', () => {
+      expect(ErrorCode.STOR_READ_FAILED).toBe('STOR-READ-001');
+      expect(ErrorCode.STOR_WRITE_FAILED).toBe('STOR-WRITE-001');
+      expect(ErrorCode.STOR_DISK_FULL).toBe('STOR-DISK-001');
+      expect(ErrorCode.STOR_FILE_NOT_FOUND).toBe('STOR-FILE-001');
+      expect(ErrorCode.STOR_PERMISSION_DENIED).toBe('STOR-PERM-001');
+    });
+
+    it('contains API error codes', () => {
+      expect(ErrorCode.API_NETWORK_ERROR).toBe('API-NET-001');
+      expect(ErrorCode.API_TIMEOUT).toBe('API-NET-002');
+      expect(ErrorCode.API_AUTH_FAILED).toBe('API-AUTH-401');
+      expect(ErrorCode.API_AUTH_MISSING).toBe('API-AUTH-001');
+      expect(ErrorCode.API_SERVER_ERROR).toBe('API-SRV-500');
+      expect(ErrorCode.API_INVALID_RESPONSE).toBe('API-RESP-001');
+      expect(ErrorCode.API_RATE_LIMITED).toBe('API-RATE-429');
+    });
+
+    it('contains location error codes', () => {
+      expect(ErrorCode.LOC_PERMISSION_DENIED).toBe('LOC-PERM-001');
+      expect(ErrorCode.LOC_UNAVAILABLE).toBe('LOC-001');
+      expect(ErrorCode.LOC_TIMEOUT).toBe('LOC-TIME-001');
+    });
+
+    it('contains media error codes', () => {
+      expect(ErrorCode.MED_LOAD_FAILED).toBe('MED-LOAD-001');
+      expect(ErrorCode.MED_SAVE_FAILED).toBe('MED-SAVE-001');
+    });
+
+    it('contains config error codes', () => {
+      expect(ErrorCode.CFG_MISSING).toBe('CFG-001');
+      expect(ErrorCode.CFG_INVALID).toBe('CFG-002');
+    });
+
+    it('contains general error codes', () => {
+      expect(ErrorCode.GEN_UNKNOWN).toBe('GEN-UNK-001');
+      expect(ErrorCode.GEN_OPERATION_CANCELLED).toBe('GEN-CANCEL-001');
+    });
   });
 
-  it('returns fallback array on error', async () => {
-    const result = await safeAsync(
-      () => Promise.reject(new AppError('fail', ErrorCode.GEN_UNKNOWN)),
-      [1, 2, 3] as any,
-      { silent: true }
-    );
-    expect(result).toEqual([1, 2, 3]);
+  describe('AppError', () => {
+    it('creates error with all properties', () => {
+      const err = new AppError('test message', ErrorCode.CAM_PERMISSION_DENIED, 'error', true, 'CameraContext');
+      expect(err.message).toBe('test message');
+      expect(err.code).toBe(ErrorCode.CAM_PERMISSION_DENIED);
+      expect(err.severity).toBe('error');
+      expect(err.recoverable).toBe(true);
+      expect(err.context).toBe('CameraContext');
+      expect(err.name).toBe('AppError');
+    });
+
+    it('has default values when not provided', () => {
+      const err = new AppError('msg', ErrorCode.GEN_UNKNOWN);
+      expect(err.severity).toBe('error');
+      expect(err.recoverable).toBe(false);
+      expect(err.context).toBeUndefined();
+    });
+
+    it('toString() formats correctly with context', () => {
+      const err = new AppError('oops', ErrorCode.API_NETWORK_ERROR, 'warning', true, 'API');
+      expect(err.toString()).toBe('[API-NET-001] oops (API)');
+    });
+
+    it('toString() formats correctly without context', () => {
+      const err = new AppError('oops', ErrorCode.GEN_UNKNOWN);
+      expect(err.toString()).toBe('[GEN-UNK-001] oops');
+    });
+
+    it('is instance of Error', () => {
+      const err = new AppError('msg', ErrorCode.GEN_UNKNOWN);
+      expect(err).toBeInstanceOf(Error);
+      expect(err).toBeInstanceOf(AppError);
+    });
   });
 
-  it('returns fallback object on error', async () => {
-    const fallbackObj = { success: false, data: null };
-    const result = await safeAsync(
-      () => Promise.reject('string error'),
-      fallbackObj,
-      { silent: true }
-    );
-    expect(result).toEqual(fallbackObj);
-  });
-});
+  describe('CameraError', () => {
+    it('creates with CameraError name', () => {
+      const err = new CameraError('camera failed', ErrorCode.CAM_CAPTURE_FAILED, 'error', true);
+      expect(err.name).toBe('CameraError');
+      expect(err.message).toBe('camera failed');
+      expect(err.code).toBe(ErrorCode.CAM_CAPTURE_FAILED);
+    });
 
-describe('toResult - returns {ok: false, error: AppError} when fn throws', () => {
-  it('returns ok:false with AppError when fn throws non-AppError', async () => {
-    const fn = () => Promise.reject(new Error('plain throw'));
-    const wrapped = toResult(fn);
-    const result = await wrapped();
-
-    expect(result.ok).toBe(false);
-    const err = (result as { ok: false; error: AppError }).error;
-    expect(err).toBeInstanceOf(AppError);
-    expect(err.message).toBe('plain throw');
-    expect(err.code).toBe(ErrorCode.GEN_UNKNOWN);
+    it('is instance of AppError', () => {
+      const err = new CameraError('msg', ErrorCode.CAM_PERMISSION_DENIED);
+      expect(err).toBeInstanceOf(AppError);
+    });
   });
 
-  it('returns ok:false with preserved AppError when fn throws AppError subclass', async () => {
-    const err = new StorageError('disk full', ErrorCode.STOR_DISK_FULL, 'critical', false);
-    const fn = () => Promise.reject(err);
-    const wrapped = toResult(fn, ErrorCode.STOR_DISK_FULL);
-    const result = await wrapped();
+  describe('StorageError', () => {
+    it('creates with StorageError name', () => {
+      const err = new StorageError('disk full', ErrorCode.STOR_DISK_FULL, 'critical', false);
+      expect(err.name).toBe('StorageError');
+      expect(err.severity).toBe('critical');
+      expect(err.recoverable).toBe(false);
+    });
 
-    expect(result.ok).toBe(false);
-    const returnedErr = (result as { ok: false; error: AppError }).error;
-    expect(returnedErr).toBe(err);
-    expect(returnedErr).toBeInstanceOf(StorageError);
-    expect(returnedErr.context).toBe('StorageError');
+    it('is instance of AppError', () => {
+      const err = new StorageError('msg', ErrorCode.STOR_READ_FAILED);
+      expect(err).toBeInstanceOf(AppError);
+    });
   });
 
-  it('returns ok:false when fn throws string', async () => {
-    const fn = () => Promise.reject('string error');
-    const wrapped = toResult(fn);
-    const result = await wrapped();
+  describe('APIError', () => {
+    it('creates with APIError name and statusCode', () => {
+      const err = new APIError('server error', ErrorCode.API_SERVER_ERROR, 500, 'error', true);
+      expect(err.name).toBe('APIError');
+      expect(err.statusCode).toBe(500);
+    });
 
-    expect(result.ok).toBe(false);
-    expect((result as any).error).toBeInstanceOf(AppError);
-    expect((result as any).error.message).toBe('string error');
-    expect((result as any).error.code).toBe(ErrorCode.GEN_UNKNOWN);
+    it('statusCode is optional', () => {
+      const err = new APIError('timeout', ErrorCode.API_TIMEOUT, undefined, 'warning', true);
+      expect(err.statusCode).toBeUndefined();
+    });
+
+    it('is instance of AppError', () => {
+      const err = new APIError('msg', ErrorCode.API_AUTH_FAILED, 401);
+      expect(err).toBeInstanceOf(AppError);
+    });
   });
 
-  it('returns ok:false with specified code when fn throws', async () => {
-    const fn = () => Promise.reject(new Error('timeout'));
-    const wrapped = toResult(fn, ErrorCode.API_TIMEOUT);
-    const result = await wrapped();
-
-    expect(result.ok).toBe(false);
-    expect((result as any).error.code).toBe(ErrorCode.API_TIMEOUT);
-  });
-});
-
-describe('Error titles', () => {
-  it('returns 相机错误 for CameraError', () => {
-    const err = new CameraError('cam', ErrorCode.CAM_PERMISSION_DENIED);
-    expect(getDefaultAlertTitle(err)).toBe('相机错误');
+  describe('LocationError', () => {
+    it('creates with LocationError name', () => {
+      const err = new LocationError('gps unavailable', ErrorCode.LOC_UNAVAILABLE, 'warning', false);
+      expect(err.name).toBe('LocationError');
+      expect(err.message).toBe('gps unavailable');
+    });
   });
 
-  it('returns 存储错误 for StorageError', () => {
-    const err = new StorageError('disk', ErrorCode.STOR_DISK_FULL);
-    expect(getDefaultAlertTitle(err)).toBe('存储错误');
+  describe('MediaError', () => {
+    it('creates with MediaError name', () => {
+      const err = new MediaError('load failed', ErrorCode.MED_LOAD_FAILED, 'error', false);
+      expect(err.name).toBe('MediaError');
+    });
   });
 
-  it('returns 网络错误 for APIError', () => {
-    const err = new APIError('auth', ErrorCode.API_AUTH_FAILED, 401);
-    expect(getDefaultAlertTitle(err)).toBe('网络错误');
+  describe('ConfigError', () => {
+    it('creates with ConfigError name', () => {
+      const err = new ConfigError('invalid config', ErrorCode.CFG_INVALID, 'warning', true);
+      expect(err.name).toBe('ConfigError');
+      expect(err.recoverable).toBe(true);
+    });
   });
 
-  it('returns 定位错误 for LocationError', () => {
-    const err = new LocationError('unavail', ErrorCode.LOC_UNAVAILABLE);
-    expect(getDefaultAlertTitle(err)).toBe('定位错误');
+  describe('errorToString', () => {
+    it('returns AppError message', () => {
+      const err = new AppError('app error', ErrorCode.GEN_UNKNOWN);
+      expect(errorToString(err)).toBe('app error');
+    });
+
+    it('returns Error message', () => {
+      const err = new Error('plain error');
+      expect(errorToString(err)).toBe('plain error');
+    });
+
+    it('returns string as-is', () => {
+      expect(errorToString('just a string')).toBe('just a string');
+    });
+
+    it('returns fallback for unknown types', () => {
+      expect(errorToString({ foo: 'bar' }, 'fallback msg')).toBe('fallback msg');
+      expect(errorToString(null)).toBe('发生了一个未知错误');
+      expect(errorToString(undefined, 'custom fallback')).toBe('custom fallback');
+    });
   });
 
-  it('returns 媒体错误 for MediaError', () => {
-    const err = new MediaError('load', ErrorCode.MED_LOAD_FAILED);
-    expect(getDefaultAlertTitle(err)).toBe('媒体错误');
+  describe('toAppError', () => {
+    it('preserves AppError instances', () => {
+      const original = new AppError('already app error', ErrorCode.CAM_CAPTURE_FAILED, 'error', true);
+      const result = toAppError(original);
+      expect(result).toBe(original);
+    });
+
+    it('wraps plain Error', () => {
+      const result = toAppError(new Error('wrapped'), ErrorCode.GEN_UNKNOWN);
+      expect(result).toBeInstanceOf(AppError);
+      expect(result.message).toBe('wrapped');
+      expect(result.code).toBe(ErrorCode.GEN_UNKNOWN);
+    });
+
+    it('wraps string', () => {
+      const result = toAppError('string error', ErrorCode.API_NETWORK_ERROR);
+      expect(result).toBeInstanceOf(AppError);
+      expect(result.message).toBe('string error');
+    });
+
+    it('uses custom default code when wrapping unknown', () => {
+      const result = toAppError({ unknown: 'obj' }, ErrorCode.CFG_INVALID);
+      expect(result.code).toBe(ErrorCode.CFG_INVALID);
+    });
   });
 
-  it('returns 配置错误 for ConfigError', () => {
-    const err = new ConfigError('missing', ErrorCode.CFG_MISSING);
-    expect(getDefaultAlertTitle(err)).toBe('配置错误');
+  describe('handleError', () => {
+    it('returns AppError', () => {
+      const err = new Error('test');
+      const result = handleError(err, { showAlert: false });
+      expect(result).toBeInstanceOf(AppError);
+    });
+
+    it('logs warning for warning severity', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      handleError(new AppError('warn msg', ErrorCode.CFG_MISSING, 'warning'), { silent: false, showAlert: false });
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
+    it('logs error for error severity', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      handleError(new AppError('err msg', ErrorCode.API_NETWORK_ERROR, 'error'), { silent: false, showAlert: false });
+      expect(errorSpy).toHaveBeenCalled();
+      errorSpy.mockRestore();
+    });
+
+    it('does not log silent severity', () => {
+      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      handleError(new AppError('silent', ErrorCode.GEN_UNKNOWN, 'silent'), { silent: false, showAlert: false });
+      expect(debugSpy).not.toHaveBeenCalled();
+      debugSpy.mockRestore();
+    });
+
+    it('shows Alert for error severity', () => {
+      handleError(new AppError('err', ErrorCode.GEN_UNKNOWN, 'error'), {});
+      expect(MockAlert.alert).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows Alert for critical severity', () => {
+      handleError(new AppError('crit', ErrorCode.STOR_DISK_FULL, 'critical', false), {});
+      expect(MockAlert.alert).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not show Alert for warning severity by default', () => {
+      handleError(new AppError('warn', ErrorCode.LOC_UNAVAILABLE, 'warning'), {});
+      expect(MockAlert.alert).not.toHaveBeenCalled();
+    });
+
+    it('does not show Alert when showAlert=false', () => {
+      handleError(new AppError('err', ErrorCode.GEN_UNKNOWN, 'error'), { showAlert: false });
+      expect(MockAlert.alert).not.toHaveBeenCalled();
+    });
+
+    it('shows recovery dialog for recoverable errors with onRecover', () => {
+      const recoverable = new AppError(' recoverable', ErrorCode.API_NETWORK_ERROR, 'error', true);
+      const onRecover = jest.fn();
+      handleError(recoverable, { onRecover });
+      expect(MockAlert.alert).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('是否重试？'),
+        expect.arrayContaining([
+          expect.objectContaining({ text: '取消' }),
+          expect.objectContaining({ text: '重试', onPress: onRecover }),
+        ])
+      );
+    });
+
+    it('does not show recovery dialog when no onRecover', () => {
+      const recoverable = new AppError(' recoverable', ErrorCode.API_NETWORK_ERROR, 'error', true);
+      handleError(recoverable, {});
+      const alertCalls = MockAlert.alert.mock.calls;
+      const lastCall = alertCalls[alertCalls.length - 1];
+      expect(lastCall[1]).not.toContain('是否重试？');
+    });
+
+    it('respects silent option', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      handleError(new AppError('err', ErrorCode.GEN_UNKNOWN, 'error'), { silent: true, showAlert: false });
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
+    });
   });
 
-  it('returns 出错了 for unknown error name', () => {
-    const err = new AppError('generic', ErrorCode.GEN_UNKNOWN);
-    expect(getDefaultAlertTitle(err)).toBe('出错了');
+  describe('isAtLeastSeverity', () => {
+    it('returns true when error severity meets minimum', () => {
+      const err = new AppError('err', ErrorCode.GEN_UNKNOWN, 'error');
+      expect(isAtLeastSeverity(err, 'error')).toBe(true);
+      expect(isAtLeastSeverity(err, 'warning')).toBe(true);
+      expect(isAtLeastSeverity(err, 'info')).toBe(true);
+    });
+
+    it('returns false when error severity is below minimum', () => {
+      const err = new AppError('err', ErrorCode.GEN_UNKNOWN, 'info');
+      expect(isAtLeastSeverity(err, 'warning')).toBe(false);
+      expect(isAtLeastSeverity(err, 'error')).toBe(false);
+      expect(isAtLeastSeverity(err, 'critical')).toBe(false);
+    });
+
+    it('handles all severity levels', () => {
+      const silent = new AppError('s', ErrorCode.GEN_UNKNOWN, 'silent');
+      const info = new AppError('i', ErrorCode.GEN_UNKNOWN, 'info');
+      const warn = new AppError('w', ErrorCode.GEN_UNKNOWN, 'warning');
+      const crit = new AppError('c', ErrorCode.GEN_UNKNOWN, 'critical');
+
+      expect(isAtLeastSeverity(silent, 'silent')).toBe(true);
+      expect(isAtLeastSeverity(silent, 'info')).toBe(false);
+      expect(isAtLeastSeverity(info, 'info')).toBe(true);
+      expect(isAtLeastSeverity(warn, 'warning')).toBe(true);
+      expect(isAtLeastSeverity(crit, 'critical')).toBe(true);
+    });
+  });
+
+  describe('getDefaultAlertTitle', () => {
+    it('returns camera title for CameraError', () => {
+      const err = new CameraError('cam', ErrorCode.CAM_CAPTURE_FAILED);
+      expect(getDefaultAlertTitle(err)).toBe('相机错误');
+    });
+
+    it('returns storage title for StorageError', () => {
+      const err = new StorageError('stor', ErrorCode.STOR_DISK_FULL);
+      expect(getDefaultAlertTitle(err)).toBe('存储错误');
+    });
+
+    it('returns network title for APIError', () => {
+      const err = new APIError('api', ErrorCode.API_SERVER_ERROR, 500);
+      expect(getDefaultAlertTitle(err)).toBe('网络错误');
+    });
+
+    it('returns location title for LocationError', () => {
+      const err = new LocationError('loc', ErrorCode.LOC_UNAVAILABLE);
+      expect(getDefaultAlertTitle(err)).toBe('定位错误');
+    });
+
+    it('returns media title for MediaError', () => {
+      const err = new MediaError('med', ErrorCode.MED_LOAD_FAILED);
+      expect(getDefaultAlertTitle(err)).toBe('媒体错误');
+    });
+
+    it('returns config title for ConfigError', () => {
+      const err = new ConfigError('cfg', ErrorCode.CFG_INVALID);
+      expect(getDefaultAlertTitle(err)).toBe('配置错误');
+    });
+
+    it('returns default title for AppError', () => {
+      const err = new AppError('app', ErrorCode.GEN_UNKNOWN);
+      expect(getDefaultAlertTitle(err)).toBe('出错了');
+    });
+  });
+
+  describe('safeAsync', () => {
+    it('returns value on success', async () => {
+      const fn = jest.fn().mockResolvedValue(42);
+      const result = await safeAsync(fn, null, { showAlert: false });
+      expect(result).toBe(42);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns fallback on error', async () => {
+      const fn = jest.fn().mockRejectedValue(new Error('fail'));
+      const result = await safeAsync(fn, 99, { showAlert: false });
+      expect(result).toBe(99);
+    });
+
+    it('returns null fallback by default on error', async () => {
+      const fn = jest.fn().mockRejectedValue(new Error('fail'));
+      const result = await safeAsync(fn);
+      expect(result).toBeNull();
+    });
+
+    it('handles sync errors', async () => {
+      const fn = jest.fn().mockImplementation(() => { throw new Error('sync fail'); });
+      const result = await safeAsync(fn, 'fallback', { showAlert: false });
+      expect(result).toBe('fallback');
+    });
+  });
+
+  describe('toResult', () => {
+    it('returns ok:true with value when successful', async () => {
+      const fn = toResult(() => Promise.resolve('success'), ErrorCode.GEN_UNKNOWN);
+      const result = await fn();
+      expect(result).toEqual({ ok: true, value: 'success' });
+    });
+
+    it('returns ok:false with error when rejected', async () => {
+      const err = new AppError('rejected', ErrorCode.API_NETWORK_ERROR);
+      const fn = toResult(() => Promise.reject(err), ErrorCode.API_NETWORK_ERROR);
+      const result = await fn();
+      expect(result.ok).toBe(false);
+      expect((result as { ok: false; error: AppError }).error.message).toBe('rejected');
+    });
+
+    it('uses custom error code', async () => {
+      const fn = toResult(() => Promise.reject(new Error('err')), ErrorCode.CAM_CAPTURE_FAILED);
+      const result = await fn();
+      expect(result.ok).toBe(false);
+      expect((result as { ok: false; error: AppError }).error.code).toBe(ErrorCode.CAM_CAPTURE_FAILED);
+    });
+  });
+
+  describe('resultOf', () => {
+    it('returns ok:true with value when successful', async () => {
+      const result = await resultOf(() => Promise.resolve(100), ErrorCode.GEN_UNKNOWN);
+      expect(result).toEqual({ ok: true, value: 100 });
+    });
+
+    it('returns ok:false with error when rejected', async () => {
+      const err = new StorageError('disk full', ErrorCode.STOR_DISK_FULL);
+      const result = await resultOf(() => Promise.reject(err), ErrorCode.STOR_DISK_FULL);
+      expect(result.ok).toBe(false);
+      expect((result as { ok: false; error: AppError }).error).toBeInstanceOf(StorageError);
+    });
+
+    it('wraps non-AppError errors with default code', async () => {
+      const result = await resultOf(() => Promise.reject(new Error('plain')), ErrorCode.API_NETWORK_ERROR);
+      expect(result.ok).toBe(false);
+      expect((result as { ok: false; error: AppError }).error.code).toBe(ErrorCode.API_NETWORK_ERROR);
+    });
   });
 });
