@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSunPosition } from '../hooks/useSunPosition';
-import { useAccessibilityButton } from '../hooks/useAccessibility';
+import { useAccessibilityButton, useAccessibilityReducedMotion } from '../hooks/useAccessibility';
 
 // Structural-only styles (no theme colors)
 const staticStyles = StyleSheet.create({
@@ -87,6 +87,7 @@ const staticStyles = StyleSheet.create({
 
 function CompassArrow({ azimuth }: { azimuth: number }) {
   const { colors } = useTheme();
+  const { reducedMotion } = useAccessibilityReducedMotion();
 
   const compassTextStyle = useMemo(() => ({ color: colors.sunCompassText, fontSize: 8, fontWeight: '700' as const }), [colors.sunCompassText]);
   const compassCenterStyle = useMemo(() => ({ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.sunCompassCenter, position: 'absolute' as const }), [colors.sunCompassCenter]);
@@ -97,6 +98,9 @@ function CompassArrow({ azimuth }: { azimuth: number }) {
     alignItems: 'center' as const, justifyContent: 'center' as const, position: 'relative' as const,
   }), [colors.topBarBorderInactive, colors.sunCompassBg]);
 
+
+  const arrowTransform = reducedMotion ? [] : [{ rotate: `${azimuth}deg` }];
+
   return (
     <View style={staticStyles.compassContainer}>
       <View style={compassRingStyle}>
@@ -104,7 +108,7 @@ function CompassArrow({ azimuth }: { azimuth: number }) {
         <Text style={[compassTextStyle, { position: 'absolute', right: 4 }]}>E</Text>
         <Text style={[compassTextStyle, { position: 'absolute', bottom: 2 }]}>S</Text>
         <Text style={[compassTextStyle, { position: 'absolute', left: 4 }]}>W</Text>
-        <View style={[staticStyles.compassContainer, { transform: [{ rotate: `${azimuth}deg` }] }]}>
+        <View style={[staticStyles.compassContainer, { transform: arrowTransform }]}>
           <Text style={{ fontSize: 16, fontWeight: '700', color: colors.sunColor }}>↑</Text>
         </View>
         <View style={compassCenterStyle} />
@@ -144,8 +148,16 @@ export function SunPositionOverlay({ visible }: { visible: boolean }) {
     );
   }
 
+  const goldenLabel = sunData.goldenHourStart && sunData.goldenHourEnd
+    ? `黄金时刻 ${sunData.goldenHourStart}-${sunData.goldenHourEnd}`
+    : null;
+  const blueLabel = sunData.blueHourStart && sunData.blueHourEnd
+    ? `蓝调时刻 ${sunData.blueHourStart}-${sunData.blueHourEnd}`
+    : null;
+  const accessibilityLabel = `太阳位置面板：仰角 ${sunData.sunAltitude.toFixed(1)}°，方向 ${sunData.direction} ${sunData.sunAzimuth.toFixed(0)}°${goldenLabel ? `，${goldenLabel}` : ''}${blueLabel ? `，${blueLabel}` : ''}`;
+
   return (
-    <View style={staticStyles.container} pointerEvents="none">
+    <View style={staticStyles.container} pointerEvents="none" accessibilityRole="text" accessibilityLabel={accessibilityLabel}>
       <View style={panelStyle}>
         <View style={staticStyles.header}>
           <Ionicons name="sunny" size={16} color={colors.sunColor} />

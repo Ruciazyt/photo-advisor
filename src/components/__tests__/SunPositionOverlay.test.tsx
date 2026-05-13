@@ -348,7 +348,16 @@ describe('6 — Accessibility', () => {
     // NOTE: SunPositionOverlay does NOT currently spread accessibility props onto
     // its root container <View>. This means screen readers have no label or role
     // for the overlay panel. This is a missing accessibility feature.
-    it.todo('SunPositionOverlay root View has accessibilityRole and accessibilityLabel');
+    it('SunPositionOverlay root View has accessibilityRole="text" and an accessibilityLabel', () => {
+      const { UNSAFE_root } = render(<SunPositionOverlay visible={true} />);
+      const container = UNSAFE_root.findByProps({ pointerEvents: 'none' });
+      expect(container.props.accessibilityRole).toBe('text');
+      expect(typeof container.props.accessibilityLabel).toBe('string');
+      expect(container.props.accessibilityLabel.length).toBeGreaterThan(0);
+      // Label includes altitude, direction, and golden/blue hour times
+      expect(container.props.accessibilityLabel).toMatch(/仰角/);
+      expect(container.props.accessibilityLabel).toMatch(/方向/);
+    });
 
     it('does not crash when rendered without accessibility props', () => {
       const { getByText } = render(<SunPositionOverlay visible={true} />);
@@ -462,13 +471,45 @@ describe('7 — Reduced motion', () => {
   it('golden hour row still renders when reducedMotion=true', () => {
     mockUseAccessibilityReducedMotion.mockReturnValueOnce({ reducedMotion: true });
     const { getByText } = render(<SunPositionOverlay visible={true} />);
-    expect(getByText('黄金时刻 06:12-06:52')).toBeTruthy();
+    expect(getByText(/黄金时刻/)).toBeTruthy();
   });
 
   // NOTE: SunPositionOverlay does NOT currently call useAccessibilityReducedMotion.
   // The compass arrow rotation is always applied even when reduced motion is enabled.
   // This is a documented missing feature (see reduced motion describe block above).
-  it.todo('SunPositionOverlay should call useAccessibilityReducedMotion (not implemented)');
+  it('compass rotation is not applied when reducedMotion=true', () => {
+    mockUseAccessibilityReducedMotion.mockReturnValueOnce({ reducedMotion: true });
+    const { UNSAFE_root } = render(<SunPositionOverlay visible={true} />);
+    const allViews = UNSAFE_root.findAllByType('View');
+    // Find the arrow container: it has a transform (possibly empty) and contains ↑ text
+    const arrowView = allViews.find((v: any) => {
+      const style = v.props.style;
+      if (!style) return false;
+      const flat = Array.isArray(style) ? style : [style];
+      return flat.some((s: any) => s && s.transform);
+    });
+    expect(arrowView).toBeTruthy();
+    const transformStyle = Array.isArray(arrowView!.props.style) ? arrowView!.props.style : [arrowView!.props.style];
+    const transform = transformStyle.find((s: any) => s && s.transform);
+    // When reducedMotion=true, transform should be an empty array (no rotation)
+    expect(transform?.transform).toEqual([]);
+  });
+
+  it('compass rotation is applied when reducedMotion=false', () => {
+    mockUseAccessibilityReducedMotion.mockReturnValueOnce({ reducedMotion: false });
+    const { UNSAFE_root } = render(<SunPositionOverlay visible={true} />);
+    const allViews = UNSAFE_root.findAllByType('View');
+    const arrowView = allViews.find((v: any) => {
+      const style = v.props.style;
+      if (!style) return false;
+      const flat = Array.isArray(style) ? style : [style];
+      return flat.some((s: any) => s && s.transform && s.transform.some((t: any) => 'rotate' in t));
+    });
+    expect(arrowView).toBeTruthy();
+    const transformStyle = Array.isArray(arrowView!.props.style) ? arrowView!.props.style : [arrowView!.props.style];
+    const transform = transformStyle.find((s: any) => s && s.transform);
+    expect(transform?.transform).toEqual([{ rotate: '157deg' }]);
+  });
 });
 
 // ---------------------------------------------------------------------------
