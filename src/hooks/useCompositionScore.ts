@@ -14,10 +14,6 @@ const GRID_LINES: Record<GridVariant, { vertical: number[]; horizontal: number[]
 };
 
 // Position coordinates for Keypoint positions
-// NOTE: 'center' is at the geometric center (0.5, 0.5), which is not on the
-// thirds/golden grid lines. Alignment scores for center-on-thirds will
-// therefore be imperfect — this is correct since the frame center is not
-// generally a thirds intersection point.
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
   'top-left':     { x: 0.33, y: 0.33 },
   'top-right':    { x: 0.67, y: 0.33 },
@@ -54,14 +50,12 @@ function computeAlignment(keypoints: Keypoint[], gridVariant: GridVariant): numb
 
 function computeBalance(keypoints: Keypoint[]): number {
   if (keypoints.length === 0) return 50;
-  // A single keypoint is always balanced (center of attention)
-  if (keypoints.length === 1) return 100;
   let leftWeight = 0;
   let rightWeight = 0;
   for (const kp of keypoints) {
     const coords = POSITION_COORDS[kp.position];
     const weight = 1;
-    if (coords.x <= 0.5) leftWeight += weight;
+    if (coords.x < 0.5) leftWeight += weight;
     else rightWeight += weight;
   }
   const total = leftWeight + rightWeight;

@@ -638,8 +638,6 @@ export interface CameraTopBarProps {
   // Focus guide
   showFocusGuide: boolean;
   onFocusGuideToggle: () => void;
-  // Focus zone selector
-  onOpenFocusZoneSelector: () => void;
   // Focus peaking
   showFocusPeaking: boolean;
   onFocusPeakingToggle: () => void;

@@ -286,7 +286,7 @@ export function handleError(
   return appError;
 }
 
-export function getDefaultAlertTitle(error: AppError): string {
+function getDefaultAlertTitle(error: AppError): string {
   switch (error.name) {
     case 'CameraError': return '相机错误';
     case 'StorageError': return '存储错误';

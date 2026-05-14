@@ -27,7 +27,6 @@ const mockColors = {
   warning: '#F59E0B',
   background: '#000000',
   sunColor: '#FFB800',
-  blueHourColor: '#6B93D6',
   gridAccent: 'rgba(232,213,183,0.35)',
   countdownBg: 'rgba(232,213,183,0.9)',
   countdownBorder: 'rgba(255,255,255,0.4)',

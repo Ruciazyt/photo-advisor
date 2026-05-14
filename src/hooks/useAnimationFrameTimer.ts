@@ -25,23 +25,6 @@ export function useAnimationFrameTimer({ intervalMs, onTick, enabled }: UseAnima
   enabledRef.current = enabled;
   onTickRef.current = onTick;
 
-  // Reset lastTickRef when enabled goes false→true (prevents immediate tick on re-enable)
-  // or when onTick reference changes (ensures fresh timing for new callback)
-  // or when intervalMs changes (old accumulated time is invalid for new interval)
-  const wasEnabledRef = useRef(enabled);
-  const prevOnTickRef = useRef(onTick);
-  const prevIntervalMsRef = useRef(intervalMs);
-  if (
-    (!wasEnabledRef.current && enabled) ||
-    prevOnTickRef.current !== onTick ||
-    prevIntervalMsRef.current !== intervalMs
-  ) {
-    lastTickRef.current = 0;
-  }
-  wasEnabledRef.current = enabled;
-  prevOnTickRef.current = onTick;
-  prevIntervalMsRef.current = intervalMs;
-
   // useFrameCallback runs on the UI thread — time delta is available as a worklet
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useFrameCallback((frameInfo) => {

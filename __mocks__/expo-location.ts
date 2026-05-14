@@ -13,22 +13,14 @@
 
 const mockRequestForegroundPermissionsAsync = jest.fn();
 const mockGetCurrentPositionAsync = jest.fn();
-const mockReverseGeocodeAsync = jest.fn();
 
 export const Location = {
   requestForegroundPermissionsAsync: mockRequestForegroundPermissionsAsync,
   getCurrentPositionAsync: mockGetCurrentPositionAsync,
-  reverseGeocodeAsync: mockReverseGeocodeAsync,
   Accuracy: {
     Low: 3,
     Balanced: 3,
     High: 4,
     Best: 4,
   },
-};
-
-export {
-  mockRequestForegroundPermissionsAsync,
-  mockGetCurrentPositionAsync,
-  mockReverseGeocodeAsync,
 };

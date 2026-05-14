@@ -21,7 +21,6 @@ import { useShakeDetector } from '../hooks/useShakeDetector';
 import { usePinchToZoom } from '../hooks/usePinchToZoom';
 
 import { CameraTopBar } from '../components/CameraTopBar';
-import { FocusZoneSelector } from '../components/FocusZoneSelector';
 import { CameraControls } from '../components/CameraControls';
 import { CameraOverlays } from '../components/CameraOverlays';
 import { RecordingIndicator } from '../components/RecordingIndicator';
@@ -85,27 +84,16 @@ export function CameraScreen() {
   const keypointsDismissAllRef = useRef(keypointsHandleDismissAll);
   keypointsDismissAllRef.current = keypointsHandleDismissAll;
 
-  const showShakeDetectorRef = useRef(showShakeDetector);
-  showShakeDetectorRef.current = showShakeDetector;
-  const speakRef = useRef(speak);
-  speakRef.current = speak;
-
   const onShake = useCallback(() => {
     bubbleChatDismissAllRef.current();
     handleDismissAllRef.current();
     keypointsDismissAllRef.current();
   }, []);
 
-  const onShakeVoiceFeedback = useCallback(() => {
-    if (showShakeDetectorRef.current) {
-      speakRef.current('已关闭所有建议');
-    }
-  }, []);
-
   useShakeDetector({
     onShake,
     enabled: showShakeDetector && showBubbleChat,
-    onShakeVoiceFeedback,
+    onShakeVoiceFeedback: showShakeDetector ? () => speak('已关闭所有建议') : undefined,
   });
 
   useEffect(() => { bubbleChatSetLoading(loading); }, [loading]);
@@ -133,7 +121,6 @@ export function CameraScreen() {
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [scoreOverlayResult, setScoreOverlayResult] = useState<import('../hooks/useCompositionScore').CompositionScoreResult | null>(null);
-  const [showFocusZoneSelector, setShowFocusZoneSelector] = useState(false);
 
   const { opacity: toastOpacity, toastMessage, showToast } = useToast();
   const { checkAndSpeak } = useVoiceFeedback();
@@ -311,25 +298,6 @@ export function CameraScreen() {
     setDefaultGridVariant(variant);
   }, [setDefaultGridVariant]);
 
-  const onOpenFocusZoneSelector = useCallback(() => setShowFocusZoneSelector(true), []);
-  const onFocusZoneSelectorClose = useCallback(() => setShowFocusZoneSelector(false), []);
-  const handleFocusZoneDepthSelect = useCallback((depth: number) => {
-    if (cameraRef.current) {
-      const cam = cameraRef.current as any;
-      if (typeof cam.focusDepth === 'function') {
-        try {
-          cam.focusDepth(depth);
-          showToast?.(`对焦区域已切换`);
-        } catch {
-          showToast?.('对焦失败，请重试');
-        }
-      } else {
-        showToast?.('当前设备不支持手动对焦');
-      }
-    }
-    setShowFocusZoneSelector(false);
-  }, [cameraRef, showToast]);
-
   // Load API config on mount
   useEffect(() => {
     import('../services/api').then(({ loadApiConfig }) => loadApiConfig().then((config) => setApiConfigured(!!config)));
@@ -392,7 +360,6 @@ export function CameraScreen() {
           toastOpacity={toastOpacity} toastMessage={toastMessage}
           showShakeDetector={showShakeDetector} onShakeDetectorToggle={() => setShowShakeDetector(!showShakeDetector)}
           showEV={showEV} onEVToggle={() => setShowEV(!showEV)} currentEV={exposureComp}
-          onOpenFocusZoneSelector={onOpenFocusZoneSelector}
         />
         <CameraControls
           selectedMode={selectedMode}
@@ -425,11 +392,6 @@ export function CameraScreen() {
         maxEC={maxEC}
         onExposureChange={(v) => setExposureCompensation(v)}
         onExposureChangeEnd={(v) => setExposureCompensation(v)}
-      />
-      <FocusZoneSelector
-        visible={showFocusZoneSelector}
-        onSelect={handleFocusZoneDepthSelect}
-        onClose={onFocusZoneSelectorClose}
       />
     </View>
   );

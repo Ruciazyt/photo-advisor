@@ -30,7 +30,7 @@ interface SettingsContextValue extends AppSettings {
 }
 
 // Default context value — used when no SettingsProvider is present (e.g. in tests)
-export const defaultSettings: AppSettings = {
+const defaultSettings: AppSettings = {
   voiceEnabled: false,
   theme: 'dark',
   timerDuration: 3,

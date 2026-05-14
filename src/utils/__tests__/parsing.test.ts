@@ -1,356 +1,488 @@
+/**
+ * Unit tests for parsing utilities (src/utils/parsing.ts)
+ *
+ * Coverage:
+ * - Named exports: BUBBLE_ROUND_ROBIN, BUBBLE_POSITION_MAP, KEYPOINT_POSITION_MAP, KEYPOINT_ROUND_ROBIN
+ * - parseBubbleItemFromText: explicit position, round-robin, bracket variants
+ * - parseBubbleItemsFromTexts: filtering empty strings, round-robin IDs
+ * - labelToKeypointPosition: all positions + fallback to center
+ * - parseKeypointFromText: bracket parsing, Chinese labels, null on unparseable
+ * - parseKeypointsFromTexts: filtering nulls, ID assignment, empty strings
+ * - computeScoreFromSuggestions: positive/negative keywords, score clamping, reason extraction
+ * - Edge cases: empty strings, whitespace, no match, Chinese text
+ */
+
 import {
-  parseBubbleItemFromText,
-  parseBubbleItemsFromTexts,
-  parseBubbleItems,
-  labelToKeypointPosition,
-  parseKeypointFromText,
-  parseKeypointsFromTexts,
-  computeScoreFromSuggestions,
+  // Named exports
   BUBBLE_ROUND_ROBIN,
   BUBBLE_POSITION_MAP,
   KEYPOINT_POSITION_MAP,
   KEYPOINT_ROUND_ROBIN,
+  // Functions
+  parseBubbleItemFromText,
+  parseBubbleItemsFromTexts,
+  labelToKeypointPosition,
+  parseKeypointFromText,
+  parseKeypointsFromTexts,
+  computeScoreFromSuggestions,
 } from '../parsing';
 
+// react-native-reanimated is used in the codebase; mock it to avoid native module issues
 jest.mock('react-native-reanimated', () => ({}));
 
-describe('parsing utils', () => {
-  // ============================================================
-  // Named constant exports
-  // ============================================================
+// ============================================================
+// Named constant exports
+// ============================================================
 
-  describe('BUBBLE_ROUND_ROBIN', () => {
-    it('contains 4 positions in correct order', () => {
-      expect(BUBBLE_ROUND_ROBIN).toEqual([
-        'top-left',
-        'top-right',
-        'bottom-left',
-        'bottom-right',
-      ]);
+describe('BUBBLE_ROUND_ROBIN', () => {
+  it('has exactly 4 positions', () => {
+    expect(BUBBLE_ROUND_ROBIN).toHaveLength(4);
+  });
+
+  it('contains the expected bubble positions in order', () => {
+    expect(BUBBLE_ROUND_ROBIN).toEqual(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+  });
+
+  it('has unique values', () => {
+    const unique = new Set(BUBBLE_ROUND_ROBIN);
+    expect(unique.size).toBe(BUBBLE_ROUND_ROBIN.length);
+  });
+});
+
+describe('BUBBLE_POSITION_MAP', () => {
+  it('maps Chinese bracket tags to BubblePosition values', () => {
+    expect(BUBBLE_POSITION_MAP['[左上]']).toBe('top-left');
+    expect(BUBBLE_POSITION_MAP['[右上]']).toBe('top-right');
+    expect(BUBBLE_POSITION_MAP['[左下]']).toBe('bottom-left');
+    expect(BUBBLE_POSITION_MAP['[右下]']).toBe('bottom-right');
+    expect(BUBBLE_POSITION_MAP['[中间]']).toBe('center');
+  });
+
+  it('has 5 entries', () => {
+    expect(Object.keys(BUBBLE_POSITION_MAP)).toHaveLength(5);
+  });
+});
+
+describe('KEYPOINT_POSITION_MAP', () => {
+  it('maps Chinese labels to KeypointPosition values', () => {
+    expect(KEYPOINT_POSITION_MAP['左上']).toBe('top-left');
+    expect(KEYPOINT_POSITION_MAP['右上']).toBe('top-right');
+    expect(KEYPOINT_POSITION_MAP['左下']).toBe('bottom-left');
+    expect(KEYPOINT_POSITION_MAP['右下']).toBe('bottom-right');
+    expect(KEYPOINT_POSITION_MAP['中间']).toBe('center');
+  });
+
+  it('has 5 entries', () => {
+    expect(Object.keys(KEYPOINT_POSITION_MAP)).toHaveLength(5);
+  });
+});
+
+describe('KEYPOINT_ROUND_ROBIN', () => {
+  it('has exactly 5 positions', () => {
+    expect(KEYPOINT_ROUND_ROBIN).toHaveLength(5);
+  });
+
+  it('contains the expected keypoint positions in order', () => {
+    expect(KEYPOINT_ROUND_ROBIN).toEqual([
+      'top-left',
+      'top-right',
+      'bottom-left',
+      'bottom-right',
+      'center',
+    ]);
+  });
+});
+
+// ============================================================
+// parseBubbleItemFromText
+// ============================================================
+
+describe('parseBubbleItemFromText', () => {
+  it('returns the id, text, and round-robin position when no explicit tag', () => {
+    // id=0 → BUBBLE_ROUND_ROBIN[0] = 'top-left'
+    const result = parseBubbleItemFromText('Some suggestion text', 0);
+    expect(result).toEqual({
+      id: 0,
+      text: 'Some suggestion text',
+      position: 'top-left',
     });
   });
 
-  describe('BUBBLE_POSITION_MAP', () => {
-    it('maps all 5 Chinese tags to BubblePosition values', () => {
-      expect(BUBBLE_POSITION_MAP['[左上]']).toBe('top-left');
-      expect(BUBBLE_POSITION_MAP['[右上]']).toBe('top-right');
-      expect(BUBBLE_POSITION_MAP['[左下]']).toBe('bottom-left');
-      expect(BUBBLE_POSITION_MAP['[右下]']).toBe('bottom-right');
-      expect(BUBBLE_POSITION_MAP['[中间]']).toBe('center');
+  it('uses position from BUBBLE_POSITION_MAP when tag is present', () => {
+    const result = parseBubbleItemFromText('[右上] 这是右上区域的内容', 0);
+    expect(result.position).toBe('top-right');
+  });
+
+  it('uses round-robin for id 1 when no explicit tag', () => {
+    const result = parseBubbleItemFromText('Plain text', 1);
+    expect(result.position).toBe('top-right');
+  });
+
+  it('uses round-robin for id 2 when no explicit tag', () => {
+    const result = parseBubbleItemFromText('Plain text', 2);
+    expect(result.position).toBe('bottom-left');
+  });
+
+  it('uses round-robin for id 3 when no explicit tag', () => {
+    const result = parseBubbleItemFromText('Plain text', 3);
+    expect(result.position).toBe('bottom-right');
+  });
+
+  it('wraps around after 4 items', () => {
+    const result = parseBubbleItemFromText('Plain text', 4);
+    expect(result.position).toBe('top-left');
+  });
+
+  it('returns id as provided', () => {
+    const result = parseBubbleItemFromText('Text', 99);
+    expect(result.id).toBe(99);
+  });
+
+  it('returns text as provided', () => {
+    const result = parseBubbleItemFromText('Exact text content', 0);
+    expect(result.text).toBe('Exact text content');
+  });
+
+  it('handles [中间] tag to set center position', () => {
+    const result = parseBubbleItemFromText('[中间] Center bubble', 0);
+    expect(result.position).toBe('center');
+  });
+
+  it('prefers explicit position over round-robin when both could apply', () => {
+    const result = parseBubbleItemFromText('[左下] Some text here', 0);
+    expect(result.position).toBe('bottom-left');
+  });
+
+  it('handles Chinese text without brackets via round-robin', () => {
+    const result = parseBubbleItemFromText('没有任何标签的中文建议文本', 0);
+    expect(result.position).toBe('top-left');
+  });
+
+  it('returns position center as fallback when unknown tag (no match)', () => {
+    // parseBubbleItemFromText doesn't have a fallback—it uses round-robin always
+    // So this test verifies the default round-robin fallback
+    const result = parseBubbleItemFromText('这是一段没有任何标签的中文建议', 0);
+    expect(result.position).toBe('top-left');
+  });
+});
+
+// ============================================================
+// parseBubbleItemsFromTexts
+// ============================================================
+
+describe('parseBubbleItemsFromTexts', () => {
+  it('parses multiple texts into BubbleItems', () => {
+    const raw = ['[左上] Top left', '[右下] Bottom right'];
+    const result = parseBubbleItemsFromTexts(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].position).toBe('top-left');
+    expect(result[1].position).toBe('bottom-right');
+  });
+
+  it('filters out empty strings', () => {
+    const raw = ['[左上] Text', '', '  ', '[右下] More'];
+    const result = parseBubbleItemsFromTexts(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].text).toBe('[左上] Text');
+    expect(result[1].text).toBe('[右下] More');
+  });
+
+  it('assigns IDs in order 0, 1, 2', () => {
+    const raw = ['First', 'Second', 'Third'];
+    const result = parseBubbleItemsFromTexts(raw);
+    expect(result[0].id).toBe(0);
+    expect(result[1].id).toBe(1);
+    expect(result[2].id).toBe(2);
+  });
+
+  it('returns empty array for all empty inputs', () => {
+    const raw = ['', '  ', '\t'];
+    const result = parseBubbleItemsFromTexts(raw);
+    expect(result).toEqual([]);
+  });
+
+  it('handles round-robin positions across items', () => {
+    const raw = ['Item 0', 'Item 1', 'Item 2', 'Item 3', 'Item 4'];
+    const result = parseBubbleItemsFromTexts(raw);
+    expect(result[0].position).toBe('top-left');
+    expect(result[1].position).toBe('top-right');
+    expect(result[2].position).toBe('bottom-left');
+    expect(result[3].position).toBe('bottom-right');
+    expect(result[4].position).toBe('top-left'); // wraps
+  });
+});
+
+// ============================================================
+// labelToKeypointPosition
+// ============================================================
+
+describe('labelToKeypointPosition', () => {
+  it('maps 左上 to top-left', () => {
+    expect(labelToKeypointPosition('左上')).toBe('top-left');
+  });
+
+  it('maps 右上 to top-right', () => {
+    expect(labelToKeypointPosition('右上')).toBe('top-right');
+  });
+
+  it('maps 左下 to bottom-left', () => {
+    expect(labelToKeypointPosition('左下')).toBe('bottom-left');
+  });
+
+  it('maps 右下 to bottom-right', () => {
+    expect(labelToKeypointPosition('右下')).toBe('bottom-right');
+  });
+
+  it('maps 中间 to center', () => {
+    expect(labelToKeypointPosition('中间')).toBe('center');
+  });
+
+  it('falls back to center for unknown labels', () => {
+    expect(labelToKeypointPosition('未知标签')).toBe('center');
+    expect(labelToKeypointPosition('')).toBe('center');
+    expect(labelToKeypointPosition('随机文本')).toBe('center');
+  });
+
+  it('matches label containing the tag anywhere (includes check)', () => {
+    // The function uses label.includes(tag)
+    expect(labelToKeypointPosition('这是左上角的标记')).toBe('top-left');
+    expect(labelToKeypointPosition('位置:右上')).toBe('top-right');
+  });
+
+  it('returns center for mixed English/chinese with no match', () => {
+    expect(labelToKeypointPosition('top-left')).toBe('center');
+    expect(labelToKeypointPosition('CENTER')).toBe('center');
+  });
+});
+
+// ============================================================
+// parseKeypointFromText
+// ============================================================
+
+describe('parseKeypointFromText', () => {
+  it('parses a standard bracket format keypoint', () => {
+    const result = parseKeypointFromText('[左上] 将主体放在左上区域', 0);
+    expect(result).toEqual({
+      id: 0,
+      label: '左上',
+      position: 'top-left',
+      instruction: '将主体放在左上区域',
     });
   });
 
-  describe('KEYPOINT_POSITION_MAP', () => {
-    it('maps all 5 Chinese labels to KeypointPosition values', () => {
-      expect(KEYPOINT_POSITION_MAP['左上']).toBe('top-left');
-      expect(KEYPOINT_POSITION_MAP['右上']).toBe('top-right');
-      expect(KEYPOINT_POSITION_MAP['左下']).toBe('bottom-left');
-      expect(KEYPOINT_POSITION_MAP['右下']).toBe('bottom-right');
-      expect(KEYPOINT_POSITION_MAP['中间']).toBe('center');
+  it('parses all position variants', () => {
+    const variants: [string, string][] = [
+      ['[右上] Right top instruction', 'top-right'],
+      ['[左下] Left bottom instruction', 'bottom-left'],
+      ['[右下] Right bottom instruction', 'bottom-right'],
+      ['[中间] Center instruction', 'center'],
+    ];
+    variants.forEach(([text, expectedPos], i) => {
+      const result = parseKeypointFromText(text, i);
+      expect(result?.position).toBe(expectedPos);
     });
   });
 
-  describe('KEYPOINT_ROUND_ROBIN', () => {
-    it('contains 5 positions in correct order', () => {
-      expect(KEYPOINT_ROUND_ROBIN).toEqual([
-        'top-left',
-        'top-right',
-        'bottom-left',
-        'bottom-right',
-        'center',
-      ]);
+  it('returns null when no bracket pattern', () => {
+    const result = parseKeypointFromText('这是一段没有括号的建议文本', 0);
+    expect(result).toBeNull();
+  });
+
+  it('returns null for empty text', () => {
+    expect(parseKeypointFromText('', 0)).toBeNull();
+  });
+
+  it('returns null for whitespace-only text', () => {
+    expect(parseKeypointFromText('   ', 0)).toBeNull();
+    expect(parseKeypointFromText('\t', 0)).toBeNull();
+  });
+
+  it('trims label and instruction', () => {
+    const result = parseKeypointFromText('[左上]   左侧区域内容   ', 0);
+    expect(result?.label).toBe('左上');
+    expect(result?.instruction).toBe('左侧区域内容');
+  });
+
+  it('sets instruction to undefined when instruction part is empty', () => {
+    const result = parseKeypointFromText('[左上] ', 0);
+    expect(result?.instruction).toBeUndefined();
+  });
+
+  it('sets instruction to undefined when only bracket is present', () => {
+    const result = parseKeypointFromText('[左上]', 0);
+    expect(result?.instruction).toBeUndefined();
+  });
+
+  it('parses Chinese instruction content', () => {
+    const result = parseKeypointFromText('[中间] 将被摄体放在画面中央', 0);
+    expect(result?.instruction).toBe('将被摄体放在画面中央');
+  });
+
+  it('uses labelToKeypointPosition for position mapping', () => {
+    const result = parseKeypointFromText('[中间] Center instruction', 0);
+    expect(result?.position).toBe('center');
+  });
+
+  it('handles bracket content with special characters', () => {
+    const result = parseKeypointFromText('[左上] 引导线：将对焦点放在左侧1/3处', 0);
+    expect(result?.label).toBe('左上');
+    expect(result?.instruction).toBe('引导线：将对焦点放在左侧1/3处');
+  });
+});
+
+// ============================================================
+// parseKeypointsFromTexts
+// ============================================================
+
+describe('parseKeypointsFromTexts', () => {
+  it('parses multiple bracket-format texts', () => {
+    const raw = [
+      '[左上] 将主体放在左上',
+      '[右下] 将主体放在右下',
+    ];
+    const result = parseKeypointsFromTexts(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].position).toBe('top-left');
+    expect(result[1].position).toBe('bottom-right');
+  });
+
+  it('filters out null/unparseable items and keeps valid ones', () => {
+    const raw = [
+      '[左上] Top left',
+      'No bracket here — filtered out',
+      '[中间] Center',
+      'Also no bracket',
+      '[右下] Bottom right',
+    ];
+    const result = parseKeypointsFromTexts(raw);
+    expect(result).toHaveLength(3);
+    expect(result[0].position).toBe('top-left');
+    expect(result[1].position).toBe('center');
+    expect(result[2].position).toBe('bottom-right');
+  });
+
+  it('filters out empty strings', () => {
+    const raw = ['', '[左上] Top left', '  ', '[中间] Center'];
+    const result = parseKeypointsFromTexts(raw);
+    expect(result).toHaveLength(2);
+  });
+
+  it('assigns sequential IDs to valid keypoints', () => {
+    const raw = [
+      'No bracket — skipped',
+      '[左上] First',
+      'Also no bracket',
+      '[中间] Second',
+    ];
+    const result = parseKeypointsFromTexts(raw);
+    expect(result[0].id).toBe(0);
+    expect(result[1].id).toBe(1);
+  });
+
+  it('returns empty array when all inputs are unparseable', () => {
+    const raw = ['Plain text', '没有括号', '', '  '];
+    const result = parseKeypointsFromTexts(raw);
+    expect(result).toEqual([]);
+  });
+
+  it('handles Chinese text content in instructions', () => {
+    const raw = [
+      '[左上] 将拍摄主体放在左上三分线交点处',
+      '[右下] 右侧留白形成视觉引导线',
+    ];
+    const result = parseKeypointsFromTexts(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].instruction).toBe('将拍摄主体放在左上三分线交点处');
+    expect(result[1].instruction).toBe('右侧留白形成视觉引导线');
+  });
+});
+
+// ============================================================
+// computeScoreFromSuggestions
+// ============================================================
+
+describe('computeScoreFromSuggestions', () => {
+  it('returns base score of 50 for empty suggestions', () => {
+    const { score } = computeScoreFromSuggestions([]);
+    expect(score).toBe(50);
+  });
+
+  it('returns empty reason for empty suggestions', () => {
+    const { reason } = computeScoreFromSuggestions([]);
+    expect(reason).toBe('');
+  });
+
+  it('increases score by 20 per positive keyword (up to +40)', () => {
+    // 1 positive: 50 + 20 = 70
+    expect(computeScoreFromSuggestions(['构图不错']).score).toBe(70);
+    // 2 positives: 50 + 40 = 90
+    expect(computeScoreFromSuggestions(['构图不错', '好构图']).score).toBe(90);
+  });
+
+  it('caps positive contribution at 40 (2 keywords)', () => {
+    // 5 positive keywords → 50 + min(5*20, 40) = 90
+    expect(computeScoreFromSuggestions(['好', '优秀', '完美', '不错', '佳']).score).toBe(90);
+  });
+
+  it('decreases score by 15 per negative keyword (up to -45)', () => {
+    // 1 negative: 50 - 15 = 35
+    expect(computeScoreFromSuggestions(['画面欠曝']).score).toBe(35);
+    // 2 negatives: 50 - 30 = 20
+    expect(computeScoreFromSuggestions(['欠曝', '过曝']).score).toBe(20);
+  });
+
+  it('caps negative contribution at 45 (3 keywords)', () => {
+    // 4 negatives → 50 - min(4*15, 45) = 50 - 45 = 5
+    expect(computeScoreFromSuggestions(['欠曝', '过曝', '倾斜', '偏移']).score).toBe(5);
+  });
+
+  it('clamps final score to 0–100 range', () => {
+    // Very negative: 50 - 45 = 5 (well above 0)
+    expect(computeScoreFromSuggestions(['欠曝', '过曝', '倾斜']).score).toBe(5);
+    // All positive: 50 + 40 = 90
+    expect(computeScoreFromSuggestions(['好', '优秀', '完美']).score).toBe(90);
+  });
+
+  it('combines positive and negative keywords correctly', () => {
+    // 2 positives (+40) - 1 negative (-15) = 50 + 25 = 75
+    const { score } = computeScoreFromSuggestions(['好', '不错', '欠曝']);
+    expect(score).toBe(75);
+  });
+
+  it('extracts reason from the first suggestion', () => {
+    const { reason } = computeScoreFromSuggestions([
+      '构图不错，建议适当增加前景',
+      '背景略微欠曝',
+    ]);
+    expect(reason).toBe('构图不错，建议适当增加前景');
+  });
+
+  it('truncates reason to 30 characters', () => {
+    const longSuggestion = '这是一个非常长的建议文本超过了三十个字符的限制范围';
+    const { reason } = computeScoreFromSuggestions([longSuggestion]);
+    expect(reason.length).toBeLessThanOrEqual(30);
+    expect(reason).toBe(longSuggestion.slice(0, 30));
+  });
+
+  it('handles Chinese positive keywords correctly', () => {
+    const keywords = ['好', '优秀', '完美', '不错', '佳'];
+    keywords.forEach(kw => {
+      const { score } = computeScoreFromSuggestions([`构图${kw}`]);
+      expect(score).toBeGreaterThan(50);
     });
   });
 
-  // ============================================================
-  // parseBubbleItemFromText
-  // ============================================================
-
-  describe('parseBubbleItemFromText', () => {
-    it('parses explicit [左上] tag', () => {
-      const item = parseBubbleItemFromText('[左上] 调整构图', 0);
-      expect(item).toEqual({ id: 0, text: '[左上] 调整构图', position: 'top-left' });
-    });
-
-    it('parses explicit [右上] tag', () => {
-      const item = parseBubbleItemFromText('[右上] 靠右站', 1);
-      expect(item).toEqual({ id: 1, text: '[右上] 靠右站', position: 'top-right' });
-    });
-
-    it('parses explicit [左下] tag', () => {
-      const item = parseBubbleItemFromText('[左下] 底部留白', 2);
-      expect(item).toEqual({ id: 2, text: '[左下] 底部留白', position: 'bottom-left' });
-    });
-
-    it('parses explicit [右下] tag', () => {
-      const item = parseBubbleItemFromText('[右下] 右侧边缘', 3);
-      expect(item).toEqual({ id: 3, text: '[右下] 右侧边缘', position: 'bottom-right' });
-    });
-
-    it('parses explicit [中间] tag', () => {
-      const item = parseBubbleItemFromText('[中间] 居中放置', 4);
-      expect(item).toEqual({ id: 4, text: '[中间] 居中放置', position: 'center' });
-    });
-
-    it('falls back to round-robin when no tag is present', () => {
-      // id=0 → BUBBLE_ROUND_ROBIN[0] = 'top-left'
-      expect(parseBubbleItemFromText('some suggestion', 0).position).toBe('top-left');
-      // id=1 → 'top-right'
-      expect(parseBubbleItemFromText('some suggestion', 1).position).toBe('top-right');
-      // id=2 → 'bottom-left'
-      expect(parseBubbleItemFromText('some suggestion', 2).position).toBe('bottom-left');
-      // id=3 → 'bottom-right'
-      expect(parseBubbleItemFromText('some suggestion', 3).position).toBe('bottom-right');
-      // id=4 → wraps around to 'top-left'
-      expect(parseBubbleItemFromText('some suggestion', 4).position).toBe('top-left');
-    });
-
-    it('explicit tag takes precedence over round-robin', () => {
-      // id=0 would be top-left, but [右下] overrides
-      const item = parseBubbleItemFromText('[右下] 右侧', 0);
-      expect(item.position).toBe('bottom-right');
-    });
-
-    it('handles Chinese text content', () => {
-      const item = parseBubbleItemFromText('[左上] 光线优秀，构图完美', 0);
-      expect(item.text).toBe('[左上] 光线优秀，构图完美');
-      expect(item.position).toBe('top-left');
-    });
-
-    it('handles English text content', () => {
-      const item = parseBubbleItemFromText('adjust composition here', 0);
-      expect(item.text).toBe('adjust composition here');
-      expect(item.id).toBe(0);
+  it('handles Chinese negative keywords correctly', () => {
+    const keywords = ['欠曝', '过曝', '倾斜', '偏移', '不足'];
+    keywords.forEach(kw => {
+      const { score } = computeScoreFromSuggestions([`检测到${kw}问题`]);
+      expect(score).toBeLessThan(50);
     });
   });
 
-  // ============================================================
-  // parseBubbleItemsFromTexts (and alias parseBubbleItems)
-  // ============================================================
-
-  describe('parseBubbleItemsFromTexts', () => {
-    it('parses multiple texts with explicit positions', () => {
-      const items = parseBubbleItemsFromTexts(['[左上] a', '[右下] b', '[中间] c']);
-      expect(items).toHaveLength(3);
-      expect(items[0].position).toBe('top-left');
-      expect(items[1].position).toBe('bottom-right');
-      expect(items[2].position).toBe('center');
-    });
-
-    it('filters out empty strings', () => {
-      const items = parseBubbleItemsFromTexts(['[左上] a', '', '   ', '[中间] c']);
-      expect(items).toHaveLength(2);
-      expect(items[0].text).toBe('[左上] a');
-      expect(items[1].text).toBe('[中间] c');
-    });
-
-    it('applies round-robin to plain texts', () => {
-      const items = parseBubbleItemsFromTexts(['plain 1', 'plain 2', 'plain 3']);
-      expect(items[0].position).toBe('top-left');
-      expect(items[1].position).toBe('top-right');
-      expect(items[2].position).toBe('bottom-left');
-    });
-
-    it('returns empty array for all-empty input', () => {
-      expect(parseBubbleItemsFromTexts([])).toEqual([]);
-      expect(parseBubbleItemsFromTexts(['', '  '])).toEqual([]);
-    });
-
-    it('preserves id as index among non-filtered items', () => {
-      const items = parseBubbleItemsFromTexts(['[左上] a', '', 'plain c']);
-      expect(items[0].id).toBe(0);
-      expect(items[1].id).toBe(1); // plain text gets id=1
-    });
-  });
-
-  describe('parseBubbleItems (alias)', () => {
-    it('is the same function as parseBubbleItemsFromTexts', () => {
-      expect(parseBubbleItems).toBe(parseBubbleItemsFromTexts);
-    });
-  });
-
-  // ============================================================
-  // labelToKeypointPosition
-  // ============================================================
-
-  describe('labelToKeypointPosition', () => {
-    it('maps all known labels', () => {
-      expect(labelToKeypointPosition('左上')).toBe('top-left');
-      expect(labelToKeypointPosition('右上')).toBe('top-right');
-      expect(labelToKeypointPosition('左下')).toBe('bottom-left');
-      expect(labelToKeypointPosition('右下')).toBe('bottom-right');
-      expect(labelToKeypointPosition('中间')).toBe('center');
-    });
-
-    it('returns center for unknown labels', () => {
-      expect(labelToKeypointPosition('随机文本')).toBe('center');
-      expect(labelToKeypointPosition('')).toBe('center');
-      expect(labelToKeypointPosition('上部')).toBe('center');
-    });
-
-    it('matches labels that appear anywhere in the string', () => {
-      expect(labelToKeypointPosition('前景左上区域')).toBe('top-left');
-      expect(labelToKeypointPosition('右上角')).toBe('top-right');
-    });
-  });
-
-  // ============================================================
-  // parseKeypointFromText
-  // ============================================================
-
-  describe('parseKeypointFromText', () => {
-    it('parses standard [标签] 内容 format', () => {
-      const kp = parseKeypointFromText('[左上] 放置主体在这里', 0);
-      expect(kp).toEqual({
-        id: 0,
-        label: '左上',
-        position: 'top-left',
-        instruction: '放置主体在这里',
-      });
-    });
-
-    it('parses [中间] label', () => {
-      const kp = parseKeypointFromText('[中间] 居中', 5);
-      expect(kp).toEqual({
-        id: 5,
-        label: '中间',
-        position: 'center',
-        instruction: '居中',
-      });
-    });
-
-    it('handles whitespace after bracket', () => {
-      const kp = parseKeypointFromText('[右上]   稍微靠右   ', 1);
-      expect(kp?.position).toBe('top-right');
-      expect(kp?.instruction).toBe('稍微靠右');
-    });
-
-    it('returns null when no bracket pattern matches', () => {
-      expect(parseKeypointFromText('plain text without brackets', 0)).toBeNull();
-      expect(parseKeypointFromText('no opening bracket]', 1)).toBeNull();
-      expect(parseKeypointFromText('[tag only', 2)).toBeNull();
-    });
-
-    it('handles empty instruction (content after bracket is empty)', () => {
-      const kp = parseKeypointFromText('[左上]', 0);
-      expect(kp?.label).toBe('左上');
-      expect(kp?.instruction).toBeUndefined();
-    });
-
-    it('handles Chinese text in label and instruction', () => {
-      const kp = parseKeypointFromText('[左下] 光线优秀构图完美', 0);
-      expect(kp?.label).toBe('左下');
-      expect(kp?.position).toBe('bottom-left');
-      expect(kp?.instruction).toBe('光线优秀构图完美');
-    });
-
-    it('returns null for empty string', () => {
-      expect(parseKeypointFromText('', 0)).toBeNull();
-    });
-  });
-
-  // ============================================================
-  // parseKeypointsFromTexts
-  // ============================================================
-
-  describe('parseKeypointsFromTexts', () => {
-    it('parses valid keypoint texts', () => {
-      const kps = parseKeypointsFromTexts(['[左上] a', '[右下] b']);
-      expect(kps).toHaveLength(2);
-      expect(kps[0].position).toBe('top-left');
-      expect(kps[1].position).toBe('bottom-right');
-    });
-
-    it('filters out empty strings', () => {
-      const kps = parseKeypointsFromTexts(['[左上] a', '', '   ', '[中间] c']);
-      expect(kps).toHaveLength(2);
-    });
-
-    it('filters out unparseable items (no bracket)', () => {
-      const kps = parseKeypointsFromTexts(['[左上] good', 'plain bad', '[中间] good too']);
-      expect(kps).toHaveLength(2);
-      expect(kps[0].id).toBe(0);
-      expect(kps[1].id).toBe(1);
-    });
-
-    it('assigns sequential ids skipping invalid entries', () => {
-      const kps = parseKeypointsFromTexts(['[左上] first', 'invalid', '[中间] third']);
-      expect(kps).toHaveLength(2);
-      expect(kps[0].id).toBe(0);
-      expect(kps[1].id).toBe(1); // id=1 not 2 (invalid entry skipped)
-    });
-
-    it('returns empty array for all-empty input', () => {
-      expect(parseKeypointsFromTexts([])).toEqual([]);
-      expect(parseKeypointsFromTexts(['', '  '])).toEqual([]);
-    });
-  });
-
-  // ============================================================
-  // computeScoreFromSuggestions
-  // ============================================================
-
-  describe('computeScoreFromSuggestions', () => {
-    it('returns base score of 50 with no suggestions', () => {
-      const result = computeScoreFromSuggestions([]);
-      expect(result.score).toBe(50);
-      expect(result.reason).toBe('');
-    });
-
-    it('increases score for positive keywords', () => {
-      // +20 per positive keyword, capped at +40
-      const result = computeScoreFromSuggestions(['光线好', '构图不错']);
-      expect(result.score).toBeGreaterThan(50);
-      // 50 + min(2*20, 40) = 50+40 = 90
-      expect(result.score).toBe(90);
-    });
-
-    it('decreases score for negative keywords', () => {
-      // -15 per negative, capped at -45
-      const result = computeScoreFromSuggestions(['有点欠曝', '构图不足']);
-      // 50 - min(2*15, 45) = 50 - 30 = 20
-      expect(result.score).toBe(20);
-    });
-
-    it('caps positive bonus at +40', () => {
-      // 4 positive keywords → min(4*20, 40) = 40
-      const result = computeScoreFromSuggestions(['好', '优秀', '完美', '不错']);
-      expect(result.score).toBe(90); // 50+40
-    });
-
-    it('caps negative penalty at -45', () => {
-      // 4 negative keywords → min(4*15, 45) = 45
-      const result = computeScoreFromSuggestions(['欠曝', '过曝', '倾斜', '偏移']);
-      expect(result.score).toBe(5); // 50-45
-    });
-
-    it('clips score to 0 minimum', () => {
-      const result = computeScoreFromSuggestions(['欠曝', '过曝', '倾斜', '偏移', '不足']);
-      // 5 negatives: 50 - min(5*15, 45) = 50-45 = 5 → but also clips above 100
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(100);
-    });
-
-    it('clips score to 100 maximum', () => {
-      const result = computeScoreFromSuggestions(['好', '优秀', '完美', '不错', '佳', '好', '优秀']);
-      expect(result.score).toBeLessThanOrEqual(100);
-    });
-
-    it('generates reason from first suggestion', () => {
-      const result = computeScoreFromSuggestions(['[左上] 光线好构图完美', '构图中']);
-      expect(result.reason.length).toBeGreaterThan(0);
-    });
-
-    it('reason is max 30 characters', () => {
-      const longText = '这是一段很长的建议文本用于测试截断功能是否正常工作';
-      const result = computeScoreFromSuggestions([longText]);
-      expect(result.reason.length).toBeLessThanOrEqual(30);
-    });
-
-    it('handles mixed positive and negative', () => {
-      const result = computeScoreFromSuggestions(['光线好但有点欠曝', '构图优秀', '稍微偏移']);
-      // 2 positive, 2 negative → 50 + min(2*20,40) - min(2*15,45) = 50+40-30 = 60
-      expect(result.score).toBe(60);
-    });
+  it('treats multiple keywords in same string independently', () => {
+    // '好' + '欠曝' in same string: +20 - 15 = 55
+    const { score } = computeScoreFromSuggestions(['好但欠曝']);
+    expect(score).toBe(55);
   });
 });
