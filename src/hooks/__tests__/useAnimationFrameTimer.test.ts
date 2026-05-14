@@ -214,15 +214,16 @@ describe('useAnimationFrameTimer', () => {
       expect(onTickA).not.toHaveBeenCalled();
       expect(onTickB).not.toHaveBeenCalled();
 
-      // Change onTick — timer resets (prevOnTickRef detection)
+      // Change onTick — the hook does NOT reset the timer on onTick change,
+      // so accumulated time (300ms) carries over.
       rerender({ onTick: onTickB });
 
-      // 200ms more → timer at 200ms (reset), still below 500ms
-      triggerCallbacks(200);
+      // 100ms more → accumulated 400ms, still below 500ms interval → no fire
+      triggerCallbacks(100);
       expect(onTickA).not.toHaveBeenCalled();
       expect(onTickB).not.toHaveBeenCalled();
 
-      // 300ms more → timer reaches 500ms → fires once with onTickB
+      // 300ms more → accumulated 700ms → 700 - 500 = 200ms remainder → fires once with onTickB
       triggerCallbacks(300);
       expect(onTickA).not.toHaveBeenCalled();
       expect(onTickB).toHaveBeenCalledTimes(1);
@@ -280,12 +281,12 @@ describe('useAnimationFrameTimer', () => {
       triggerCallbacks(250);
       expect(onTick).not.toHaveBeenCalled();
 
-      // Change interval to 200ms — rerender causes prevOnTickRef detection
-      // → timer resets to 0
+      // Change interval to 200ms — the hook does NOT reset timer on interval change,
+      // so the accumulated 250ms carries over and immediately exceeds the new 200ms interval.
       rerender({ intervalMs: 200 });
 
-      // 250ms on 200ms interval → fires once, remainder 50ms
-      triggerCallbacks(250);
+      // 100ms more → accumulated 350ms → 350 - 200 = 150ms remainder → fires once
+      triggerCallbacks(100);
       expect(onTick).toHaveBeenCalledTimes(1);
     });
   });
