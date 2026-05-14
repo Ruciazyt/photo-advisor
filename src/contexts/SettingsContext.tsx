@@ -6,6 +6,7 @@ import type {
   TimerDuration,
   ImageQualityPreset,
   FocusPeakingSensitivity,
+  ShakeDetectorSensitivity,
 } from '../types';
 
 interface SettingsContextValue extends AppSettings {
@@ -27,6 +28,7 @@ interface SettingsContextValue extends AppSettings {
   setImageQualityPreset: (v: ImageQualityPreset) => Promise<void>;
   setFocusPeakingColor: (v: string) => Promise<void>;
   setFocusPeakingSensitivity: (v: FocusPeakingSensitivity) => Promise<void>;
+  setShakeDetectorSensitivity: (v: ShakeDetectorSensitivity) => Promise<void>;
 }
 
 // Default context value — used when no SettingsProvider is present (e.g. in tests)
@@ -49,6 +51,7 @@ const defaultSettings: AppSettings = {
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',
+  shakeDetectorSensitivity: 'medium',
 };
 
 // Default setters — call saveAppSettings directly so components work even without a provider (e.g. in tests).
@@ -72,6 +75,7 @@ const defaultValue: SettingsContextValue = {
   setImageQualityPreset: (v) => saveAppSettings({ imageQualityPreset: v }),
   setFocusPeakingColor: (v) => saveAppSettings({ focusPeakingColor: v }),
   setFocusPeakingSensitivity: (v) => saveAppSettings({ focusPeakingSensitivity: v }),
+  setShakeDetectorSensitivity: (v) => saveAppSettings({ shakeDetectorSensitivity: v }),
 };
 
 const SettingsContext = createContext<SettingsContextValue>(defaultValue);
@@ -114,6 +118,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setImageQualityPreset: makeSetter('imageQualityPreset'),
     setFocusPeakingColor: makeSetter('focusPeakingColor'),
     setFocusPeakingSensitivity: makeSetter('focusPeakingSensitivity'),
+    setShakeDetectorSensitivity: makeSetter('shakeDetectorSensitivity'),
   };
 
   return (

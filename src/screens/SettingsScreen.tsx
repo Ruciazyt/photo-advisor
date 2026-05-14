@@ -64,6 +64,7 @@ export function SettingsScreen({ onSaved }: Props) {
     imageQualityPreset, setImageQualityPreset,
     focusPeakingColor, setFocusPeakingColor,
     focusPeakingSensitivity, setFocusPeakingSensitivity,
+    shakeDetectorSensitivity, setShakeDetectorSensitivity,
   } = useSettings();
   const [apiType, setApiType] = useState<'openai' | 'minimax'>('openai');
   const [apiKey, setApiKey] = useState('');
@@ -572,6 +573,46 @@ export function SettingsScreen({ onSaved }: Props) {
               }}
             />
           </View>
+
+          {/* Shake Detector Sensitivity — only visible when shake detector is enabled */}
+          {showShakeDetector && showBubbleChat && (
+            <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+              <View style={styles.prefInfo}>
+                <Text style={[styles.prefTitle, { color: colors.text }]}>摇一摇灵敏度</Text>
+                <Text style={[styles.prefDesc, { color: colors.textSecondary }]}>调整触发摇晃的敏感程度</Text>
+              </View>
+            </View>
+          )}
+          {showShakeDetector && showBubbleChat && (
+            <View style={styles.qualityPresetRow}>
+              {(['low', 'medium', 'high'] as const).map((s) => {
+                const labels = { low: '轻柔', medium: '适中', high: '强力' };
+                const isSelected = shakeDetectorSensitivity === s;
+                return (
+                  <TouchableOpacity
+                    key={s}
+                    style={[
+                      styles.qualityOption,
+                      { backgroundColor: colors.cardBg, borderColor: isSelected ? colors.accent : colors.border },
+                      isSelected && { backgroundColor: 'rgba(232,213,183,0.1)', borderColor: colors.accent },
+                    ]}
+                    onPress={() => {
+                      setShakeDetectorSensitivity(s);
+                    }}
+                    activeOpacity={0.7}
+                    accessibilityLabel={`${labels[s]}${isSelected ? '，已选中' : ''}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityHint={isSelected ? '当前灵敏度' : `切换到${labels[s]}`}
+                  >
+                    <Text style={[styles.qualityOptionText, { color: isSelected ? colors.accent : colors.textSecondary }]}>
+                      {labels[s]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
 
           {/* Timer Duration */}
           <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>

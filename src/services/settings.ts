@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppSettings, GridVariant } from '../types';
+import type { AppSettings, GridVariant, ShakeDetectorSensitivity } from '../types';
 
 const STORAGE_KEY = '@photo_advisor_settings';
 
@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',
+  shakeDetectorSensitivity: 'medium',
 };
 
 export function validateSettings(raw: unknown): AppSettings {
@@ -64,6 +65,7 @@ export function validateSettings(raw: unknown): AppSettings {
     imageQualityPreset: hasKey('imageQualityPreset') && presetValues.includes(input.imageQualityPreset as string) ? (input.imageQualityPreset as 'size' | 'balanced' | 'quality') : DEFAULT_SETTINGS.imageQualityPreset,
     focusPeakingColor: hasKey('focusPeakingColor') && isValidHex(input.focusPeakingColor) ? (input.focusPeakingColor as string) : DEFAULT_SETTINGS.focusPeakingColor,
     focusPeakingSensitivity: hasKey('focusPeakingSensitivity') && sensitivityValues.includes(input.focusPeakingSensitivity as string) ? (input.focusPeakingSensitivity as 'low' | 'medium' | 'high') : DEFAULT_SETTINGS.focusPeakingSensitivity,
+    shakeDetectorSensitivity: hasKey('shakeDetectorSensitivity') && sensitivityValues.includes(input.shakeDetectorSensitivity as string) ? (input.shakeDetectorSensitivity as ShakeDetectorSensitivity) : DEFAULT_SETTINGS.shakeDetectorSensitivity,
   };
 }
 

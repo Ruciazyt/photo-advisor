@@ -333,6 +333,8 @@ export type ImageQualityPreset = 'size' | 'balanced' | 'quality';
 
 export type FocusPeakingSensitivity = 'low' | 'medium' | 'high';
 
+export type ShakeDetectorSensitivity = 'low' | 'medium' | 'high';
+
 export interface AppSettings {
   voiceEnabled: boolean;
   theme: 'dark' | 'light';
@@ -352,6 +354,7 @@ export interface AppSettings {
   imageQualityPreset: ImageQualityPreset;
   focusPeakingColor: string;
   focusPeakingSensitivity: FocusPeakingSensitivity;
+  shakeDetectorSensitivity?: ShakeDetectorSensitivity;
 }
 
 // ============================================================

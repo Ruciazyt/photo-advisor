@@ -59,6 +59,7 @@ export function CameraScreen() {
     showRawMode, setShowRawMode,
     showBubbleChat, setShowBubbleChat,
     showShakeDetector, setShowShakeDetector,
+    shakeDetectorSensitivity,
     showKeypoints, setShowKeypoints,
     timerDuration, setTimerDuration,
   } = useSettings();
@@ -97,9 +98,12 @@ export function CameraScreen() {
     }
   }, []);
 
+  const shakeThreshold = shakeDetectorSensitivity === 'low' ? 2.5 : shakeDetectorSensitivity === 'high' ? 1.2 : 1.8;
+
   useShakeDetector({
     onShake,
     enabled: showShakeDetector && showBubbleChat,
+    threshold: shakeThreshold,
   });
 
   useEffect(() => { bubbleChatSetLoading(loading); }, [loading]);

@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = {
   imageQualityPreset: 'balanced',
   focusPeakingColor: '#FF4444',
   focusPeakingSensitivity: 'medium',
+  shakeDetectorSensitivity: 'medium',
 };
 
 describe('settings service', () => {

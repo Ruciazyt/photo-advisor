@@ -22,6 +22,7 @@ describe('validateSettings', () => {
         imageQualityPreset: 'quality',
         focusPeakingColor: '#00FF00',
         focusPeakingSensitivity: 'high' as const,
+        shakeDetectorSensitivity: 'high' as const,
       };
       expect(validateSettings(fullSettings)).toEqual(fullSettings);
     });
@@ -187,6 +188,24 @@ describe('validateSettings', () => {
       values.forEach(v => {
         expect(validateSettings({ focusPeakingSensitivity: v }).focusPeakingSensitivity).toBe(v);
       });
+    });
+  });
+
+  describe('shakeDetectorSensitivity validation', () => {
+    it('falls back to medium for invalid values', () => {
+      expect(validateSettings({ shakeDetectorSensitivity: 'ultra' }).shakeDetectorSensitivity).toBe('medium');
+      expect(validateSettings({ shakeDetectorSensitivity: 123 as unknown }).shakeDetectorSensitivity).toBe('medium');
+      expect(validateSettings({ shakeDetectorSensitivity: null }).shakeDetectorSensitivity).toBe('medium');
+    });
+    it('keeps valid values', () => {
+      const values = ['low', 'medium', 'high'] as const;
+      values.forEach(v => {
+        expect(validateSettings({ shakeDetectorSensitivity: v }).shakeDetectorSensitivity).toBe(v);
+      });
+    });
+    it('is included in full settings pass-through', () => {
+      const full = { shakeDetectorSensitivity: 'high' as const };
+      expect(validateSettings(full).shakeDetectorSensitivity).toBe('high');
     });
   });
 });
