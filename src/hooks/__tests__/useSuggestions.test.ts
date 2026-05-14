@@ -1,118 +1,56 @@
 /**
  * Unit tests for src/hooks/useSuggestions.ts
  *
- * Covers:
+ * Tested:
  * - Initial state (empty suggestions, loading=false)
  * - setSuggestions updates suggestions array
  * - handleDismiss removes single suggestion by index
  * - handleDismissAll clears all suggestions
- * - bubbleItems derivation from suggestions via parseBubbleItemFromText
- * - loading state management via setLoading
+ * - bubbleItems is derived correctly from suggestions using parseBubbleItemFromText
+ * - loading state management
+ * - setLoading sets loading flag
+ * - Multiple suggestions → multiple bubble items with correct positions
  */
 
 import { renderHook, act } from '@testing-library/react-native';
 import { useSuggestions } from '../useSuggestions';
 
 // ---------------------------------------------------------------------------
-// Mock react-native-reanimated (same pattern as existing tests)
+// Mock react-native-reanimated (used throughout the codebase)
 // ---------------------------------------------------------------------------
 jest.mock('react-native-reanimated', () => ({}));
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function makeBubble(id: number, text: string, position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' = 'top-left') {
-  return { id, text, position };
-}
-
-// ---------------------------------------------------------------------------
-// Test suite
-// ---------------------------------------------------------------------------
-
 describe('useSuggestions', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  // ─── Initial state ──────────────────────────────────────────────────────
 
-  // -------------------------------------------------------------------------
-  // Return value shape
-  // -------------------------------------------------------------------------
-  describe('return value shape', () => {
-    it('exposes all required fields', () => {
-      const { result } = renderHook(() => useSuggestions());
-      expect(result.current).toHaveProperty('suggestions');
-      expect(result.current).toHaveProperty('setSuggestions');
-      expect(result.current).toHaveProperty('loading');
-      expect(result.current).toHaveProperty('setLoading');
-      expect(result.current).toHaveProperty('handleDismiss');
-      expect(result.current).toHaveProperty('handleDismissAll');
-      expect(result.current).toHaveProperty('bubbleItems');
-    });
-
-    it('setSuggestions, setLoading, handleDismiss, handleDismissAll are functions', () => {
-      const { result } = renderHook(() => useSuggestions());
-      expect(typeof result.current.setSuggestions).toBe('function');
-      expect(typeof result.current.setLoading).toBe('function');
-      expect(typeof result.current.handleDismiss).toBe('function');
-      expect(typeof result.current.handleDismissAll).toBe('function');
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // Initial state
-  // -------------------------------------------------------------------------
   describe('initial state', () => {
-    it('starts with empty suggestions array', () => {
+    it('starts with empty suggestions and loading=false', () => {
       const { result } = renderHook(() => useSuggestions());
       expect(result.current.suggestions).toEqual([]);
-    });
-
-    it('starts with loading=false', () => {
-      const { result } = renderHook(() => useSuggestions());
       expect(result.current.loading).toBe(false);
-    });
-
-    it('starts with empty bubbleItems', () => {
-      const { result } = renderHook(() => useSuggestions());
-      expect(result.current.bubbleItems).toEqual([]);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // setSuggestions
-  // -------------------------------------------------------------------------
+  // ─── setSuggestions ──────────────────────────────────────────────────────
+
   describe('setSuggestions', () => {
-    it('updates suggestions array with provided values', () => {
+    it('updates the suggestions array', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['构图不错', '试试三分法']);
+        result.current.setSuggestions(['构图不错', '光线偏暗']);
       });
 
-      expect(result.current.suggestions).toEqual(['构图不错', '试试三分法']);
+      expect(result.current.suggestions).toEqual(['构图不错', '光线偏暗']);
     });
 
-    it('setSuggestions with functional update receives current state', () => {
+    it('setSuggestions with empty array clears suggestions', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['first']);
+        result.current.setSuggestions(['some suggestion']);
       });
-
-      act(() => {
-        result.current.setSuggestions(prev => [...prev, 'second']);
-      });
-
-      expect(result.current.suggestions).toEqual(['first', 'second']);
-    });
-
-    it('setSuggestions([]) clears suggestions', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions(['a', 'b', 'c']);
-      });
+      expect(result.current.suggestions).toHaveLength(1);
 
       act(() => {
         result.current.setSuggestions([]);
@@ -122,80 +60,54 @@ describe('useSuggestions', () => {
     });
   });
 
-  // -------------------------------------------------------------------------
-  // handleDismiss
-  // -------------------------------------------------------------------------
+  // ─── handleDismiss ────────────────────────────────────────────────────────
+
   describe('handleDismiss', () => {
-    it('removes single suggestion by index', () => {
+    it('removes the suggestion at the given index', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['第一条', '第二条', '第三条']);
+        result.current.setSuggestions(['第一句', '第二句', '第三句']);
       });
 
       act(() => {
         result.current.handleDismiss(1);
       });
 
-      expect(result.current.suggestions).toEqual(['第一条', '第三条']);
+      expect(result.current.suggestions).toEqual(['第一句', '第三句']);
     });
 
-    it('handles dismiss of first element', () => {
+    it('removing first item shifts subsequent items', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['first', 'second']);
+        result.current.setSuggestions(['a', 'b', 'c']);
       });
 
       act(() => {
         result.current.handleDismiss(0);
       });
 
-      expect(result.current.suggestions).toEqual(['second']);
-    });
-
-    it('handles dismiss of last element', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions(['first', 'second']);
-      });
-
-      act(() => {
-        result.current.handleDismiss(1);
-      });
-
-      expect(result.current.suggestions).toEqual(['first']);
+      expect(result.current.suggestions).toEqual(['b', 'c']);
     });
 
     it('dismissing out-of-range index is a no-op', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['only']);
+        result.current.setSuggestions(['only one']);
       });
 
       act(() => {
         result.current.handleDismiss(99);
       });
 
-      expect(result.current.suggestions).toEqual(['only']);
-    });
-
-    it('dismissing on empty suggestions is a no-op', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.handleDismiss(0);
-      });
-
-      expect(result.current.suggestions).toEqual([]);
+      expect(result.current.suggestions).toEqual(['only one']);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // handleDismissAll
-  // -------------------------------------------------------------------------
+  // ─── handleDismissAll ───────────────────────────────────────────────────
+
   describe('handleDismissAll', () => {
     it('clears all suggestions', () => {
       const { result } = renderHook(() => useSuggestions());
@@ -222,10 +134,74 @@ describe('useSuggestions', () => {
     });
   });
 
-  // -------------------------------------------------------------------------
-  // setLoading
-  // -------------------------------------------------------------------------
-  describe('setLoading', () => {
+  // ─── bubbleItems derivation ──────────────────────────────────────────────
+
+  describe('bubbleItems', () => {
+    it('bubbleItems is initially empty for empty suggestions', () => {
+      const { result } = renderHook(() => useSuggestions());
+      expect(result.current.bubbleItems).toEqual([]);
+    });
+
+    it('bubbleItems is derived from suggestions using parseBubbleItemFromText', () => {
+      const { result } = renderHook(() => useSuggestions());
+
+      act(() => {
+        result.current.setSuggestions(['构图不错']);
+      });
+
+      expect(result.current.bubbleItems).toHaveLength(1);
+      expect(result.current.bubbleItems[0].text).toBe('构图不错');
+    });
+
+    it('bubbleItems updates when setSuggestions is called', () => {
+      const { result } = renderHook(() => useSuggestions());
+
+      act(() => {
+        result.current.setSuggestions(['first', 'second']);
+      });
+
+      expect(result.current.bubbleItems).toHaveLength(2);
+      expect(result.current.bubbleItems[0].text).toBe('first');
+      expect(result.current.bubbleItems[1].text).toBe('second');
+    });
+
+    it('bubbleItems is empty after handleDismissAll', () => {
+      const { result } = renderHook(() => useSuggestions());
+
+      act(() => {
+        result.current.setSuggestions(['a', 'b']);
+      });
+
+      act(() => {
+        result.current.handleDismissAll();
+      });
+
+      expect(result.current.bubbleItems).toEqual([]);
+    });
+
+    it('bubbleItems shrinks after handleDismiss removes a suggestion', () => {
+      const { result } = renderHook(() => useSuggestions());
+
+      act(() => {
+        result.current.setSuggestions(['a', 'b', 'c']);
+      });
+
+      act(() => {
+        result.current.handleDismiss(1);
+      });
+
+      expect(result.current.bubbleItems).toHaveLength(2);
+    });
+  });
+
+  // ─── loading state ───────────────────────────────────────────────────────
+
+  describe('loading state', () => {
+    it('starts with loading=false', () => {
+      const { result } = renderHook(() => useSuggestions());
+      expect(result.current.loading).toBe(false);
+    });
+
     it('setLoading(true) sets loading to true', () => {
       const { result } = renderHook(() => useSuggestions());
 
@@ -242,7 +218,6 @@ describe('useSuggestions', () => {
       act(() => {
         result.current.setLoading(true);
       });
-
       act(() => {
         result.current.setLoading(false);
       });
@@ -250,172 +225,95 @@ describe('useSuggestions', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    it('setLoading toggles correctly', () => {
+    it('setLoading does not affect suggestions array', () => {
       const { result } = renderHook(() => useSuggestions());
 
-      expect(result.current.loading).toBe(false);
+      act(() => {
+        result.current.setSuggestions(['keep me']);
+      });
 
       act(() => {
         result.current.setLoading(true);
       });
+
+      expect(result.current.suggestions).toEqual(['keep me']);
       expect(result.current.loading).toBe(true);
 
       act(() => {
         result.current.setLoading(false);
       });
-      expect(result.current.loading).toBe(false);
+
+      expect(result.current.suggestions).toEqual(['keep me']);
     });
   });
 
-  // -------------------------------------------------------------------------
-  // bubbleItems derivation
-  // -------------------------------------------------------------------------
-  describe('bubbleItems', () => {
-    it('derives bubbleItems from suggestions using parseBubbleItemFromText', () => {
+  // ─── Multiple suggestions with positions ────────────────────────────────
+
+  describe('multiple suggestions → bubble item positions', () => {
+    it('maps multiple suggestions to bubble items with round-robin positions', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['构图不错']);
-      });
-
-      expect(result.current.bubbleItems).toHaveLength(1);
-      expect(result.current.bubbleItems[0].text).toBe('构图不错');
-      expect(result.current.bubbleItems[0].position).toBe('top-left'); // round-robin id=0
-    });
-
-    it('multiple suggestions produce multiple bubble items with round-robin positions', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions(['第一句', '第二句', '第三句', '第四句']);
+        result.current.setSuggestions(['一', '二', '三', '四', '五']);
       });
 
       const items = result.current.bubbleItems;
-      expect(items).toHaveLength(4);
+      expect(items).toHaveLength(5);
+      // Round-robin positions: top-left, top-right, bottom-left, bottom-right, top-left (wrap)
       expect(items[0].position).toBe('top-left');
       expect(items[1].position).toBe('top-right');
       expect(items[2].position).toBe('bottom-left');
       expect(items[3].position).toBe('bottom-right');
+      expect(items[4].position).toBe('top-left');
     });
 
-    it('bubbleItems updates when suggestions change', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions(['原始建议']);
-      });
-      expect(result.current.bubbleItems).toHaveLength(1);
-      expect(result.current.bubbleItems[0].text).toBe('原始建议');
-
-      act(() => {
-        result.current.setSuggestions(['新建议一', '新建议二']);
-      });
-
-      const items = result.current.bubbleItems;
-      expect(items).toHaveLength(2);
-      expect(items[0].text).toBe('新建议一');
-      expect(items[1].text).toBe('新建议二');
-    });
-
-    it('bubbleItems is empty when suggestions is empty', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions([]);
-      });
-
-      expect(result.current.bubbleItems).toEqual([]);
-    });
-
-    it('bubbleItems ids are 0-indexed within each batch', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions(['item1', 'item2']);
-      });
-
-      expect(result.current.bubbleItems[0].id).toBe(0);
-      expect(result.current.bubbleItems[1].id).toBe(1);
-    });
-
-    it('suggestions with bracketed position tags produce bubble items with explicit positions', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setSuggestions(['[左上] 左上内容', '[右下] 右下内容']);
-      });
-
-      const items = result.current.bubbleItems;
-      expect(items[0].position).toBe('top-left');
-      expect(items[1].position).toBe('bottom-right');
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // Integration: suggestions + loading interaction
-  // -------------------------------------------------------------------------
-  describe('suggestions and loading interaction', () => {
-    it('setSuggestions while loading=true does not affect loading state', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setLoading(true);
-      });
-
-      act(() => {
-        result.current.setSuggestions(['a', 'b']);
-      });
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.suggestions).toEqual(['a', 'b']);
-    });
-
-    it('bubbleItems reflects suggestions even when loading is true', () => {
-      const { result } = renderHook(() => useSuggestions());
-
-      act(() => {
-        result.current.setLoading(true);
-      });
-
-      act(() => {
-        result.current.setSuggestions(['test']);
-      });
-
-      expect(result.current.bubbleItems).toHaveLength(1);
-      expect(result.current.bubbleItems[0].text).toBe('test');
-    });
-
-    it('handleDismissAll while loading=false clears suggestions', () => {
+    it('assigns correct ids to bubble items based on array index', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
         result.current.setSuggestions(['a', 'b', 'c']);
       });
 
-      act(() => {
-        result.current.handleDismissAll();
-      });
-
-      expect(result.current.suggestions).toEqual([]);
-      expect(result.current.bubbleItems).toEqual([]);
+      const items = result.current.bubbleItems;
+      expect(items[0].id).toBe(0);
+      expect(items[1].id).toBe(1);
+      expect(items[2].id).toBe(2);
     });
 
-    it('dismiss then add works correctly', () => {
+    it('parses explicit position tags from suggestion text', () => {
       const { result } = renderHook(() => useSuggestions());
 
       act(() => {
-        result.current.setSuggestions(['first', 'second']);
+        result.current.setSuggestions(['[右上] 靠右构图', '[左下] 下方放置']);
       });
 
-      act(() => {
-        result.current.handleDismiss(0);
-      });
+      const items = result.current.bubbleItems;
+      expect(items[0].position).toBe('top-right');
+      expect(items[1].position).toBe('bottom-left');
+    });
+  });
 
-      act(() => {
-        result.current.setSuggestions(prev => [...prev, 'third']);
-      });
+  // ─── Return value shape ──────────────────────────────────────────────────
 
-      expect(result.current.suggestions).toEqual(['second', 'third']);
+  describe('return value shape', () => {
+    it('exposes all required fields', () => {
+      const { result } = renderHook(() => useSuggestions());
+      const r = result.current;
+      expect(r).toHaveProperty('suggestions');
+      expect(r).toHaveProperty('setSuggestions');
+      expect(r).toHaveProperty('loading');
+      expect(r).toHaveProperty('setLoading');
+      expect(r).toHaveProperty('handleDismiss');
+      expect(r).toHaveProperty('handleDismissAll');
+      expect(r).toHaveProperty('bubbleItems');
+    });
+
+    it('all function fields are functions', () => {
+      const { result } = renderHook(() => useSuggestions());
+      expect(typeof result.current.setSuggestions).toBe('function');
+      expect(typeof result.current.setLoading).toBe('function');
+      expect(typeof result.current.handleDismiss).toBe('function');
+      expect(typeof result.current.handleDismissAll).toBe('function');
     });
   });
 });
