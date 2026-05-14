@@ -55,7 +55,7 @@ function computeBalance(keypoints: Keypoint[]): number {
   for (const kp of keypoints) {
     const coords = POSITION_COORDS[kp.position];
     const weight = 1;
-    if (coords.x < 0.5) leftWeight += weight;
+    if (coords.x <= 0.5) leftWeight += weight;
     else rightWeight += weight;
   }
   const total = leftWeight + rightWeight;
