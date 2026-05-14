@@ -25,9 +25,14 @@ export function useShootLog(): {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const entries = await loadLog();
-    setLog(entries);
-    setLoading(false);
+    try {
+      const entries = await loadLog();
+      setLog(entries);
+    } catch {
+      setLog([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
