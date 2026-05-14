@@ -117,6 +117,8 @@ describe('useShakeDetector', () => {
       // Third shake — triggers
       emitShake({ x: 0, y: 0, z: 2.2 });
       expect(onShake).toHaveBeenCalledTimes(1);
+      // intensity = magnitude/threshold, capped at 1.0: 2.2/1.8 ≈ 1.22 → 1.0
+      expect(onShake).toHaveBeenCalledWith(1);
     });
 
     it('respects custom threshold', () => {
@@ -130,10 +132,10 @@ describe('useShakeDetector', () => {
         })
       );
 
-      // Send 3 moderate shakes (magnitude ~2) — below 3.0 threshold, no trigger
-      emitShake({ x: 0, y: 0, z: 2.0 });
-      emitShake({ x: 0, y: 0, z: 2.1 });
-      emitShake({ x: 0, y: 0, z: 2.2 });
+      // magnitude sqrt(0+0+2.95²) = 2.95 < threshold 3.0 → no trigger
+      emitShake({ x: 0, y: 0, z: 2.95 });
+      emitShake({ x: 0, y: 0, z: 2.95 });
+      emitShake({ x: 0, y: 0, z: 2.95 });
       expect(onShake).not.toHaveBeenCalled();
     });
 
@@ -151,6 +153,8 @@ describe('useShakeDetector', () => {
       emitShake({ x: 0, y: 0, z: 2.0 });
       emitShake({ x: 0, y: 0, z: 2.1 });
       expect(onShake).toHaveBeenCalledTimes(1);
+      // intensity = 2.1/1.8 ≈ 1.17 → capped at 1.0
+      expect(onShake).toHaveBeenCalledWith(1);
     });
 
     it('ignores null values in accelerometer data', () => {
@@ -364,6 +368,56 @@ describe('useShakeDetector', () => {
       emitShake({ x: 0, y: 0, z: 2.2 });
       expect(onShake).not.toHaveBeenCalled();
       expect(onShakeVoiceFeedback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('intensity', () => {
+    it('passes normalized intensity (0-1) to onShake', () => {
+      const onShake = jest.fn();
+      renderHook(() =>
+        useShakeDetector({
+          onShake,
+          enabled: true,
+          threshold: 1.8,
+          consecutiveCount: 1,
+        })
+      );
+
+      // magnitude sqrt(0+0+4.41) ≈ 2.1 / threshold 1.8 ≈ 1.17 → capped at 1.0
+      emitShake({ x: 0, y: 0, z: 2.1 });
+      expect(onShake).toHaveBeenCalledWith(1);
+    });
+
+    it('caps intensity at 1.0 when magnitude exceeds threshold', () => {
+      const onShake = jest.fn();
+      renderHook(() =>
+        useShakeDetector({
+          onShake,
+          enabled: true,
+          threshold: 1.0,
+          consecutiveCount: 1,
+        })
+      );
+
+      // magnitude 3.0 / threshold 1.0 = 3.0 → capped at 1.0
+      emitShake({ x: 0, y: 0, z: 3.0 });
+      expect(onShake).toHaveBeenCalledWith(1);
+    });
+
+    it('intensity is optional in onShake callback (backward compatibility)', () => {
+      const onShake = jest.fn();
+      renderHook(() =>
+        useShakeDetector({
+          onShake,
+          enabled: true,
+          threshold: 2.0,
+          consecutiveCount: 1,
+        })
+      );
+
+      emitShake({ x: 0, y: 0, z: 2.2 });
+      expect(onShake).toHaveBeenCalledTimes(1);
+      // intensity argument is present so caller can use it or ignore it
     });
   });
 });
