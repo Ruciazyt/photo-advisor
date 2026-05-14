@@ -132,5 +132,31 @@ describe('useErrorHandler', () => {
         })
       ).resolves.not.toThrow();
     });
+
+    it('updates lastError when async function rejects', async () => {
+      const { result } = renderHook(() => useErrorHandler());
+      expect(result.current.lastError).toBeNull();
+      const testErr = new AppError('async fail', ErrorCode.API_NETWORK_ERROR);
+      await act(async () => {
+        await result.current.safeTry(
+          () => Promise.reject(testErr),
+          ErrorCode.API_NETWORK_ERROR
+        );
+      });
+      expect(result.current.lastError).toBeInstanceOf(AppError);
+      expect(result.current.lastError?.message).toBe('async fail');
+    });
+
+    it('sets isErrorVisible to true when async function rejects', async () => {
+      const { result } = renderHook(() => useErrorHandler());
+      expect(result.current.isErrorVisible).toBe(false);
+      await act(async () => {
+        await result.current.safeTry(
+          () => Promise.reject(new Error('fail')),
+          ErrorCode.GEN_UNKNOWN
+        );
+      });
+      expect(result.current.isErrorVisible).toBe(true);
+    });
   });
 });

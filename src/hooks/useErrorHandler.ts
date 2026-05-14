@@ -23,7 +23,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { AppError, ErrorCode, handleError as globalHandleError } from '../services/errors';
+import { AppError, ErrorCode, handleError as globalHandleError, toAppError } from '../services/errors';
 import type { HandleErrorOptions } from '../types';
 
 export interface UseErrorHandlerOptions {
@@ -112,8 +112,10 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}): UseErrorH
         const value = await fn();
         return { ok: true, value };
       } catch (e) {
-        const { toAppError } = require('../services/errors');
         const appError = toAppError(e, errorCode);
+        // Update error state so UI can reflect the failure consistently with handleError
+        setLastError(appError);
+        setIsErrorVisible(true);
         return { ok: false, error: appError };
       }
     },
