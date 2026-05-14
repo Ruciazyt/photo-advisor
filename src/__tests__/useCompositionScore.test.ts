@@ -32,15 +32,14 @@ describe('useCompositionScore', () => {
 
     it('returns lower alignment score for keypoints far from grid lines', () => {
       const { result } = renderHook(() => useCompositionScore());
-      // 'center' position is at 0.5, 0.5 which has moderate distance from thirds lines (0.33, 0.67)
-      // Distance to nearest thirds line = 0.17, normalized = 0.34, score = 66
+      // 'center' position is at 0.333, 0.333 which is exactly on the top-left thirds intersection
+      // Distance to nearest thirds line = 0, normalized = 0, score = 100
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // Alignment is moderate since center is between thirds lines
-      expect(scoreResult.breakdown.alignment).toBeGreaterThanOrEqual(60);
-      expect(scoreResult.breakdown.alignment).toBeLessThanOrEqual(70);
+      // Alignment is perfect since center is exactly on a thirds grid line
+      expect(scoreResult.breakdown.alignment).toBe(100);
     });
 
     it('balance is 100 for evenly distributed keypoints left/right', () => {
@@ -70,7 +69,8 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      expect(scoreResult.breakdown.centrality).toBe(100);
+      // center at (0.333, 0.333) has dist from (0.5, 0.5) = 0.236, normalized = 0.334, centrality = 67
+      expect(scoreResult.breakdown.centrality).toBe(67);
     });
 
     it('centrality is lower for corner keypoints', () => {
