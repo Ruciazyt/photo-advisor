@@ -38,9 +38,8 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // Alignment is moderate since center is between thirds lines
-      expect(scoreResult.breakdown.alignment).toBeGreaterThanOrEqual(60);
-      expect(scoreResult.breakdown.alignment).toBeLessThanOrEqual(70);
+      // Alignment is high since center is now at the top-left thirds intersection
+      expect(scoreResult.breakdown.alignment).toBeGreaterThanOrEqual(90);
     });
 
     it('balance is 100 for evenly distributed keypoints left/right', () => {
@@ -70,7 +69,9 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      expect(scoreResult.breakdown.centrality).toBe(100);
+      // center at (0.33, 0.33) has distance to true center (0.5, 0.5)
+      // dist = sqrt(0.17^2 + 0.17^2) = 0.24, normalized = 0.24/0.707 ≈ 0.34, centrality ≈ 66
+      expect(scoreResult.breakdown.centrality).toBe(66);
     });
 
     it('centrality is lower for corner keypoints', () => {
