@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppSettings, GridVariant, ShakeDetectorSensitivity } from '../types';
+import type { AppSettings, GridVariant, ShakeDetectorSensitivity, TimerDuration } from '../types';
 
 const STORAGE_KEY = '@photo_advisor_settings';
 
@@ -49,7 +49,7 @@ export function validateSettings(raw: unknown): AppSettings {
   return {
     voiceEnabled: getBool('voiceEnabled'),
     theme: hasKey('theme') && themeValues.includes(input.theme as string) ? (input.theme as 'dark' | 'light') : DEFAULT_SETTINGS.theme,
-    timerDuration: hasKey('timerDuration') && timerValues.includes(input.timerDuration as number) ? (input.timerDuration as number) : DEFAULT_SETTINGS.timerDuration,
+    timerDuration: hasKey('timerDuration') && timerValues.includes(input.timerDuration as TimerDuration) ? (input.timerDuration as TimerDuration) : DEFAULT_SETTINGS.timerDuration,
     defaultGridVariant: hasKey('defaultGridVariant') && gridValues.includes(input.defaultGridVariant as GridVariant) ? (input.defaultGridVariant as GridVariant) : DEFAULT_SETTINGS.defaultGridVariant,
     showHistogram: getBool('showHistogram'),
     showLevel: getBool('showLevel'),
