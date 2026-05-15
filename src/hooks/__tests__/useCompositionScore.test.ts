@@ -99,10 +99,10 @@ describe('useCompositionScore', () => {
     });
 
     it('score 80 → grade C', () => {
-      // center on golden gives score=65 (C) with center at (0.333, 0.333)
+      // center on golden gives score=68 (C) with center at (0.5, 0.5)
       const { result } = renderHook(() => useCompositionScore());
       const res = result.current.computeScore([kp('center')], 'golden');
-      expect(res.score).toBe(65);
+      expect(res.score).toBe(68);
       expect(res.grade).toBe('C');
     });
 
@@ -145,20 +145,21 @@ describe('useCompositionScore', () => {
   // Pure function: computeScore
   // -------------------------------------------------------------------------
   describe('computeScore', () => {
-    // With center at (0.333, 0.333):
-    // Alignment: vDist = min(|0.333-0.333|,|0.333-0.667|) = 0, vScore = 100
-    // hDist = 0, hScore = 100, alignment = 100
-    // Balance: x=0.333 <= 0.5 → leftWeight=1, rightWeight=0 → ratio=1 → balance=0
-    // Centrality: dist = sqrt((0.333-0.5)^2+(0.333-0.5)^2) = 0.236, normalized=0.334, centrality=67
-    // score = 100*0.5 + 0*0.2 + 67*0.3 = 50+0+20.1 = 70.1 → 70
-    it('center keypoint on thirds grid → score=70, grade B', () => {
+    // center at (0.5, 0.5) is on the center vertical (x=0.5) but NOT on thirds lines (0.333, 0.667)
+    // vDist = min(|0.5-0.333|,|0.5-0.667|) = 0.167
+    // vScore = (1-0.167/0.5)*100 = 67
+    // same for h → alignment = 67
+    // Balance: x=0.5 is NOT < 0.5, so goes to rightWeight → leftWeight=0, rightWeight=1, ratio=1 → balance=0
+    // Centrality: dist from (0.5,0.5) = 0 → centrality = 100
+    // score = 67*0.5 + 0*0.2 + 100*0.3 = 33.5 + 0 + 30 = 63.5 → 64
+    it('center keypoint on thirds grid → score=64, grade C', () => {
       const { result } = renderHook(() => useCompositionScore());
       const res = result.current.computeScore([kp('center')], 'thirds');
-      expect(res.score).toBe(70);
-      expect(res.grade).toBe('B');
-      expect(res.breakdown.alignment).toBe(100);
+      expect(res.score).toBe(64);
+      expect(res.grade).toBe('C');
+      expect(res.breakdown.alignment).toBe(67);
       expect(res.breakdown.balance).toBe(0);
-      expect(res.breakdown.centrality).toBe(67);
+      expect(res.breakdown.centrality).toBe(100);
     });
 
     it('no keypoints → default 50/50/50, grade D', () => {
@@ -171,12 +172,12 @@ describe('useCompositionScore', () => {
       expect(res.grade).toBe('D');
     });
 
-    // With center at (0.333, 0.333):
-    // Alignment: center is exactly on thirds lines → alignment=100
-    // Balance: 3 centers, x=0.333 <= 0.5 → leftWeight=3, rightWeight=0 → ratio=1 → balance=0
-    // Centrality: all at center → dist from (0.5,0.5)=0.236, normalized=0.334, centrality=67
-    // score = 100*0.5 + 0*0.2 + 67*0.3 = 50+0+20.1 = 70.1 → 70
-    it('all keypoints at center → score=70, grade B', () => {
+    // With center at (0.5, 0.5):
+    // Alignment: center is NOT on thirds lines (0.333, 0.667) → vDist = 0.167, alignment = 67
+    // Balance: x=0.5 NOT < 0.5 → rightWeight=1, leftWeight=0 → ratio=1 → balance=0
+    // Centrality: dist from (0.5,0.5) = 0 → centrality = 100
+    // score = 67*0.5 + 0*0.2 + 100*0.3 = 33.5+0+30 = 63.5 → 64
+    it('all keypoints at center → score=64, grade C', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints = [
         kp('center'),
@@ -184,11 +185,11 @@ describe('useCompositionScore', () => {
         kp('center'),
       ];
       const res = result.current.computeScore(keypoints, 'thirds');
-      expect(res.score).toBe(70);
-      expect(res.grade).toBe('B');
-      expect(res.breakdown.alignment).toBe(100);
-      expect(res.breakdown.balance).toBe(0); // 3 centers all left → imbalanced
-      expect(res.breakdown.centrality).toBe(67);
+      expect(res.score).toBe(64);
+      expect(res.grade).toBe('C');
+      expect(res.breakdown.alignment).toBe(67);
+      expect(res.breakdown.balance).toBe(0); // 3 centers all right of 0.5 → imbalanced
+      expect(res.breakdown.centrality).toBe(100);
     });
 
     it('keypoints at corners on thirds → high alignment, low centrality', () => {
@@ -228,18 +229,19 @@ describe('useCompositionScore', () => {
       expect(thirdsScore.breakdown.alignment).toBeGreaterThan(goldenScore.breakdown.alignment);
     });
 
-    // center (0.333, 0.333) is NOT on golden lines (0.382, 0.618)
-    // vDist = min(|0.333-0.382|,|0.333-0.618|) = min(0.049, 0.285) = 0.049
-    // vScore = (1-0.049/0.5)*100 = 90.2 → 90
-    // hScore same → 90
-    // alignment = 90, balance = 0 (single center: leftWeight=1, rightWeight=0, ratio=1), centrality = 67
-    // score = 90*0.5 + 0*0.2 + 67*0.3 = 45+0+20.1 = 65.1 → 65
-    it('single keypoint at center on golden grid → alignment=90, score=65, grade C', () => {
+    // center at (0.5, 0.5) is NOT on golden lines (0.382, 0.618)
+    // vDist = min(|0.5-0.382|,|0.5-0.618|) = min(0.118, 0.118) = 0.118
+    // vScore = (1-0.118/0.5)*100 = 76.4 → 76
+    // same for h → alignment = 76
+    // Balance: x=0.5 NOT < 0.5 → rightWeight=1, leftWeight=0 → ratio=1 → balance=0
+    // Centrality: dist from (0.5,0.5) = 0 → centrality = 100
+    // score = 76*0.5 + 0*0.2 + 100*0.3 = 38+0+30 = 68
+    it('single keypoint at center on golden grid → alignment=76, score=68, grade C', () => {
       const { result } = renderHook(() => useCompositionScore());
       const res = result.current.computeScore([kp('center')], 'golden');
       expect(res.grade).toBe('C');
-      expect(res.breakdown.alignment).toBe(90);
-      expect(res.score).toBe(65);
+      expect(res.breakdown.alignment).toBe(76);
+      expect(res.score).toBe(68);
     });
   });
 

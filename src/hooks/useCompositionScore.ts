@@ -14,12 +14,14 @@ const GRID_LINES: Record<GridVariant, { vertical: number[]; horizontal: number[]
 };
 
 // Position coordinates for Keypoint positions
+// 'center' at (0.5, 0.5) is the true geometric center, ensuring balanced left/right weight
+// and avoiding alignment with thirds/golden grid lines
 const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
   'top-left':     { x: 0.33, y: 0.33 },
   'top-right':    { x: 0.67, y: 0.33 },
   'bottom-left':  { x: 0.33, y: 0.67 },
   'bottom-right': { x: 0.67, y: 0.67 },
-  'center':       { x: 0.333, y: 0.333 },
+  'center':       { x: 0.5, y: 0.5 },
 };
 
 function gradeFromScore(score: number): CompositionGrade {
@@ -55,7 +57,7 @@ function computeBalance(keypoints: Keypoint[]): number {
   for (const kp of keypoints) {
     const coords = POSITION_COORDS[kp.position];
     const weight = 1;
-    if (coords.x <= 0.5) leftWeight += weight;
+    if (coords.x < 0.5) leftWeight += weight;
     else rightWeight += weight;
   }
   const total = leftWeight + rightWeight;
