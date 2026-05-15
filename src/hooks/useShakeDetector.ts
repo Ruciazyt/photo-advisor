@@ -16,8 +16,8 @@ import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
 import type { EventSubscription as Subscription } from 'expo-modules-core';
 
 export interface UseShakeDetectorOptions {
-  /** Called when a shake is detected */
-  onShake: () => void;
+  /** Called when a shake is detected. intensity is 0-1 normalized magnitude (capped at 1). */
+  onShake: (intensity?: number) => void;
   /** Only listen when enabled (e.g., while bubble chat is visible) */
   enabled?: boolean;
   /**
@@ -83,7 +83,9 @@ export function useShakeDetector({
           if (now - lastShakeTimeRef.current > resetIntervalMs) {
             lastShakeTimeRef.current = now;
             consecutiveRef.current = 0;
-            onShake();
+            // Normalize intensity: magnitude / threshold, capped at 1.0
+            const intensity = Math.min(magnitude / threshold, 1);
+            onShake(intensity);
             onShakeVoiceFeedback?.();
           }
         }

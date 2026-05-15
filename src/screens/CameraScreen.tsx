@@ -84,16 +84,22 @@ export function CameraScreen() {
   const keypointsDismissAllRef = useRef(keypointsHandleDismissAll);
   keypointsDismissAllRef.current = keypointsHandleDismissAll;
 
-  const onShake = useCallback(() => {
+  const onShake = useCallback((intensity?: number) => {
     bubbleChatDismissAllRef.current();
     handleDismissAllRef.current();
     keypointsDismissAllRef.current();
+    if (showShakeDetector) {
+      if (intensity != null && intensity > 0.7) {
+        speak('用力摇晃，所有建议已关闭');
+      } else {
+        speak('轻摇一下，建议已关闭');
+      }
+    }
   }, []);
 
   useShakeDetector({
     onShake,
     enabled: showShakeDetector && showBubbleChat,
-    onShakeVoiceFeedback: showShakeDetector ? () => speak('已关闭所有建议') : undefined,
   });
 
   useEffect(() => { bubbleChatSetLoading(loading); }, [loading]);
