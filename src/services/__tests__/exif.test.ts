@@ -231,7 +231,7 @@ describe('getExifData', () => {
     expect(result!.dateTime).toBe('2026:04:15 10:30:00');
     expect(result!.iso).toBe(100);
     expect(result!.aperture).toBe(1.8);
-    expect(result!.shutterSpeed).toBe(0.001);
+    expect(result!.shutterSpeed).toBe('1/1000');
     expect(result!.exposureTime).toBe(0.001);
     expect(result!.focalLength).toBe(24);
     expect(result!.flashFired).toBe(true);

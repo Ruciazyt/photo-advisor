@@ -1,7 +1,3 @@
-/**
- * EXIF metadata extraction service.
- * Uses expo-image's Image.getInfoAsync to read EXIF data from photo URIs.
- */
 import { Image } from 'expo-image';
 
 export interface ExifData {
@@ -12,7 +8,7 @@ export interface ExifData {
   gpsLongitude?: number;
   iso?: number;
   aperture?: number;
-  shutterSpeed?: number;
+  shutterSpeed?: string;
   focalLength?: number;
   exposureTime?: number;
   flashFired?: boolean;
@@ -21,90 +17,155 @@ export interface ExifData {
   orientation?: number;
 }
 
-/** Extract EXIF metadata from a photo URI. Returns null on failure. */
+type RawExif = {
+  Make?: string;
+  Model?: string;
+  DateTime?: string;
+  DateTimeOriginal?: string;
+  CreateDate?: string;
+  GPSLatitude?: number | number[];
+  GPSLatitudeRef?: string;
+  GPSLongitude?: number | number[];
+  GPSLongitudeRef?: string;
+  ISOSpeedRatings?: number | number[];
+  FNumber?: number | string;
+  ApertureValue?: number | string;
+  ExposureTime?: number | string;
+  FocalLength?: number | string;
+  Flash?: boolean | number;
+  PixelXDimension?: number;
+  PixelYDimension?: number;
+  ImageWidth?: number;
+  ImageLength?: number;
+  Orientation?: number;
+};
+
+function parseRational(raw: unknown): number | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string') {
+    const parts = raw.split('/');
+    if (parts.length === 2) {
+      const num = parseFloat(parts[0]);
+      const den = parseFloat(parts[1]);
+      if (!isNaN(num) && !isNaN(den) && den !== 0) return num / den;
+    }
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed)) return parsed;
+  }
+  return undefined;
+}
+
+function parseIso(raw: unknown): number | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === 'number') return raw;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const first = raw[0];
+    return typeof first === 'number' ? first : parseInt(String(first), 10) || undefined;
+  }
+  return undefined;
+}
+
+function parseFlashFired(raw: unknown): boolean | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === 'boolean') return raw;
+  if (typeof raw === 'number') return (raw & 1) !== 0;
+  return undefined;
+}
+
+function parseGpsCoord(raw: unknown, ref: unknown): number | undefined {
+  if (raw == null) return undefined;
+
+  const isNegative = typeof ref === 'string' && (ref === 'S' || ref === 'W');
+
+  if (typeof raw === 'number') {
+    // If already negative, keep as-is (the sign is intrinsic)
+    if (raw < 0) return raw;
+    // Positive raw value: flip sign only when Ref indicates S/W
+    return isNegative ? -raw : raw;
+  }
+
+  if (Array.isArray(raw) && raw.length >= 3) {
+    const den = raw.length >= 4 ? raw[3] : 1;
+    const degrees = raw[0] / den + (raw[1] / den) / 60 + (raw[2] / den) / 3600;
+    return isNegative ? -degrees : degrees;
+  }
+
+  return undefined;
+}
+
+export function formatShutterSpeed(value: number): string {
+  if (value >= 1) {
+    return `${value}s`;
+  }
+
+  const standardSpeeds = [1, 1 / 2, 1 / 4, 1 / 8, 1 / 16, 1 / 15, 1 / 30, 1 / 60, 1 / 125, 1 / 250, 1 / 500, 1 / 1000, 1 / 2000, 1 / 4000, 1 / 8000];
+
+  let closest = standardSpeeds[0];
+  let minDiff = Math.abs(value - closest);
+  for (const speed of standardSpeeds) {
+    const diff = Math.abs(value - speed);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = speed;
+    }
+  }
+
+  if (closest >= 1) return `${closest}s`;
+  const denominator = Math.round(1 / closest);
+  return `1/${denominator}`;
+}
+
+export function formatGpsCoord(coord: number, isLatitude: boolean): string {
+  const abs = Math.abs(coord);
+  const deg = Math.floor(abs);
+  const minFloat = (abs - deg) * 60;
+  const min = Math.floor(minFloat);
+  const secFloat = (minFloat - min) * 60;
+  const minStr = min === 0 ? '0' : String(min);
+  const sec = secFloat.toFixed(1);
+
+  const direction = isLatitude
+    ? (coord >= 0 ? 'N' : 'S')
+    : (coord >= 0 ? 'E' : 'W');
+
+  return `${deg}°${minStr}'${sec}"${direction}`;
+}
+
 export async function getExifData(uri: string): Promise<ExifData | null> {
   try {
-    const info = await (Image as any).getInfoAsync(uri);
-    if (!info?.exif) return null;
+    const info = await Image.getInfoAsync(uri);
+    if (!info) return null;
 
-    const raw = info.exif as Record<string, unknown>;
+    const exif = info.exif as RawExif | undefined;
+    if (!exif) return null;
 
-    // Normalize GPS from different naming conventions
-    const gpsLat =
-      (raw.GPSLatitude as number | undefined) ??
-      (raw.GPSLatitude as number | undefined);
-    const gpsLng =
-      (raw.GPSLongitude as number | undefined) ??
-      (raw.GPSLongitude as number | undefined);
+    const exposureTime = parseRational(exif.ExposureTime);
 
-    // Flash: some platforms return a string "FlashDidFire" or number
-    let flashFired: boolean | undefined;
-    if (raw.Flash !== undefined) {
-      if (typeof raw.Flash === 'boolean') {
-        flashFired = raw.Flash;
-      } else if (typeof raw.Flash === 'number') {
-        // Bit 0 = flash fired
-        flashFired = (raw.Flash & 1) === 1;
-      }
-    }
+    const width = (info.width ?? exif.PixelXDimension ?? exif.ImageWidth) as number | undefined;
+    const height = (info.height ?? exif.PixelYDimension ?? exif.ImageLength) as number | undefined;
 
     return {
-      make: raw.Make as string | undefined,
-      model: raw.Model as string | undefined,
-      dateTime: (raw.DateTime as string | undefined) ?? (raw.DateTimeOriginal as string | undefined),
-      gpsLatitude: gpsLat,
-      gpsLongitude: gpsLng,
-      iso: raw.ISOSpeedRatings as number | undefined,
-      aperture: raw.FNumber as number | undefined,
-      shutterSpeed: raw.ExposureTime as number | undefined,
-      focalLength: raw.FocalLength as number | undefined,
-      exposureTime: raw.ExposureTime as number | undefined,
-      flashFired,
-      imageWidth: raw.PixelXDimension as number | undefined ?? (raw.ImageWidth as number | undefined),
-      imageHeight: raw.PixelYDimension as number | undefined ?? (raw.ImageLength as number | undefined),
-      orientation: raw.Orientation as number | undefined,
+      make: exif.Make,
+      model: exif.Model,
+      dateTime: exif.DateTime ?? exif.DateTimeOriginal ?? exif.CreateDate,
+      gpsLatitude: parseGpsCoord(exif.GPSLatitude, exif.GPSLatitudeRef),
+      gpsLongitude: parseGpsCoord(exif.GPSLongitude, exif.GPSLongitudeRef),
+      iso: parseIso(exif.ISOSpeedRatings),
+      aperture: parseRational(exif.FNumber ?? exif.ApertureValue),
+      exposureTime,
+      shutterSpeed: exposureTime != null ? formatShutterSpeed(exposureTime) : undefined,
+      focalLength: parseRational(exif.FocalLength),
+      flashFired: parseFlashFired(exif.Flash),
+      imageWidth: width,
+      imageHeight: height,
+      orientation: exif.Orientation,
     };
   } catch {
     return null;
   }
 }
 
-/**
- * Convert a fractional shutter speed to a readable string.
- * e.g. 0.001 → "1/1000", 1 → "1s", 0.5 → "1/2"
- */
-export function formatShutterSpeed(value: number): string {
-  if (value >= 1) {
-    return `${value}s`;
-  }
-  // Find nearest reciprocal with tolerance
-  const rounded = Math.round(1 / value);
-  if (Math.abs(1 / rounded - value) < 0.001) {
-    return `1/${rounded}`;
-  }
-  return `${value}s`;
-}
-
-/**
- * Format a GPS coordinate as "40°26'46"N".
- * @param coord Coordinate value (positive = N/E, negative = S/W)
- * @param isLatitude True for latitude, false for longitude
- */
-export function formatGpsCoord(coord: number, isLatitude: boolean): string {
-  const abs = Math.abs(coord);
-  const degrees = Math.floor(abs);
-  const minutesDecimal = (abs - degrees) * 60;
-  const minutes = Math.floor(minutesDecimal);
-  const seconds = ((minutesDecimal - minutes) * 60).toFixed(1);
-
-  const direction = isLatitude
-    ? coord >= 0 ? 'N' : 'S'
-    : coord >= 0 ? 'E' : 'W';
-
-  return `${degrees}°${minutes}'${seconds}"${direction}`;
-}
-
-/** Convert raw EXIF data to a human-readable map for UI display. */
 export function getReadableExif(exif: ExifData): Record<string, string> {
   const result: Record<string, string> = {};
 
@@ -112,13 +173,13 @@ export function getReadableExif(exif: ExifData): Record<string, string> {
   if (exif.model) result['Model'] = exif.model;
   if (exif.dateTime) result['DateTime'] = exif.dateTime;
   if (exif.iso) result['ISO'] = String(exif.iso);
-  if (exif.aperture != null) result['Aperture'] = `f/${exif.aperture.toFixed(1)}`;
+  if (exif.aperture) result['Aperture'] = `f/${exif.aperture.toFixed(1)}`;
+  if (exif.exposureTime != null) result['Exposure'] = formatShutterSpeed(exif.exposureTime);
   if (exif.exposureTime != null) result['Shutter'] = formatShutterSpeed(exif.exposureTime);
-  if (exif.focalLength != null) result['FocalLength'] = `${exif.focalLength.toFixed(1)}mm`;
-  if (exif.flashFired != null) result['Flash'] = exif.flashFired ? 'Fired' : 'Off';
-  if (exif.imageWidth && exif.imageHeight)
-    result['Dimensions'] = `${exif.imageWidth} × ${exif.imageHeight}`;
-  if (exif.orientation) result['Orientation'] = String(exif.orientation);
+  if (exif.focalLength) result['FocalLength'] = `${exif.focalLength.toFixed(1)}mm`;
+  if (exif.flashFired !== undefined) result['Flash'] = exif.flashFired ? 'Fired' : 'Off';
+  if (exif.imageWidth && exif.imageHeight) result['Dimensions'] = `${exif.imageWidth} × ${exif.imageHeight}`;
+  if (exif.orientation != null) result['Orientation'] = String(exif.orientation);
   if (exif.gpsLatitude != null && exif.gpsLongitude != null) {
     result['Latitude'] = formatGpsCoord(exif.gpsLatitude, true);
     result['Longitude'] = formatGpsCoord(exif.gpsLongitude, false);
