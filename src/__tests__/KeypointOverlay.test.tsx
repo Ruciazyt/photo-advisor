@@ -184,8 +184,8 @@ describe('KeypointOverlay', () => {
       expect(POSITION_COORDS['bottom-right']).toEqual({ x: 0.67, y: 0.67 });
     });
 
-    it('center marker is at thirds grid intersection (1/3, 1/3)', () => {
-      expect(POSITION_COORDS['center']).toEqual({ x: 0.33, y: 0.33 });
+    it('center marker is at true screen center (0.5, 0.5)', () => {
+      expect(POSITION_COORDS['center']).toEqual({ x: 0.5, y: 0.5 });
     });
   });
 

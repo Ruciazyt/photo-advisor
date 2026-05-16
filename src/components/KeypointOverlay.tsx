@@ -26,7 +26,7 @@ const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
   'top-right':    { x: 0.67, y: 0.33 },
   'bottom-left':  { x: 0.33, y: 0.67 },
   'bottom-right': { x: 0.67, y: 0.67 },
-  'center':       { x: 0.33, y: 0.33 },
+  'center':       { x: 0.5, y: 0.5 },
 };
 
 // Module-level constants
