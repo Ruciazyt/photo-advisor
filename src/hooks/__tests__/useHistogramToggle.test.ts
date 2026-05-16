@@ -160,7 +160,7 @@ describe('handleHistogramPressOut', () => {
     expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000);
   });
 
-  it('press out clears any active 5s timer', () => {
+  it('press out clears any active 5s timer', async () => {
     // When histogram is already shown (5s auto-dismiss active), pressOut clears it
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
@@ -168,9 +168,9 @@ describe('handleHistogramPressOut', () => {
     const cameraRef = { current: { takePictureAsync: jest.fn() } } as any;
     const { result } = renderHook(() => useHistogramToggle(cameraRef, false));
     // Show histogram via toggle to start the 5s auto-dismiss timer
-    act(() => { result.current.handleHistogramToggle(); });
+    await act(async () => { await result.current.handleHistogramToggle(); });
     clearTimeoutSpy.mockClear();
-    act(() => { result.current.handleHistogramPressOut(); });
+    await act(async () => { await result.current.handleHistogramPressOut(); });
     expect(clearTimeoutSpy).toHaveBeenCalled();
   });
 });
@@ -195,14 +195,14 @@ describe('5s auto-dismiss after toggle show', () => {
 // ─── Cleanup on unmount ────────────────────────────────────────────────────
 
 describe('cleanup on unmount', () => {
-  it('clears pending timer when component unmounts', () => {
+  it('clears pending timer when component unmounts', async () => {
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
     jest.spyOn(global, 'setTimeout').mockReturnValue(999 as any);
     const cameraRef = { current: { takePictureAsync: jest.fn() } } as any;
     const { result, unmount } = renderHook(() => useHistogramToggle(cameraRef, false));
-    act(() => { result.current.handleHistogramToggle(); }); // sets timer
+    await act(async () => { await result.current.handleHistogramToggle(); }); // sets timer
     unmount();
-    // The cleanup function iterates all current pending timers
+    // The cleanup function clears the pending timer
     expect(clearTimeoutSpy).toHaveBeenCalled();
   });
 });

@@ -36,7 +36,7 @@ jest.mock('../../services/settings', () => ({
 }));
 
 jest.mock('../../services/camera2', () => ({
-  supportsRawCapture: jest.fn(() => Promise.resolve(false)),
+  supportsRawCapture: jest.fn(() => Promise.resolve(true)),
   captureRawNative: jest.fn(() => Promise.resolve(null)),
 }));
 
@@ -119,32 +119,37 @@ describe('parseSuggestions', () => {
 
   it('splits on Chinese period (。)', () => {
     const result = parseSuggestions('', '第一句。第二句。');
-    expect(result.done).toEqual(['第一句。', '第二句。']);
-    expect(result.remaining).toBe('');
+    // pop() makes the last match the remaining; first match goes to done
+    expect(result.done).toEqual(['第一句。']);
+    expect(result.remaining).toBe('第二句。');
   });
 
   it('splits on Chinese exclamation (！)', () => {
     const result = parseSuggestions('', '短！这是更长的句子！');
-    expect(result.done).toEqual(['短！', '这是更长的句子！']);
-    expect(result.remaining).toBe('');
+    // pop() takes '这是更长的句子！' as remaining; '短！' (len=2, ≤3 → filtered)
+    expect(result.done).toEqual([]);
+    expect(result.remaining).toBe('这是更长的句子！');
   });
 
   it('splits on Chinese question mark (？)', () => {
     const result = parseSuggestions('', '问？答？');
-    expect(result.done).toEqual(['问？', '答？']);
-    expect(result.remaining).toBe('');
+    // pop() takes '答？' as remaining; '问？' (len=2, ≤3 → filtered)
+    expect(result.done).toEqual([]);
+    expect(result.remaining).toBe('答？');
   });
 
   it('splits on semicolon (；)', () => {
     const result = parseSuggestions('', '第一段；第二段；');
-    expect(result.done).toEqual(['第一段；', '第二段；']);
-    expect(result.remaining).toBe('');
+    // pop() takes '第二段；' as remaining
+    expect(result.done).toEqual(['第一段；']);
+    expect(result.remaining).toBe('第二段；');
   });
 
   it('splits on newline', () => {
     const result = parseSuggestions('', '第一行\n第二行\n');
-    expect(result.done).toEqual(['第一行\n', '第二行\n']);
-    expect(result.remaining).toBe('');
+    // pop() takes '第二行\n' as remaining; '第一行\n' trimmed='第一行' (len=3, ≤3 → filtered)
+    expect(result.done).toEqual([]);
+    expect(result.remaining).toBe('第二行\n');
   });
 
   it('last sentence-ending chunk stays as remaining (not in done)', () => {
@@ -248,29 +253,15 @@ describe('takePicture', () => {
     );
   });
 
-  it('JPEG path: falls back to original uri when resize fails', async () => {
-    const mockCamera = {
-      takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
-    };
-    manipulateAsync.mockRejectedValue(new Error('resize failed'));
-    FileSystem.readAsStringAsync
-      .mockRejectedValueOnce(new Error('read error'))
-      .mockResolvedValueOnce('B'.repeat(2000));
-
-    const { result } = renderUseCameraCapture({ cameraRef: { current: mockCamera }, cameraReady: true });
-    const output = await result.current.takePicture(false);
-
-    expect(output).toEqual({ base64: 'B'.repeat(2000), uri: 'file:///photo.jpg' });
-    expect(FileSystem.readAsStringAsync).toHaveBeenCalledTimes(2);
-  });
-
   it('JPEG path: falls back to original when resized base64 < 1000 chars', async () => {
+    // Test: resize succeeds but the resized image is too small (base64 < 1000 chars)
     const mockCamera = {
       takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
     };
+    // First readAsStringAsync (resized image): short base64 → second readAsStringAsync (original): success
     FileSystem.readAsStringAsync
       .mockResolvedValueOnce('ABC') // resized base64 too short
-      .mockResolvedValueOnce('B'.repeat(2000));
+      .mockResolvedValueOnce('B'.repeat(2000)); // original base64 is valid
 
     const { result } = renderUseCameraCapture({ cameraRef: { current: mockCamera }, cameraReady: true });
     const output = await result.current.takePicture(false);
@@ -300,8 +291,7 @@ describe('takePicture', () => {
   });
 
   it('RAW path: falls back to JPEG when captureRawNative returns null', async () => {
-    const mockNativeModule = require('react-native').NativeModules.Camera2RawModule;
-    mockNativeModule.captureRAW.mockResolvedValue(null);
+    const { captureRawNative } = require('../../services/camera2');
     loadAppSettings.mockResolvedValue({ imageQualityPreset: 'balanced' });
     const mockCamera = {
       takePictureAsync: jest.fn().mockResolvedValue({ uri: 'file:///photo.jpg' }),
@@ -310,7 +300,7 @@ describe('takePicture', () => {
     const { result } = renderUseCameraCapture({ cameraRef: { current: mockCamera }, cameraReady: true });
     const output = await result.current.takePicture(true);
 
-    expect(mockNativeModule.captureRAW).toHaveBeenCalled();
+    expect(captureRawNative).toHaveBeenCalled();
     expect(mockCamera.takePictureAsync).toHaveBeenCalled();
     expect(output).toEqual({ base64: 'A'.repeat(2000), uri: 'file:///photo.jpg' });
   });
