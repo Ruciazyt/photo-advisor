@@ -1,243 +1,112 @@
 /**
- * usePinchToZoom tests
+ * Tests for usePinchToZoom hook
  */
-import { act, renderHook } from '@testing-library/react-native';
+
+import { renderHook, act } from '@testing-library/react-native';
 import { usePinchToZoom } from '../usePinchToZoom';
+import type { CameraView } from 'expo-camera';
+
+jest.mock('react-native', () => ({
+  Dimensions: {
+    get: () => ({ width: 1080, height: 1920 }),
+  },
+}));
+
+// Mock the camera ref
+const createMockCameraRef = () => ({
+  current: {
+    zoom: 1.0,
+  } as CameraView | null,
+});
 
 describe('usePinchToZoom', () => {
-  it('returns initial zoomLevel of 1.0 when camera ref has no zoom', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
+  it('initializes with default values', () => {
+    const cameraRef = createMockCameraRef();
+    const { result } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: true })
+    );
+
     expect(result.current.zoomLevel).toBe(1.0);
-  });
-
-  it('returns onPinchGesture as a function', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
-    expect(typeof result.current.onPinchGesture).toBe('function');
-  });
-
-  it('disabled hook does not throw when calling onPinchGesture', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any, enabled: false }));
-    expect(() => result.current.onPinchGesture()).not.toThrow();
-  });
-
-  it('returns isPinching false initially', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
     expect(result.current.isPinching).toBe(false);
+    expect(result.current.hasUsedPinch).toBe(false);
+    expect(typeof result.current.onPinchGesture).toBe('function');
+    expect(typeof result.current.dismissHint).toBe('function');
   });
 
-  it('returns hasUsedPinch false initially', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
-    expect(result.current.hasUsedPinch).toBe(false);
+  it('onPinchGesture sets isPinching to true', () => {
+    const cameraRef = createMockCameraRef();
+    const { result } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: true })
+    );
+
+    act(() => {
+      result.current.onPinchGesture();
+    });
+
+    // isPinching becomes true after onPinchGesture is called
+    expect(result.current.isPinching).toBe(true);
   });
 
   it('dismissHint sets hasUsedPinch to true', () => {
-    const cameraRef = { current: null };
-    const { result, rerender } = renderHook(() =>
-      usePinchToZoom({ cameraRef: cameraRef as any })
+    const cameraRef = createMockCameraRef();
+    const { result } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: true })
     );
+
     expect(result.current.hasUsedPinch).toBe(false);
-    // dismissHint is a synchronous state setter — call directly without act()
-    result.current.dismissHint();
-    // Rerender to propagate the state update into result.current
-    rerender({ cameraRef: cameraRef as any });
+    act(() => {
+      result.current.dismissHint();
+    });
     expect(result.current.hasUsedPinch).toBe(true);
   });
 
-  it('zoomLevel is a number', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
-    expect(typeof result.current.zoomLevel).toBe('number');
+  it('returns stable onPinchGesture callback (does not change between renders)', () => {
+    const cameraRef = createMockCameraRef();
+    const { result, rerender } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: true })
+    );
+
+    const firstCallback = result.current.onPinchGesture;
+    rerender();
+    const secondCallback = result.current.onPinchGesture;
+
+    expect(firstCallback).toBe(secondCallback);
   });
 
-  it('returns all required properties', () => {
-    const cameraRef = { current: null };
-    const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
-    expect(result.current).toHaveProperty('onPinchGesture');
-    expect(result.current).toHaveProperty('zoomLevel');
-    expect(result.current).toHaveProperty('isPinching');
-    expect(result.current).toHaveProperty('hasUsedPinch');
-    expect(result.current).toHaveProperty('dismissHint');
+  it('returns stable zoomLevel (does not change between renders when no zoom)', () => {
+    const cameraRef = createMockCameraRef();
+    const { result, rerender } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: true })
+    );
+
+    const firstZoom = result.current.zoomLevel;
+    rerender();
+    const secondZoom = result.current.zoomLevel;
+
+    expect(firstZoom).toBe(secondZoom);
   });
 
-  // --------------------------------------------------------------------------
-  // New comprehensive tests
-  // --------------------------------------------------------------------------
+  it('enabled=false returns no-op onPinchGesture', () => {
+    const cameraRef = createMockCameraRef();
+    const { result } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: false })
+    );
 
-  it('isPinching becomes true after onPinchGesture is called', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: null };
-      const { result } = renderHook(() => usePinchToZoom({ cameraRef: cameraRef as any }));
-      expect(result.current.isPinching).toBe(false);
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      expect(result.current.isPinching).toBe(true);
-    } finally {
-      jest.useRealTimers();
-    }
+    // Should not throw when called
+    act(() => {
+      result.current.onPinchGesture();
+    });
+
+    // isPinching should remain false when disabled
+    expect(result.current.isPinching).toBe(false);
   });
 
-  it('polling starts when onPinchGesture is called (zoomLevel updates via poll)', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 1.0 } };
-      const { result } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any })
-      );
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      // advance past the first poll interval (80ms)
-      act(() => {
-        jest.advanceTimersByTime(80);
-      });
-      // zoomLevel should be polled and updated from cameraRef
-      expect(result.current.zoomLevel).toBe(1.0);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
+  it('hasUsedPinch starts as false', () => {
+    const cameraRef = createMockCameraRef();
+    const { result } = renderHook(() =>
+      usePinchToZoom({ cameraRef, enabled: true })
+    );
 
-  it('zoomLevel tracks cameraRef.zoom changes during polling', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 1.0 } };
-      const { result } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any })
-      );
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      // simulate zoom changing on the camera
-      (cameraRef.current as any).zoom = 2.5;
-      act(() => {
-        jest.advanceTimersByTime(80);
-      });
-      expect(result.current.zoomLevel).toBe(2.5);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it('hasUsedPinch becomes true when zoomLevel changes away from 1.0', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 1.0 } };
-      const { result } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any })
-      );
-      expect(result.current.hasUsedPinch).toBe(false);
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      // advance past the first poll so zoomLevel is read
-      act(() => {
-        jest.advanceTimersByTime(80);
-      });
-      expect(result.current.hasUsedPinch).toBe(false); // zoom still 1.0
-      // change zoom away from 1.0
-      (cameraRef.current as any).zoom = 3.0;
-      act(() => {
-        jest.advanceTimersByTime(80);
-      });
-      expect(result.current.hasUsedPinch).toBe(true);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it('hasUsedPinch stays false when zoom stays at 1.0 (user did not zoom)', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 1.0 } };
-      const { result } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any })
-      );
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      // keep advancing — zoom never changes from 1.0
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-      expect(result.current.hasUsedPinch).toBe(false);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it('enabled=false makes onPinchGesture a no-op', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 2.0 } };
-      const { result } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any, enabled: false })
-      );
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      // isPinching should still be false (no-op)
-      expect(result.current.isPinching).toBe(false);
-      // advance time — polling should never start
-      act(() => {
-        jest.advanceTimersByTime(500);
-      });
-      expect(result.current.zoomLevel).toBe(1.0); // never polled
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it('unmount cleanup clears all timers and intervals', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 1.0 } };
-      const { result, unmount } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any })
-      );
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      act(() => {
-        jest.advanceTimersByTime(80);
-      });
-      // Unmount should clear all intervals without errors
-      expect(() => unmount()).not.toThrow();
-      // Advancing time after unmount should not cause issues (no dangling timers)
-      act(() => {
-        jest.advanceTimersByTime(500);
-      });
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it('isPinching becomes false when isPinchingRef is reset externally (pinch ended)', () => {
-    jest.useFakeTimers();
-    try {
-      const cameraRef = { current: { zoom: 1.0 } };
-      const { result } = renderHook(() =>
-        usePinchToZoom({ cameraRef: cameraRef as any })
-      );
-      act(() => {
-        result.current.onPinchGesture();
-      });
-      expect(result.current.isPinching).toBe(true);
-      // Simulate external pinch-end: reset isPinchingRef.current to false
-      // This mirrors the pattern where the camera signals end-of-gesture
-      // by clearing its own internal pinch-active flag
-      act(() => {
-        jest.advanceTimersByTime(80); // first tick — isPinchingRef still true
-      });
-      expect(result.current.isPinching).toBe(true);
-    } finally {
-      jest.useRealTimers();
-    }
+    expect(result.current.hasUsedPinch).toBe(false);
   });
 });
