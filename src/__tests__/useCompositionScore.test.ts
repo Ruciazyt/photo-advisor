@@ -32,14 +32,14 @@ describe('useCompositionScore', () => {
 
     it('returns perfect alignment score for center position on thirds grid', () => {
       const { result } = renderHook(() => useCompositionScore());
-      // 'center' position is now at (0.333, 0.333) - top-left thirds intersection
-      // Distance to nearest thirds line = 0, alignment = 100
+      // 'center' position is now at (0.5, 0.5) - true screen center
+      // Distance to nearest thirds line = min(|0.5-0.333|, |0.5-0.667|) = 0.167, alignment = ~67
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // Alignment: center at (0.333, 0.333) is exactly ON the thirds intersection, alignment = 100
-      expect(scoreResult.breakdown.alignment).toBe(100);
+      // Alignment: center at (0.5, 0.5) is NOT on thirds intersection, alignment = ~67
+      expect(scoreResult.breakdown.alignment).toBe(67);
     });
 
     it('balance is 100 for evenly distributed keypoints left/right', () => {
@@ -82,9 +82,8 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // center at (0.333, 0.333) has distance to true center (0.5, 0.5)
-      // dist = sqrt((0.167)^2 + (0.167)^2) = 0.236, normalized = 0.236/0.707 = 0.334, centrality = 66.6 -> rounds to 67
-      expect(scoreResult.breakdown.centrality).toBe(67);
+      // center at (0.5, 0.5) IS at true screen center, so centrality = 100
+      expect(scoreResult.breakdown.centrality).toBe(100);
     });
 
     it('centrality is lower for corner keypoints', () => {
