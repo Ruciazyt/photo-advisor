@@ -76,7 +76,7 @@ describe('useCompositionScore', () => {
       expect(scoreResult.breakdown.balance).toBeLessThan(100);
     });
 
-    it('centrality is highest for center position keypoint', () => {
+    it('centrality score reflects distance from true screen center', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
