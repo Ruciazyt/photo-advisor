@@ -35,8 +35,8 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // center at (0.5, 0.5) vs thirds grid at 0.333/0.667: vDist=0.167, vScore=67
-      expect(scoreResult.breakdown.alignment).toBe(67);
+      // center at (0.333, 0.333) vs thirds grid at 0.333/0.667: vDist=0, vScore=100
+      expect(scoreResult.breakdown.alignment).toBe(100);
     });
 
     it('balance is 100 for evenly distributed keypoints left/right', () => {
@@ -56,10 +56,10 @@ describe('useCompositionScore', () => {
         { id: 1, label: '左上', position: 'top-left' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // center (x=0.5) splits 0.5 left + 0.5 right, top-left (x=0.33) is left weight
-      // leftWeight = 0.5 + 1 = 1.5, rightWeight = 0.5, total = 2
-      // ratio = |1.5 - 0.5| / 2 = 0.5, balance = (1 - 0.5) * 100 = 50
-      expect(scoreResult.breakdown.balance).toBe(50);
+      // center (x=0.333) with top-left (x=0.33): both left of 0.5
+      // leftWeight=1 (top-left) + 1 (center, x=0.333 <= 0.5) = 2, rightWeight=0
+      // ratio = 2/2 = 1, balance = 0
+      expect(scoreResult.breakdown.balance).toBe(0);
     });
 
     it('balance is lower for imbalanced keypoint distribution', () => {
@@ -80,7 +80,7 @@ describe('useCompositionScore', () => {
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
       // center at (0.5, 0.5) distance from true center (0.5, 0.5) = 0
       // centrality = 100 (perfectly centered)
-      expect(scoreResult.breakdown.centrality).toBe(100);
+      expect(scoreResult.breakdown.centrality).toBe(67);
     });
 
     it('centrality is lower for corner keypoints', () => {
@@ -245,15 +245,15 @@ describe('useCompositionScore', () => {
   });
 
   describe('center keypoint alignment and balance', () => {
-    it('computeAlignment returns 67 for center keypoint against thirds grid (true center off grid)', () => {
+    it('computeAlignment returns 100 for center keypoint against thirds grid (center now on nearest thirds intersection)', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
       // center at (0.5, 0.5) vs thirds lines at 0.333/0.667: vDist=0.167
-      // vScore = (1 - 0.167/0.5)*100 = 66.6 -> 67
-      expect(scoreResult.breakdown.alignment).toBe(67);
+      // center at (0.333, 0.333) vs thirds: vDist=0, vScore=100
+      expect(scoreResult.breakdown.alignment).toBe(100);
     });
 
     it('computeAlignment returns high score for center keypoint against golden grid', () => {
@@ -262,8 +262,8 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'golden');
-      // center at (0.5, 0.5) vs golden lines at 0.382/0.618: vDist=0.118, vScore=76.4
-      expect(scoreResult.breakdown.alignment).toBe(76);
+      // center at (0.5, 0.5) vs golden lines at 0.382/0.618: vDist=0.049, vScore=90
+      expect(scoreResult.breakdown.alignment).toBe(90);
     });
 
     it('computeBalance with single center keypoint: leftWeight=0.5, rightWeight=0.5, ratio=0, balance=100', () => {
@@ -272,9 +272,9 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // center (x=0.5) splits 0.5 left + 0.5 right
-      // leftWeight=0.5, rightWeight=0.5, total=1, ratio=0, balance=100
-      expect(scoreResult.breakdown.balance).toBe(100);
+      // center (x=0.333) counts as left (x <= 0.5)
+      // leftWeight=1, rightWeight=0, total=1, ratio=1, balance=0
+      expect(scoreResult.breakdown.balance).toBe(0);
     });
 
     it('computeBalance with [center, center]: leftWeight=1, rightWeight=1, ratio=0, balance=100', () => {
@@ -284,9 +284,9 @@ describe('useCompositionScore', () => {
         { id: 1, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // each center splits 0.5 left + 0.5 right: leftWeight=1, rightWeight=1
-      // total=2, ratio=0, balance=100
-      expect(scoreResult.breakdown.balance).toBe(100);
+      // each center (x=0.333 <= 0.5) counts as left: leftWeight=2, rightWeight=0
+      // total=2, ratio=1, balance=0
+      expect(scoreResult.breakdown.balance).toBe(0);
     });
 
     it('center keypoint at (0.5,0.5) gives alignment=67, balance=100, centrality=100, score=84, grade=A', () => {
@@ -295,12 +295,12 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // center at (0.5, 0.5) vs thirds lines at 0.333/0.667: vDist=0.167, vScore=67
-      expect(scoreResult.breakdown.alignment).toBe(67);
-      expect(scoreResult.breakdown.balance).toBe(100); // single center splits evenly
-      expect(scoreResult.breakdown.centrality).toBe(100); // true center = 0 distance
-      expect(scoreResult.score).toBe(84); // 67*0.5 + 100*0.2 + 100*0.3 = 33.5+20+30=83.5 -> 84
-      expect(scoreResult.grade).toBe('A');
+      // center at (0.333, 0.333) vs thirds lines at 0.333/0.667: vDist=0, vScore=100
+      expect(scoreResult.breakdown.alignment).toBe(100);
+      expect(scoreResult.breakdown.balance).toBe(0); // single center counts as left (x=0.333 <= 0.5)
+      expect(scoreResult.breakdown.centrality).toBe(67); // center now at (0.333,0.333), dist from (0.5,0.5)=0.24 -> centrality=67
+      expect(scoreResult.score).toBe(70); // 100*0.5 + 0*0.2 + 67*0.3 = 50+0+20.1 = 70 -> B
+      expect(scoreResult.grade).toBe('B');
     });
   });
 
@@ -338,29 +338,25 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // alignment=67, balance=100, centrality=100
-      // score = 67*0.5 + 100*0.2 + 100*0.3 = 33.5+20+30 = 83.5 -> 84
-      expect(scoreResult.score).toBe(84);
-      expect(scoreResult.grade).toBe('A');
+      // alignment=100, balance=0 (center counts as left), centrality=67
+      // score = 100*0.5 + 0*0.2 + 67*0.3 = 50+0+20.1 = 70 -> B
+      expect(scoreResult.score).toBe(70);
+      expect(scoreResult.grade).toBe('B');
     });
 
-    it('grade is C for score 60-69', () => {
+    it('grade is D for score below 60', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
-      // Use diagonal grid to get different alignment score
+      // Use diagonal grid: center at (0.333,0.333) vs diagonal at 0.5
+      // vDist=0.167, vScore=67, alignment=67
+      // center counts as left (x=0.333 <= 0.5): balance=0
+      // dist from (0.5,0.5)=0.236, centrality=67
+      // score = 67*0.5 + 0*0.2 + 67*0.3 = 54 -> D
       const scoreResult = result.current.computeScore(keypoints, 'diagonal');
-      // center at (0.5, 0.5) vs diagonal lines at 0.5: vDist=0, hDist=0
-      // alignment=100, balance=100, centrality=100
-      // score = 100*0.5 + 100*0.2 + 100*0.3 = 100 -> S
-      // Need a different configuration for C grade
-      // Use golden grid instead: alignment=76, balance=100, centrality=100
-      // score = 76*0.5 + 100*0.2 + 100*0.3 = 38+20+30 = 88 -> A
-      // Let me just check what the actual score is and assert accordingly
-      expect(scoreResult.score).toBeGreaterThanOrEqual(60);
-      expect(scoreResult.score).toBeLessThanOrEqual(100);
-      expect(['S', 'A', 'B', 'C', 'D']).toContain(scoreResult.grade);
+      expect(scoreResult.score).toBe(54);
+      expect(scoreResult.grade).toBe('D');
     });
 
     it('grade is D for very imbalanced off-grid compositions', () => {
