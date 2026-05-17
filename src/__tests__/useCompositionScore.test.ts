@@ -281,19 +281,22 @@ describe('useCompositionScore', () => {
       expect(scoreResult.breakdown.balance).toBe(0);
     });
 
-    it('computeScore for center keypoint with thirds grid gives high alignment score', () => {
+    it('center keypoint at (0.333,0.333) gives alignment=100, score=70, grade=B', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
       expect(scoreResult.breakdown.alignment).toBe(100);
-      expect(scoreResult.score).toBeGreaterThanOrEqual(60);
+      expect(scoreResult.breakdown.balance).toBe(0); // single center, all left
+      expect(scoreResult.breakdown.centrality).toBe(67);
+      expect(scoreResult.score).toBe(70);
+      expect(scoreResult.grade).toBe('B');
     });
   });
 
   describe('grade boundaries', () => {
-    it('grade is S for score >= 90', () => {
+    it('grade is S for score >= 90, A for 80-89', () => {
       const { result } = renderHook(() => useCompositionScore());
       const keypoints: Keypoint[] = [
         { id: 0, label: '左上', position: 'top-left' },
@@ -302,12 +305,11 @@ describe('useCompositionScore', () => {
         { id: 3, label: '右下', position: 'bottom-right' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      if (scoreResult.score >= 90) {
-        expect(scoreResult.grade).toBe('S');
-      } else {
-        // Score might be 89 if alignment isn't perfect (top-left x=0.33 vs thirds 0.333)
-        expect(['S', 'A']).toContain(scoreResult.grade);
-      }
+      // top-left x=0.33 vs thirds 0.333: vDist=0.003, vScore=99.4
+      // alignment avg ~99, balance=100, centrality ~66
+      // score = 99*0.5 + 100*0.2 + 66*0.3 = 89.3 -> 89 -> A
+      expect(scoreResult.score).toBe(89);
+      expect(scoreResult.grade).toBe('A');
     });
 
     it('grade is B for score 70-79', () => {
@@ -335,29 +337,19 @@ describe('useCompositionScore', () => {
       expect(scoreResult.grade).toBe('C');
     });
 
-    it('grade is D for score < 60', () => {
+    it('grade is D for very imbalanced off-grid compositions', () => {
       const { result } = renderHook(() => useCompositionScore());
-      // Use two center keypoints on golden grid - imbalanced and off-grid alignment
-      const keypoints: Keypoint[] = [
-        { id: 0, label: '中间', position: 'center' },
-        { id: 1, label: '中间', position: 'center' },
-      ];
-      const scoreResult = result.current.computeScore(keypoints, 'golden');
-      // alignment=90, balance=0, centrality=67
-      // score = 90*0.5 + 0*0.2 + 67*0.3 = 45 + 0 + 20 = 65 -> C actually
-      // Need a worse case
+      // Left-side corners on diagonal grid: off-grid + imbalanced
       const badKeypoints: Keypoint[] = [
         { id: 0, label: '左上', position: 'top-left' },
         { id: 1, label: '左下', position: 'bottom-left' },
-        { id: 2, label: '左上', position: 'top-left' },
       ];
-      const badResult = result.current.computeScore(badKeypoints, 'golden');
-      if (badResult.score < 60) {
-        expect(badResult.grade).toBe('D');
-      } else {
-        // If score is >= 60, it's at least a C
-        expect(badResult.score).toBeGreaterThanOrEqual(60);
-      }
+      const badResult = result.current.computeScore(badKeypoints, 'diagonal');
+      // diagonal lines at 0.5, top-left at (0.33, 0.33): vDist=0.17, vScore=66
+      // alignment=66, balance=0 (all left), centrality=66
+      // score = 66*0.5 + 0*0.2 + 66*0.3 = 52.8 -> 53 -> D
+      expect(badResult.score).toBe(53);
+      expect(badResult.grade).toBe('D');
     });
   });
 });
