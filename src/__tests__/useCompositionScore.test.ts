@@ -32,14 +32,14 @@ describe('useCompositionScore', () => {
 
     it('returns perfect alignment score for center position on thirds grid', () => {
       const { result } = renderHook(() => useCompositionScore());
-      // 'center' position is now at (0.333, 0.333) - on thirds intersection
-      // Distance to nearest thirds line = min(|0.333-0.333|, |0.333-0.667|) = 0, alignment = 100
+      // 'center' position is now at (0.5, 0.5) - NOT on thirds lines
+      // Distance to nearest thirds vertical = min(|0.5-0.333|, |0.5-0.667|) = 0.167
+      // vScore = (1 - 0.167/0.5)*100 = 66.7, same for hScore, alignment = 67
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // Alignment: center at (0.333, 0.333) IS on thirds intersection, alignment = 100
-      expect(scoreResult.breakdown.alignment).toBe(100);
+      expect(scoreResult.breakdown.alignment).toBe(67);
     });
 
     it('balance is 100 for evenly distributed keypoints left/right', () => {
@@ -55,14 +55,14 @@ describe('useCompositionScore', () => {
 
     it('balance includes center as left weight when using <= 0.5', () => {
       const { result } = renderHook(() => useCompositionScore());
-      // center at x=0.333 counts as left weight (x <= 0.5)
-      // So center + top-left = 2 left, 0 right -> ratio = 1, balance = 0
+      // center at x=0.5: coords.x < 0.5 is FALSE, so center counts as RIGHT weight
+      // center (right) + top-left (left, x=0.33): left=1, right=1 -> ratio=0 -> balance=100
       const keypoints: Keypoint[] = [
         { id: 0, label: '中间', position: 'center' },
         { id: 1, label: '左上', position: 'top-left' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      expect(scoreResult.breakdown.balance).toBe(0);
+      expect(scoreResult.breakdown.balance).toBe(100);
     });
 
     it('balance is lower for imbalanced keypoint distribution', () => {
@@ -82,8 +82,8 @@ describe('useCompositionScore', () => {
         { id: 0, label: '中间', position: 'center' },
       ];
       const scoreResult = result.current.computeScore(keypoints, 'thirds');
-      // center at (0.333, 0.333) is NOT at true screen center (0.5, 0.5), centrality = 67
-      expect(scoreResult.breakdown.centrality).toBe(67);
+      // center at (0.5, 0.5) IS at true screen center, centrality = 100
+      expect(scoreResult.breakdown.centrality).toBe(100);
     });
 
     it('centrality is lower for corner keypoints', () => {
