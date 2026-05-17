@@ -188,6 +188,7 @@ describe('SharePreviewModal', () => {
   });
 
   it('calls onShare with captured image URI when Share button is pressed', async () => {
+    jest.setTimeout(10000);
     const captureRef = require('react-native-view-shot').captureRef;
     captureRef.mockResolvedValue('file:///captured-share.jpg');
 

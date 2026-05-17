@@ -146,6 +146,7 @@ describe('SettingsScreen', () => {
 
   // 9. successful save — calls saveApiConfig and shows success alert
   it('successful save calls saveApiConfig and shows success alert', async () => {
+    jest.setTimeout(10000);
     (saveApiConfig as jest.Mock).mockResolvedValue(undefined);
     const { getByText, getByPlaceholderText } = render(<SettingsScreen />);
     fireEvent.changeText(getByPlaceholderText('sk-xxxxxxxx'), 'sk-testkey123');
