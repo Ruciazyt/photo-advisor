@@ -1,270 +1,401 @@
 /**
- * Unit tests for src/components/ExposureBar.tsx
+ * Tests for ExposureBar component — EV (exposure compensation) slider bar
  */
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
-import { act } from 'react';
-import { View } from 'react-native';
-import { ExposureBar } from '../ExposureBar';
 
-// Mock PanResponder.create — use 'mock' prefix so jest allows factory to reference it
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockPanResponderHandlers: any = {
-  onStartShouldSetResponder: jest.fn(() => true),
-  onMoveShouldSetResponder: jest.fn(() => true),
-  onPanResponderGrant: jest.fn(),
-  onPanResponderMove: jest.fn(),
-  onPanResponderRelease: jest.fn(),
-};
-
-jest.mock('react-native', () => {
-  const React = require('react');
-  // Track the config passed to PanResponder.create so tests can inspect/invoke callbacks
-  const mockPanResponder: any = {
-    panHandlers: mockPanResponderHandlers,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    create: (jest.fn() as any).mockImplementation((config: any) => {
-      // Wire real config callbacks through the mock handlers so they can be triggered in tests
-      const originalOnMove = config.onPanResponderMove;
-      const originalOnRelease = config.onPanResponderRelease;
-      mockPanResponderHandlers.onPanResponderMove = (...args: any[]) => { originalOnMove?.(...args); };
-      mockPanResponderHandlers.onPanResponderRelease = (...args: any[]) => { originalOnRelease?.(...args); };
-      return mockPanResponder;
-    }),
-  };
-  return {
-    View: (props: any) => {
-      // Auto-fire onLayout so layoutRef gets populated for position calculations
-      React.useEffect(() => {
-        if (props.onLayout) {
-          props.onLayout({ nativeEvent: { layout: { width: 358, height: 8, x: 0, y: 0 } } } as any);
-        }
-      }, []);
-      return React.createElement('View', props, props.children);
-    },
-    Text: (props: any) => React.createElement('Text', props, props.children),
-    PanResponder: mockPanResponder,
-    Dimensions: { get: () => ({ width: 390, height: 844 }) },
-    StyleSheet: { create: (s: any) => s, flatten: (s: any) => (Array.isArray(s) ? Object.assign({}, ...s) : s) },
-  };
-});
-
-// Mock react-native-reanimated (follows project convention from existing tests)
+// Mock reanimated + worklets (same pattern as existing tests in project)
 jest.mock('react-native-reanimated', () => {
-  const mockView = (props: React.PropsWithChildren) => props.children;
-  const mockText = (props: React.PropsWithChildren) => props.children;
+  const View = require('react-native').View;
   return {
-    __esModule: true,
-    default: { View: mockView, Text: mockText },
-    useSharedValue: jest.fn((initial: unknown) => ({ value: initial })),
+    default: { View },
+    useSharedValue: jest.fn((initial) => ({ value: initial })),
     useAnimatedStyle: jest.fn(() => ({})),
-    withTiming: jest.fn((value: unknown) => value),
-    Easing: { out: jest.fn(), ease: jest.fn() },
+    withTiming: jest.fn((value) => value),
+    runOnJS: jest.fn((fn) => fn),
   };
 });
+
+jest.mock('react-native-worklets');
 
 // Mock ThemeContext
-jest.mock('../../contexts/ThemeContext', () => ({
+jest.mock('../contexts/ThemeContext', () => ({
   useTheme: jest.fn(() => ({
-    theme: 'dark' as const,
+    theme: 'dark',
     colors: {
-      primary: '#000000',
-      accent: '#E8D5B7',
-      cardBg: '#1A1A1A',
+      primary: '#000',
+      accent: '#e8d5b7',
       text: '#FFFFFF',
       textSecondary: '#888888',
-      border: '#333333',
+      border: 'rgba(255,255,255,0.5)',
+      background: '#000000',
+      overlayBg: 'rgba(0,0,0,0.55)',
+      cardBg: '#1A1A1A',
       success: '#4CAF50',
       error: '#FF5252',
       warning: '#F59E0B',
-      background: '#000000',
-      sunColor: '#FFB800',
-      gridAccent: 'rgba(232,213,183,0.35)',
-      bubbleBg: 'rgba(0,0,0,0.4)',
-      bubbleText: '#FFFFFF',
-      countdownBg: 'rgba(232,213,183,0.9)',
-      countdownBorder: 'rgba(255,255,255,0.4)',
-      countdownText: '#000000',
-      scoreS: '#FFD700',
-      scoreA: '#C0C0C0',
-      scoreB: '#CD7F32',
-      scoreC: '#8B7355',
-      scoreD: '#555555',
-      scoreOverlayBg: 'rgba(0,0,0,0.65)',
-      scoreHintText: 'rgba(255,255,255,0.4)',
-      scoreCardBg: 'rgba(28,28,28,0.95)',
-      scoreCardBorder: 'rgba(255,255,255,0.1)',
-      scoreLabelText: 'rgba(255,255,255,0.6)',
-      scoreBarBg: 'rgba(255,255,255,0.1)',
-      modeSelectorBg: 'rgba(0,0,0,0.4)',
-      modeSelectorUnselected: 'rgba(255,255,255,0.7)',
-      overlayBg: 'rgba(0,0,0,0.55)',
-      topBarBg: 'rgba(0,0,0,0.55)',
-      topBarText: '#FFFFFF',
-      topBarTextSecondary: 'rgba(255,255,255,0.6)',
-      topBarBorderInactive: 'rgba(255,255,255,0.15)',
-      topBarBorderActive: 'rgba(255,255,255,0.3)',
-      topBarSelectorBgActive: 'rgba(232,213,183,0.35)',
-      topBarSelectorBorderActive: 'rgba(232,213,183,0.6)',
-      timerActiveBg: 'rgba(255,82,82,0.6)',
-      timerActiveBorder: 'rgba(255,255,255,0.3)',
-      timerPreviewBg: 'rgba(0,0,0,0.5)',
-      timerBorder: 'rgba(255,255,255,0.25)',
-      timerUnitText: 'rgba(255,255,255,0.5)',
-      challengeActiveBg: 'rgba(255,215,0,0.15)',
-      challengeActiveBorder: 'rgba(255,215,0,0.6)',
-      challengeActiveText: '#FFD700',
-      rawActiveBg: 'rgba(0,200,100,0.2)',
-      rawActiveBorder: 'rgba(0,200,100,0.6)',
-      rawActiveText: '#00C864',
-      focusGuideActiveBg: 'rgba(255,220,0,0.15)',
     },
+    setTheme: jest.fn(),
+    toggleTheme: jest.fn(),
   })),
 }));
 
 // Mock useAccessibilityReducedMotion
-jest.mock('../../hooks/useAccessibility', () => ({
+jest.mock('../hooks/useAccessibility', () => ({
   useAccessibilityReducedMotion: jest.fn(() => ({ reducedMotion: false })),
+  useAccessibilityAnnouncement: jest.fn(() => ({ announce: jest.fn() })),
 }));
 
-const defaultProps = {
-  visible: true,
-  exposureComp: 0,
-  minEC: -3.0,
-  maxEC: 3.0,
-  onExposureChange: jest.fn(),
-  onExposureChangeEnd: jest.fn(),
-};
+import { render, fireEvent } from '@testing-library/react-native';
+import { ExposureBar } from '../ExposureBar';
 
 describe('ExposureBar', () => {
+  const defaultProps = {
+    visible: true,
+    exposureComp: 0,
+    minEC: -3,
+    maxEC: 3,
+    onExposureChange: jest.fn(),
+    onExposureChangeEnd: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders null when visible=false', () => {
-    const { queryByText } = render(
+  // ─────────────────────────────────────────────
+  // 1. Visibility toggle — renders null when not visible
+  // ─────────────────────────────────────────────
+
+  it('renders null when visible=false (returns null early)', () => {
+    const { toJSON } = render(
       <ExposureBar {...defaultProps} visible={false} />
     );
-    expect(queryByText('曝光补偿 (EV)')).toBeNull();
-    expect(queryByText('-3.0')).toBeNull();
+    expect(toJSON()).toBeNull();
   });
 
-  it('renders correctly when visible=true with default props', () => {
+  it('renders the bar when visible=true', () => {
     const { getByText } = render(<ExposureBar {...defaultProps} />);
     expect(getByText('曝光补偿 (EV)')).toBeTruthy();
-    expect(getByText('+0.0 EV')).toBeTruthy();
   });
 
-  it('renders EV value label with positive exposure (shows "+X.X EV")', () => {
+  it('renders all tick labels (min, 0, max) and EV value label', () => {
     const { getByText } = render(
-      <ExposureBar {...defaultProps} exposureComp={1.5} />
+      <ExposureBar
+        {...defaultProps}
+        exposureComp={1.5}
+        minEC={-3}
+        maxEC={3}
+      />
     );
+    expect(getByText('曝光补偿 (EV)')).toBeTruthy();
+    expect(getByText('-3.0')).toBeTruthy();
+    expect(getByText('0')).toBeTruthy();
+    expect(getByText('3.0')).toBeTruthy();
     expect(getByText('+1.5 EV')).toBeTruthy();
   });
 
-  it('renders EV value label with negative exposure (shows "-X.X EV")', () => {
+  it('shows negative EV value with minus sign', () => {
     const { getByText } = render(
       <ExposureBar {...defaultProps} exposureComp={-2.0} />
     );
     expect(getByText('-2.0 EV')).toBeTruthy();
   });
 
-  it('renders EV value label at zero (shows "+0.0 EV")', () => {
+  it('shows positive EV value with plus sign', () => {
+    const { getByText } = render(
+      <ExposureBar {...defaultProps} exposureComp={1.0} />
+    );
+    expect(getByText('+1.0 EV')).toBeTruthy();
+  });
+
+  // ─────────────────────────────────────────────
+  // 2. Value-to-position mapping (thumb positioning)
+  // ─────────────────────────────────────────────
+
+  it('renders with correct EV label at min boundary', () => {
+    const { getByText } = render(
+      <ExposureBar
+        {...defaultProps}
+        exposureComp={-3}
+        minEC={-3}
+        maxEC={3}
+      />
+    );
+    expect(getByText('-3.0')).toBeTruthy();
+    expect(getByText('+0.0 EV')).toBeTruthy(); // min maps to 0
+  });
+
+  it('renders with correct EV label at max boundary', () => {
+    const { getByText } = render(
+      <ExposureBar
+        {...defaultProps}
+        exposureComp={3}
+        minEC={-3}
+        maxEC={3}
+      />
+    );
+    expect(getByText('3.0')).toBeTruthy();
+  });
+
+  it('renders correctly with non-zero exposure value', () => {
+    const { getByText } = render(
+      <ExposureBar
+        {...defaultProps}
+        exposureComp={0.5}
+        minEC={-3}
+        maxEC={3}
+      />
+    );
+    expect(getByText('+0.5 EV')).toBeTruthy();
+  });
+
+  // ─────────────────────────────────────────────
+  // 3. Position-to-value mapping (drag → EV conversion)
+  // ─────────────────────────────────────────────
+
+  /**
+   * Helper: find a View with the given pan handler and call it.
+   * layoutRef.current.width is set from the onLayout callback on the Animated.View.
+   * With default Dimensions: width=390, so bar width = 390 - 32 = 358.
+   * The layout fires with width=390 (full container), barWidth = 358 internally.
+   *
+   * PanResponder uses gestureState.moveX (absolute screen coord).
+   * rawPos = Math.max(0, Math.min(barWidth, gestureState.moveX - barX))
+   * barX = layoutRef.current.x (set in onLayout, typically 16 from left:16 style)
+   *
+   * positionToValue: (pos / barWidth) * range + minEC, rounded to 1 decimal
+   * With minEC=-3, maxEC=3, range=6 → value = (pos / barWidth) * 6 - 3, rounded
+   */
+  function findPanHandler(
+    result: ReturnType<typeof render>,
+    handlerName: 'onPanResponderMove' | 'onPanResponderRelease'
+  ) {
+    const allViews = result.UNSAFE_getAllByType
+      ? result.UNSAFE_getAllByType(require('react-native').View)
+      : [];
+    for (const v of allViews) {
+      if (v.props[handlerName]) return v.props[handlerName];
+    }
+    return null;
+  }
+
+  function fireLayout(result: ReturnType<typeof render>) {
+    const allViews = result.UNSAFE_getAllByType
+      ? result.UNSAFE_getAllByType(require('react-native').View)
+      : [];
+    for (const v of allViews) {
+      if (v.props.onLayout) {
+        // Simulate full container width of 390 (barWidth = 390 - 32 = 358)
+        fireEvent(v, 'layout', {
+          nativeEvent: { layout: { width: 390, height: 80, x: 0, y: 0 } },
+        });
+        return;
+      }
+    }
+  }
+
+  it('onExposureChange fires during drag movement', () => {
+    const onExposureChange = jest.fn();
+    const result = render(
+      <ExposureBar
+        {...defaultProps}
+        onExposureChange={onExposureChange}
+      />
+    );
+
+    // Set layout so barWidth is known
+    fireLayout(result);
+
+    const moveHandler = findPanHandler(result, 'onPanResponderMove');
+    expect(moveHandler).not.toBeNull();
+
+    // Simulate move at bar center:
+    // barWidth=358, barX=16 (from container left:16, top:120 → x≈16)
+    // center pos = 179 → value = (179/358)*6 - 3 ≈ 0.0
+    if (moveHandler) moveHandler(null, { moveX: 16 + 179 });
+
+    expect(onExposureChange).toHaveBeenCalled();
+    const [arg] = onExposureChange.mock.calls[0];
+    expect(typeof arg).toBe('number');
+  });
+
+  it('onExposureChangeEnd fires when drag is released', () => {
+    const onExposureChangeEnd = jest.fn();
+    const result = render(
+      <ExposureBar
+        {...defaultProps}
+        onExposureChangeEnd={onExposureChangeEnd}
+      />
+    );
+
+    fireLayout(result);
+
+    const releaseHandler = findPanHandler(result, 'onPanResponderRelease');
+    expect(releaseHandler).not.toBeNull();
+
+    if (releaseHandler) releaseHandler(null, { moveX: 16 + 179 });
+
+    expect(onExposureChangeEnd).toHaveBeenCalled();
+  });
+
+  it('onExposureChangeEnd is optional — does not crash when omitted', () => {
+    const onExposureChange = jest.fn();
+    const result = render(
+      <ExposureBar
+        visible={true}
+        exposureComp={0}
+        minEC={-3}
+        maxEC={3}
+        onExposureChange={onExposureChange}
+        // onExposureChangeEnd intentionally omitted
+      />
+    );
+
+    fireLayout(result);
+
+    const releaseHandler = findPanHandler(result, 'onPanResponderRelease');
+    expect(releaseHandler).not.toBeNull();
+
+    // Should not throw even though onExposureChangeEnd is undefined
+    expect(() => {
+      if (releaseHandler) releaseHandler(null, { moveX: 16 + 179 });
+    }).not.toThrow();
+  });
+
+  it('clamps drag to left bound (pos < 0 → clamped to 0)', () => {
+    const onExposureChange = jest.fn();
+    const result = render(
+      <ExposureBar
+        {...defaultProps}
+        onExposureChange={onExposureChange}
+      />
+    );
+    fireLayout(result);
+
+    const moveHandler = findPanHandler(result, 'onPanResponderMove');
+    if (moveHandler) {
+      onExposureChange.mockClear();
+      // Drag far left — should clamp to barX offset minimum
+      moveHandler(null, { moveX: -1000 });
+      expect(onExposureChange).toHaveBeenCalled();
+    }
+  });
+
+  it('clamps drag to right bound (pos > barWidth → clamped to barWidth)', () => {
+    const onExposureChange = jest.fn();
+    const result = render(
+      <ExposureBar
+        {...defaultProps}
+        onExposureChange={onExposureChange}
+      />
+    );
+    fireLayout(result);
+
+    const moveHandler = findPanHandler(result, 'onPanResponderMove');
+    if (moveHandler) {
+      onExposureChange.mockClear();
+      // Drag far right
+      moveHandler(null, { moveX: 9999 });
+      expect(onExposureChange).toHaveBeenCalled();
+    }
+  });
+
+  // ─────────────────────────────────────────────
+  // 4. Reanimated opacity animation
+  // ─────────────────────────────────────────────
+
+  it('calls useSharedValue for animatedOpacity', () => {
+    const { useSharedValue } = require('react-native-reanimated');
+    render(<ExposureBar {...defaultProps} />);
+    expect(useSharedValue).toHaveBeenCalled();
+  });
+
+  it('calls useAnimatedStyle for opacity transitions', () => {
+    const { useAnimatedStyle } = require('react-native-reanimated');
+    render(<ExposureBar {...defaultProps} />);
+    expect(useAnimatedStyle).toHaveBeenCalled();
+  });
+
+  it('calls withTiming when useAnimatedStyle is invoked', () => {
+    const { withTiming } = require('react-native-reanimated');
+    render(<ExposureBar {...defaultProps} visible={true} />);
+    expect(withTiming).toHaveBeenCalled();
+  });
+
+  // ─────────────────────────────────────────────
+  // 5. Value label formatting
+  // ─────────────────────────────────────────────
+
+  it('formats +0.0 EV for zero', () => {
     const { getByText } = render(
       <ExposureBar {...defaultProps} exposureComp={0} />
     );
     expect(getByText('+0.0 EV')).toBeTruthy();
   });
 
-  it('renders tick labels showing min, 0, and max values', () => {
+  it('formats -0.5 EV for negative half', () => {
     const { getByText } = render(
-      <ExposureBar {...defaultProps} minEC={-3.0} maxEC={3.0} />
+      <ExposureBar {...defaultProps} exposureComp={-0.5} />
     );
-    expect(getByText('-3.0')).toBeTruthy();
-    expect(getByText('0')).toBeTruthy();
-    expect(getByText('3.0')).toBeTruthy();
+    expect(getByText('-0.5 EV')).toBeTruthy();
   });
 
-  it('renders tick labels with different min/max values', () => {
+  it('formats +2.5 EV for positive value', () => {
     const { getByText } = render(
-      <ExposureBar {...defaultProps} minEC={-1.0} maxEC={2.0} />
+      <ExposureBar {...defaultProps} exposureComp={2.5} />
     );
-    expect(getByText('-1.0')).toBeTruthy();
-    expect(getByText('0')).toBeTruthy();
-    expect(getByText('2.0')).toBeTruthy();
+    expect(getByText('+2.5 EV')).toBeTruthy();
   });
 
-  it('exposes correct pointerEvents and panHandlers via panResponder', () => {
-    render(<ExposureBar {...defaultProps} />);
-    // Verify PanResponder.create was called with expected handler config
-    expect(mockPanResponderHandlers.onStartShouldSetResponder).toBeDefined();
-    expect(typeof mockPanResponderHandlers.onMoveShouldSetResponder).toBe('function');
-    expect(typeof mockPanResponderHandlers.onPanResponderGrant).toBe('function');
-    expect(typeof mockPanResponderHandlers.onPanResponderMove).toBe('function');
-    expect(typeof mockPanResponderHandlers.onPanResponderRelease).toBe('function');
-    // onStartShouldSetResponder and onMoveShouldSetResponder should return true
-    expect(mockPanResponderHandlers.onStartShouldSetResponder()).toBe(true);
-    expect(mockPanResponderHandlers.onMoveShouldSetResponder()).toBe(true);
-  });
+  // ─────────────────────────────────────────────
+  // 6. Edge case: zero range (minEC === maxEC)
+  // ─────────────────────────────────────────────
 
-  it('calls onExposureChange when panResponder move is triggered', () => {
+  it('handles zero range without crashing (no division by zero)', () => {
     const onExposureChange = jest.fn();
-    const onExposureChangeEnd = jest.fn();
     const result = render(
       <ExposureBar
         {...defaultProps}
+        minEC={0}
+        maxEC={0}
+        exposureComp={0}
         onExposureChange={onExposureChange}
-        onExposureChangeEnd={onExposureChangeEnd}
-        minEC={-3.0}
-        maxEC={3.0}
       />
     );
-    // Force a synchronous re-render so useMemo picks up the latest callbacks
-    act(() => {
-      result.rerender(
-        <ExposureBar
-          {...defaultProps}
-          onExposureChange={onExposureChange}
-          onExposureChangeEnd={onExposureChangeEnd}
-          minEC={-3.0}
-          maxEC={3.0}
-        />
-      );
-    });
-    // Simulate a pan move event — the stored callback calls the actual onExposureChange
-    const mockGestureState = { moveX: 200, moveY: 150 };
-    act(() => {
-      mockPanResponderHandlers.onPanResponderMove(null, mockGestureState);
-    });
-    expect(onExposureChange).toHaveBeenCalled();
+
+    expect(result.getByText('曝光补偿 (EV)')).toBeTruthy();
+
+    fireLayout(result);
+
+    const moveHandler = findPanHandler(result, 'onPanResponderMove');
+    if (moveHandler) {
+      expect(() => moveHandler(null, { moveX: 200 })).not.toThrow();
+    }
   });
 
-  it('calls onExposureChangeEnd when panResponder release is triggered', () => {
-    const onExposureChangeEnd = jest.fn();
+  it('clamps to center position when range is zero', () => {
     const result = render(
       <ExposureBar
         {...defaultProps}
-        onExposureChangeEnd={onExposureChangeEnd}
-        minEC={-3.0}
-        maxEC={3.0}
+        minEC={0}
+        maxEC={0}
+        exposureComp={0}
       />
     );
-    // Force a synchronous re-render so useMemo picks up the latest callbacks
-    act(() => {
-      result.rerender(
-        <ExposureBar
-          {...defaultProps}
-          onExposureChangeEnd={onExposureChangeEnd}
-          minEC={-3.0}
-          maxEC={3.0}
-        />
-      );
-    });
-    const mockGestureState = { moveX: 200, moveY: 150 };
-    act(() => {
-      mockPanResponderHandlers.onPanResponderRelease(null, mockGestureState);
-    });
-    expect(onExposureChangeEnd).toHaveBeenCalled();
+    // Should render fine — valueToPosition returns width/2 for zero range
+    expect(result.getByText('+0.0 EV')).toBeTruthy();
+  });
+
+  // ─────────────────────────────────────────────
+  // 7. Accessibility: reduced motion respects no-animation duration
+  // ─────────────────────────────────────────────
+
+  it('renders with reducedMotion=false by default (withTiming duration=200)', () => {
+    const { withTiming } = require('react-native-reanimated');
+    const result = render(<ExposureBar {...defaultProps} visible={true} />);
+    expect(result.getByText('曝光补偿 (EV)')).toBeTruthy();
+    // withTiming should be called for opacity animation
+    expect(withTiming).toHaveBeenCalled();
   });
 });

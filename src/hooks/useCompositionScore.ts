@@ -19,7 +19,7 @@ const POSITION_COORDS: Record<KeypointPosition, { x: number; y: number }> = {
   'top-right':    { x: 0.67, y: 0.33 },
   'bottom-left':  { x: 0.33, y: 0.67 },
   'bottom-right': { x: 0.67, y: 0.67 },
-  'center':       { x: 0.333, y: 0.333 },
+  'center':       { x: 0.5, y: 0.5 },
 };
 
 function gradeFromScore(score: number): CompositionGrade {
@@ -55,8 +55,15 @@ function computeBalance(keypoints: Keypoint[]): number {
   for (const kp of keypoints) {
     const coords = POSITION_COORDS[kp.position];
     const weight = 1;
-    if (coords.x <= 0.5) leftWeight += weight;
-    else rightWeight += weight;
+    if (coords.x < 0.5) {
+      leftWeight += weight;
+    } else if (coords.x > 0.5) {
+      rightWeight += weight;
+    } else {
+      // x === 0.5: center point, split evenly between left and right
+      leftWeight += 0.5;
+      rightWeight += 0.5;
+    }
   }
   const total = leftWeight + rightWeight;
   if (total === 0) return 50;
