@@ -175,3 +175,111 @@ describe('useHistogram', () => {
     expect(secondData).toHaveLength(256);
   });
 });
+
+// ─── Uncovered paths ────────────────────────────────────────────────────────
+
+describe('useHistogram uncovered paths', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockTakePictureAsync.mockReset();
+    mockManipulateAsync.mockReset();
+    mockReadAsStringAsync.mockReset();
+  });
+
+  it('capture() returns current data and does NOT update state when photo.uri is missing', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: undefined });
+
+    const { result } = renderHook(() => useHistogram());
+    const initialData = result.current.histogramData;
+    const ref = { current: { takePictureAsync: mockTakePictureAsync } } as any;
+
+    let returnedData: number[] | null = null;
+    await act(async () => {
+      returnedData = await result.current.capture(ref);
+    });
+
+    // Returns current (initial) data — 256 zeros
+    expect(returnedData).toEqual(initialData);
+    // State was NOT updated (still the same zeros)
+    expect(result.current.histogramData).toEqual(initialData);
+  });
+
+  it('capture() returns current data when base64 is empty string', async () => {
+    mockReadAsStringAsync.mockResolvedValue('');
+
+    const { result } = renderHook(() => useHistogram());
+    const initialData = result.current.histogramData;
+    const ref = { current: { takePictureAsync: mockTakePictureAsync } } as any;
+
+    let returnedData: number[] | null = null;
+    await act(async () => {
+      returnedData = await result.current.capture(ref);
+    });
+
+    expect(returnedData).toEqual(initialData);
+    expect(result.current.histogramData).toEqual(initialData);
+  });
+
+  it('capture() returns current data when base64 length < 100', async () => {
+    mockReadAsStringAsync.mockResolvedValue('too short');
+
+    const { result } = renderHook(() => useHistogram());
+    const initialData = result.current.histogramData;
+    const ref = { current: { takePictureAsync: mockTakePictureAsync } } as any;
+
+    let returnedData: number[] | null = null;
+    await act(async () => {
+      returnedData = await result.current.capture(ref);
+    });
+
+    expect(returnedData).toEqual(initialData);
+    expect(result.current.histogramData).toEqual(initialData);
+  });
+
+  it('capture() still sets isCapturing=false in finally even when photo.uri is missing', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: undefined });
+
+    const { result } = renderHook(() => useHistogram());
+    const ref = { current: { takePictureAsync: mockTakePictureAsync } } as any;
+
+    await act(async () => {
+      await result.current.capture(ref);
+    });
+
+    expect(result.current.isCapturing).toBe(false);
+  });
+
+  it('capture() still sets isCapturing=false in finally even when base64 is too short', async () => {
+    mockReadAsStringAsync.mockResolvedValue('x'.repeat(50));
+
+    const { result } = renderHook(() => useHistogram());
+    const ref = { current: { takePictureAsync: mockTakePictureAsync } } as any;
+
+    await act(async () => {
+      await result.current.capture(ref);
+    });
+
+    expect(result.current.isCapturing).toBe(false);
+  });
+
+  it('capture() catches and swallows exceptions from takePictureAsync', async () => {
+    mockTakePictureAsync.mockRejectedValue(new Error('camera error'));
+
+    const { result } = renderHook(() => useHistogram());
+    const initialData = result.current.histogramData;
+    const ref = { current: { takePictureAsync: mockTakePictureAsync } } as any;
+
+    let caught = false;
+    await act(async () => {
+      try {
+        await result.current.capture(ref);
+      } catch {
+        caught = true;
+      }
+    });
+
+    expect(caught).toBe(false); // hook catches internally, does not throw
+    expect(result.current.histogramData).toEqual(initialData);
+    expect(result.current.isCapturing).toBe(false);
+  });
+});
