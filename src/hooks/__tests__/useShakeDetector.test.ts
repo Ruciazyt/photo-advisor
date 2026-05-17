@@ -369,6 +369,8 @@ describe('useShakeDetector', () => {
       expect(onShake).not.toHaveBeenCalled();
       expect(onShakeVoiceFeedback).not.toHaveBeenCalled();
     });
+  });
+
   describe('intensity', () => {
     it('passes normalized intensity (0-1) to onShake', () => {
       const onShake = jest.fn();
@@ -432,8 +434,5 @@ describe('useShakeDetector', () => {
       expect(onShake).toHaveBeenCalledTimes(1);
       // caller can ignore the intensity arg
     });
-  });
-
-
   });
 });
